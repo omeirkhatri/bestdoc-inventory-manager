@@ -601,7 +601,7 @@ def wastage():
         MovementHistory.timestamp.desc()
     ).limit(10).all()
     
-    return render_template('wastage.html', expired_items=expired_items, wastage_history=wastage_history)
+    return render_template('wastage.html', expired_items=expired_items, wastage_history=wastage_history, today=today)
 
 def handle_wastage():
     try:
