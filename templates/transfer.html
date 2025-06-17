@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Transfer Items - Healthcare Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-exchange-alt me-2"></i>
+            Transfer Items
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Cabinet Items -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-archive me-2"></i>
+                    Cabinet Items
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if cabinet_items %}
+                <div class="list-group">
+                    {% for item in cabinet_items %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ item.name }}</h6>
+                                <p class="mb-1">
+                                    <span class="badge bg-secondary me-2">{{ item.type }}</span>
+                                    {% if item.size %}
+                                    <span class="badge bg-info me-2">{{ item.size }}</span>
+                                    {% endif %}
+                                    <span class="badge bg-primary">{{ item.quantity }} units</span>
+                                </p>
+                                <small class="text-muted">
+                                    {% if item.expiry_date %}
+                                        Expires: {{ item.expiry_date.strftime('%m/%d/%Y') }}
+                                        {% if item.expiry_status == 'expired' %}
+                                            <span class="badge bg-danger ms-1">Expired</span>
+                                        {% elif item.expiry_status == 'expiring' %}
+                                            <span class="badge bg-warning ms-1">Expiring Soon</span>
+                                        {% endif %}
+                                    {% else %}
+                                        No expiry date
+                                    {% endif %}
+                                    {% if item.batch_number %}
+                                        | Batch: {{ item.batch_number }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" 
+                                    onclick="selectItemForTransfer('{{ item.id }}', '{{ item.name }}', '{{ item.type }}', '{{ item.size or '' }}', {{ item.quantity }})">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No items in Cabinet</h6>
+                    <p class="text-muted">
+                        <a href="{{ url_for('add_items') }}">Add some items</a> to get started.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Form -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-share me-2"></i>
+                    Transfer Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="transferForm">
+                    <input type="hidden" id="item_id" name="item_id">
+                    
+                    <div class="mb-3">
+                        <label for="selectedItem" class="form-label">Selected Item</label>
+                        <input type="text" class="form-control" id="selectedItem" readonly 
+                               placeholder="Select an item from the Cabinet">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="to_bag_id" class="form-label">Destination Bag <span class="text-danger">*</span></label>
+                        <select class="form-select" id="to_bag_id" name="to_bag_id" required>
+                            <option value="">Select destination bag...</option>
+                            {% for bag in bags %}
+                                {% if bag.name != 'Cabinet' %}
+                                <option value="{{ bag.id }}">{{ bag.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity to Transfer <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                        <div class="form-text">Available: <span id="maxQuantity">0</span> units</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success" id="transferBtn" disabled>
+                            <i class="fas fa-exchange-alt me-2"></i>Transfer Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Bags Section -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-briefcase me-2"></i>
+                    Available Bags
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if bags %}
+                <div class="row">
+                    {% for bag in bags %}
+                        {% if bag.name != 'Cabinet' %}
+                        <div class="col-md-6 mb-2">
+                            <div class="card bg-light">
+                                <div class="card-body py-2">
+                                    <h6 class="card-title mb-1">{{ bag.name }}</h6>
+                                    <small class="text-muted">
+                                        {{ bag.get_total_items() }} items
+                                        {% if bag.description %}
+                                        <br>{{ bag.description }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="text-center mt-2">
+                    <a href="{{ url_for('bags') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-cog me-1"></i>Manage Bags
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FIFO Information -->
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Transfer Rules</h6>
+            <ul class="mb-0">
+                <li><strong>FIFO (First In, First Out):</strong> Items are automatically sorted by expiry date - oldest items are shown first for transfer</li>
+                <li><strong>Batch Management:</strong> Items with the same name but different expiry dates or batches are treated separately</li>
+                <li><strong>Cabinet to Bags:</strong> Only items from the Cabinet can be transferred to medical bags</li>
+                <li><strong>Quantity Control:</strong> You cannot transfer more items than are available in stock</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let selectedItemData = null;
+
+function selectItemForTransfer(itemId, itemName, itemType, itemSize, maxQty) {
+    selectedItemData = {
+        id: itemId,
+        name: itemName,
+        type: itemType,
+        size: itemSize,
+        maxQuantity: maxQty
+    };
+    
+    // Update form fields
+    document.getElementById('item_id').value = itemId;
+    
+    let itemDisplay = itemName + ' (' + itemType + ')';
+    if (itemSize) {
+        itemDisplay += ' - ' + itemSize;
+    }
+    document.getElementById('selectedItem').value = itemDisplay;
+    
+    document.getElementById('maxQuantity').textContent = maxQty;
+    document.getElementById('quantity').max = maxQty;
+    document.getElementById('quantity').value = '';
+    
+    // Enable form
+    document.getElementById('transferBtn').disabled = false;
+    document.getElementById('to_bag_id').focus();
+    
+    // Highlight selected item
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    event.target.closest('.list-group-item').classList.add('active');
+}
+
+// Form validation
+document.getElementById('transferForm').addEventListener('submit', function(e) {
+    const itemId = document.getElementById('item_id').value;
+    const toBagId = document.getElementById('to_bag_id').value;
+    const quantity = parseInt(document.getElementById('quantity').value);
+    
+    if (!itemId) {
+        e.preventDefault();
+        alert('Please select an item from the Cabinet');
+        return false;
+    }
+    
+    if (!toBagId) {
+        e.preventDefault();
+        alert('Please select a destination bag');
+        document.getElementById('to_bag_id').focus();
+        return false;
+    }
+    
+    if (!quantity || quantity <= 0) {
+        e.preventDefault();
+        alert('Please enter a valid quantity');
+        document.getElementById('quantity').focus();
+        return false;
+    }
+    
+    if (selectedItemData && quantity > selectedItemData.maxQuantity) {
+        e.preventDefault();
+        alert(`Cannot transfer more than ${selectedItemData.maxQuantity} units`);
+        document.getElementById('quantity').focus();
+        return false;
+    }
+    
+    // Confirm transfer
+    const bagName = document.getElementById('to_bag_id').options[document.getElementById('to_bag_id').selectedIndex].text;
+    const itemName = selectedItemData ? selectedItemData.name : 'selected item';
+    
+    if (!confirm(`Transfer ${quantity} units of ${itemName} to ${bagName}?`)) {
+        e.preventDefault();
+        return false;
+    }
+});
+
+// Real-time quantity validation
+document.getElementById('quantity').addEventListener('input', function() {
+    const quantity = parseInt(this.value);
+    const maxQty = selectedItemData ? selectedItemData.maxQuantity : 0;
+    
+    if (quantity > maxQty) {
+        this.setCustomValidity(`Maximum available: ${maxQty}`);
+        this.reportValidity();
+    } else {
+        this.setCustomValidity('');
+    }
+});
+
+// Reset form when no item is selected
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.list-group-item') && !e.target.closest('#transferForm')) {
+        // Clear selection if clicking outside
+        // Uncomment if you want this behavior
+        // clearSelection();
+    }
+});
+
+function clearSelection() {
+    selectedItemData = null;
+    document.getElementById('item_id').value = '';
+    document.getElementById('selectedItem').value = '';
+    document.getElementById('maxQuantity').textContent = '0';
+    document.getElementById('quantity').value = '';
+    document.getElementById('to_bag_id').value = '';
+    document.getElementById('transferBtn').disabled = true;
+    
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.classList.remove('active');
+    });
+}
+</script>
+{% endblock %}

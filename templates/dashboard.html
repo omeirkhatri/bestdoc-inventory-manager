@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Healthcare Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-dashboard me-2"></i>
+            Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_items }}</h4>
+                        <p class="card-text">Total Items</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-boxes fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_unique_items }}</h4>
+                        <p class="card-text">Unique Items</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ expiring_items|length }}</h4>
+                        <p class="card-text">Expiring Soon</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ expired_items|length }}</h4>
+                        <p class="card-text">Expired Items</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Items by Bag</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="bagChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Stock Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerts Section -->
+{% if expired_items or expiring_items or low_stock_items %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Alerts
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if expired_items %}
+                <div class="alert alert-danger">
+                    <h6><i class="fas fa-times-circle me-2"></i>Expired Items ({{ expired_items|length }})</h6>
+                    <div class="row">
+                        {% for item in expired_items[:5] %}
+                        <div class="col-md-6">
+                            <small>{{ item.name }} ({{ item.bag.name }}) - Expired {{ item.expiry_date }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if expired_items|length > 5 %}
+                    <small><a href="{{ url_for('expiry') }}" class="text-white">View all {{ expired_items|length }} expired items</a></small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if expiring_items %}
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-clock me-2"></i>Expiring Soon ({{ expiring_items|length }})</h6>
+                    <div class="row">
+                        {% for item in expiring_items[:5] %}
+                        <div class="col-md-6">
+                            <small>{{ item.name }} ({{ item.bag.name }}) - Expires {{ item.expiry_date }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if expiring_items|length > 5 %}
+                    <small><a href="{{ url_for('expiry') }}" class="text-dark">View all {{ expiring_items|length }} expiring items</a></small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if low_stock_items %}
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-arrow-down me-2"></i>Low Stock ({{ low_stock_items|length }})</h6>
+                    <div class="row">
+                        {% for item in low_stock_items[:5] %}
+                        <div class="col-md-6">
+                            <small>{{ item.name }} ({{ item.bag.name }}) - Only {{ item.quantity }} left</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if low_stock_items|length > 5 %}
+                    <small><a href="{{ url_for('inventory') }}?search=&type=&bag=&expiry=" class="text-info">View all low stock items</a></small>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_movements %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Item</th>
+                                <th>Action</th>
+                                <th>Quantity</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movement in recent_movements %}
+                            <tr>
+                                <td>
+                                    <small>{{ movement.timestamp.strftime('%m/%d %H:%M') }}</small>
+                                </td>
+                                <td>{{ movement.item_name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if movement.movement_type == 'addition' %}success{% elif movement.movement_type == 'usage' %}danger{% else %}info{% endif %}">
+                                        {{ movement.movement_type.title() }}
+                                    </span>
+                                </td>
+                                <td>{{ movement.quantity }}</td>
+                                <td>
+                                    {% if movement.movement_type == 'transfer' %}
+                                        {{ movement.from_bag }} → {{ movement.to_bag }}
+                                    {% elif movement.movement_type == 'usage' %}
+                                        {{ movement.from_bag }}
+                                    {% else %}
+                                        {{ movement.to_bag }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                    <a href="{{ url_for('history') }}" class="btn btn-outline-secondary btn-sm">View Full History</a>
+                </div>
+                {% else %}
+                <p class="text-muted">No recent activity</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Bag Chart
+const bagCtx = document.getElementById('bagChart').getContext('2d');
+const bagData = {
+    labels: [{% for bag in bags_with_counts %}'{{ bag.name }}'{% if not loop.last %},{% endif %}{% endfor %}],
+    datasets: [{
+        data: [{% for bag in bags_with_counts %}{{ bag.count }}{% if not loop.last %},{% endif %}{% endfor %}],
+        backgroundColor: [
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(255, 159, 64, 0.8)'
+        ]
+    }]
+};
+
+new Chart(bagCtx, {
+    type: 'doughnut',
+    data: bagData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Status Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusData = {
+    labels: ['Good', 'Expiring Soon', 'Expired', 'Low Stock'],
+    datasets: [{
+        data: [
+            {{ total_items - expiring_items|length - expired_items|length }},
+            {{ expiring_items|length }},
+            {{ expired_items|length }},
+            {{ low_stock_items|length }}
+        ],
+        backgroundColor: [
+            'rgba(40, 167, 69, 0.8)',
+            'rgba(255, 193, 7, 0.8)',
+            'rgba(220, 53, 69, 0.8)',
+            'rgba(23, 162, 184, 0.8)'
+        ]
+    }]
+};
+
+new Chart(statusCtx, {
+    type: 'bar',
+    data: statusData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

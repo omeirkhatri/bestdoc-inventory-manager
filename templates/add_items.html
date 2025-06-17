@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Add Items - Healthcare Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-plus me-2"></i>
+            Add Items
+        </h1>
+    </div>
+</div>
+
+<!-- Add Method Tabs -->
+<ul class="nav nav-tabs mb-4" id="addMethodTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab">
+            <i class="fas fa-edit me-2"></i>Manual Entry
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="csv-tab" data-bs-toggle="tab" data-bs-target="#csv" type="button" role="tab">
+            <i class="fas fa-upload me-2"></i>CSV Upload
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="addMethodTabsContent">
+    <!-- Manual Entry Tab -->
+    <div class="tab-pane fade show active" id="manual" role="tabpanel">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Manual Entry</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="manualForm">
+                    <div class="mb-3">
+                        <label for="bag_id" class="form-label">Destination Bag <span class="text-danger">*</span></label>
+                        <select class="form-select" id="bag_id" name="bag_id" required>
+                            <option value="">Select a bag...</option>
+                            {% for bag in bags %}
+                            <option value="{{ bag.id }}">{{ bag.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="itemRows">
+                        <div class="item-row border rounded p-3 mb-3">
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label">Item Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">Type <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="type" required>
+                                        <option value="">Select...</option>
+                                        {% for item_type in item_types %}
+                                        <option value="{{ item_type.name }}">{{ item_type.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">Size</label>
+                                    <input type="text" class="form-control" name="size" placeholder="e.g., 22G, 5ml">
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="quantity" min="1" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label">Expiry Date</label>
+                                    <input type="date" class="form-control" name="expiry_date">
+                                </div>
+                                <div class="col-md-1 mb-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-row" style="display: none;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-11">
+                                    <label class="form-label">Batch Number</label>
+                                    <input type="text" class="form-control" name="batch_number" placeholder="Optional">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-secondary" id="addRowBtn">
+                            <i class="fas fa-plus me-2"></i>Add Another Item
+                        </button>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Add Items
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSV Upload Tab -->
+    <div class="tab-pane fade" id="csv" role="tabpanel">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">CSV Upload</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>CSV Format Requirements:</h6>
+                    <p class="mb-2">Your CSV file should have the following columns:</p>
+                    <ul class="mb-2">
+                        <li><strong>name</strong> (required) - Item name</li>
+                        <li><strong>type</strong> (required) - Item type</li>
+                        <li><strong>quantity</strong> (required) - Quantity to add</li>
+                        <li><strong>size</strong> (optional) - Item size</li>
+                        <li><strong>expiry_date</strong> (optional) - Format: YYYY-MM-DD or MM/DD/YYYY</li>
+                        <li><strong>batch_number</strong> (optional) - Batch identifier</li>
+                        <li><strong>bag</strong> (optional) - Destination bag (defaults to Cabinet)</li>
+                    </ul>
+                    <small class="text-muted">Example: name,type,quantity,size,expiry_date,batch_number,bag</small>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload me-2"></i>Upload CSV
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sample CSV Download -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Sample CSV Template</h5>
+            </div>
+            <div class="card-body">
+                <p>Download a sample CSV template to get started:</p>
+                <button type="button" class="btn btn-outline-info" onclick="downloadSampleCSV()">
+                    <i class="fas fa-download me-2"></i>Download Sample CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Add new row functionality
+document.getElementById('addRowBtn').addEventListener('click', function() {
+    const itemRows = document.getElementById('itemRows');
+    const firstRow = itemRows.querySelector('.item-row');
+    const newRow = firstRow.cloneNode(true);
+    
+    // Clear all input values
+    newRow.querySelectorAll('input, select').forEach(input => {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+            input.checked = false;
+        } else {
+            input.value = '';
+        }
+    });
+    
+    // Show remove button
+    newRow.querySelector('.remove-row').style.display = 'block';
+    
+    itemRows.appendChild(newRow);
+    updateRemoveButtons();
+});
+
+// Remove row functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-row')) {
+        e.target.closest('.item-row').remove();
+        updateRemoveButtons();
+    }
+});
+
+function updateRemoveButtons() {
+    const rows = document.querySelectorAll('.item-row');
+    rows.forEach((row, index) => {
+        const removeBtn = row.querySelector('.remove-row');
+        if (rows.length > 1) {
+            removeBtn.style.display = 'block';
+        } else {
+            removeBtn.style.display = 'none';
+        }
+    });
+}
+
+// Download sample CSV
+function downloadSampleCSV() {
+    const csvContent = 'name,type,quantity,size,expiry_date,batch_number,bag\n' +
+                      'Syringe 10ml,Consumables,50,10ml,2025-12-31,BATCH001,Cabinet\n' +
+                      'Needle 22G,Consumables,100,22G,2026-06-15,BATCH002,Cabinet\n' +
+                      'Saline Solution,IV Vials,25,500ml,2025-08-20,BATCH003,Cabinet';
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inventory_sample.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Form validation
+document.getElementById('manualForm').addEventListener('submit', function(e) {
+    const bagSelect = document.getElementById('bag_id');
+    if (!bagSelect.value) {
+        e.preventDefault();
+        alert('Please select a destination bag');
+        bagSelect.focus();
+        return false;
+    }
+    
+    let hasValidItem = false;
+    const itemRows = document.querySelectorAll('.item-row');
+    
+    itemRows.forEach(row => {
+        const name = row.querySelector('input[name="name"]').value.trim();
+        const type = row.querySelector('select[name="type"]').value.trim();
+        const quantity = row.querySelector('input[name="quantity"]').value.trim();
+        
+        if (name && type && quantity) {
+            hasValidItem = true;
+        }
+    });
+    
+    if (!hasValidItem) {
+        e.preventDefault();
+        alert('Please fill in at least one complete item (name, type, and quantity)');
+        return false;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}Movement History - Healthcare Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-history me-2"></i>
+            Movement History
+        </h1>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">All Movements</h5>
+    </div>
+    <div class="card-body">
+        {% if movements.items %}
+        <div class="table-responsive">
+            <table class="table table-striped" id="historyTable">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Item</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Action</th>
+                        <th>Quantity</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in movements.items %}
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>{{ movement.timestamp.strftime('%m/%d/%Y') }}</strong><br>
+                                <small class="text-muted">{{ movement.timestamp.strftime('%H:%M:%S') }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <strong>{{ movement.item_name }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ movement.item_type }}</span>
+                        </td>
+                        <td>{{ movement.item_size or '-' }}</td>
+                        <td>
+                            <span class="badge bg-{% if movement.movement_type == 'addition' %}success{% elif movement.movement_type == 'usage' %}danger{% elif movement.movement_type == 'transfer' %}info{% else %}secondary{% endif %}">
+                                {% if movement.movement_type == 'addition' %}
+                                    <i class="fas fa-plus me-1"></i>Added
+                                {% elif movement.movement_type == 'usage' %}
+                                    <i class="fas fa-minus me-1"></i>Used
+                                {% elif movement.movement_type == 'transfer' %}
+                                    <i class="fas fa-exchange-alt me-1"></i>Transferred
+                                {% else %}
+                                    {{ movement.movement_type.title() }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <strong>{{ movement.quantity }}</strong>
+                        </td>
+                        <td>
+                            {% if movement.from_bag %}
+                                <span class="badge bg-outline-secondary">{{ movement.from_bag }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if movement.to_bag %}
+                                <span class="badge bg-outline-primary">{{ movement.to_bag }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if movement.notes %}
+                                <small class="text-muted">{{ movement.notes }}</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if movements.pages > 1 %}
+        <nav aria-label="Movement history pagination">
+            <ul class="pagination justify-content-center mt-4">
+                {% if movements.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('history', page=movements.prev_num) }}">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in movements.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != movements.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('history', page=page_num) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if movements.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('history', page=movements.next_num) }}">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <!-- Page Info -->
+        <div class="text-center text-muted">
+            <small>
+                Showing {{ movements.per_page * (movements.page - 1) + 1 }} to 
+                {{ movements.per_page * (movements.page - 1) + movements.items|length }} 
+                of {{ movements.total }} movements
+            </small>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Movement History</h5>
+            <p class="text-muted">Start by <a href="{{ url_for('add_items') }}">adding items</a> to see movement history.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+{% if movements.items %}
+<div class="row mt-4">
+    <div class="col-md-4 mb-3">
+        <div class="card bg-success">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    {{ movements.items | selectattr('movement_type', 'equalto', 'addition') | list | length }}
+                </h5>
+                <p class="card-text">Items Added</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-info">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    {{ movements.items | selectattr('movement_type', 'equalto', 'transfer') | list | length }}
+                </h5>
+                <p class="card-text">Transfers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card bg-warning">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    {{ movements.items | selectattr('movement_type', 'equalto', 'usage') | list | length }}
+                </h5>
+                <p class="card-text">Usage Records</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Export and Filter Options -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    Tools
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary" onclick="exportToCSV()">
+                        <i class="fas fa-download me-1"></i>Export CSV
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="printHistory()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-outline-info" data-bs-toggle="collapse" data-bs-target="#filterOptions">
+                        <i class="fas fa-filter me-1"></i>Advanced Filters
+                    </button>
+                </div>
+
+                <!-- Advanced Filters (Hidden by default) -->
+                <div class="collapse mt-3" id="filterOptions">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <form method="GET" class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="item_filter" class="form-label">Item Name</label>
+                                    <input type="text" class="form-control" id="item_filter" name="item_filter" 
+                                           value="{{ request.args.get('item_filter', '') }}" placeholder="Search items...">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="type_filter" class="form-label">Movement Type</label>
+                                    <select class="form-select" id="type_filter" name="type_filter">
+                                        <option value="">All Types</option>
+                                        <option value="addition" {% if request.args.get('type_filter') == 'addition' %}selected{% endif %}>Addition</option>
+                                        <option value="transfer" {% if request.args.get('type_filter') == 'transfer' %}selected{% endif %}>Transfer</option>
+                                        <option value="usage" {% if request.args.get('type_filter') == 'usage' %}selected{% endif %}>Usage</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="date_from" class="form-label">From Date</label>
+                                    <input type="date" class="form-control" id="date_from" name="date_from" 
+                                           value="{{ request.args.get('date_from', '') }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="date_to" class="form-label">To Date</label>
+                                    <input type="date" class="form-control" id="date_to" name="date_to" 
+                                           value="{{ request.args.get('date_to', '') }}">
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary me-2">Apply Filters</button>
+                                    <a href="{{ url_for('history') }}" class="btn btn-outline-secondary">Clear</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#historyTable').DataTable({
+        responsive: true,
+        pageLength: 25,
+        order: [[0, 'desc']], // Sort by date/time descending
+        columnDefs: [
+            { orderable: false, targets: [-1] } // Disable sorting on Notes column
+        ]
+    });
+});
+
+// Export to CSV
+function exportToCSV() {
+    const table = document.getElementById('historyTable');
+    const rows = table.querySelectorAll('tr');
+    let csvContent = '';
+    
+    // Headers
+    const headers = [];
+    rows[0].querySelectorAll('th').forEach(th => {
+        headers.push('"' + th.textContent.trim() + '"');
+    });
+    csvContent += headers.join(',') + '\n';
+    
+    // Data rows
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const cols = row.querySelectorAll('td');
+        const rowData = [];
+        
+        cols.forEach(col => {
+            // Clean up the cell content
+            let cellText = col.textContent.trim();
+            // Replace line breaks with spaces
+            cellText = cellText.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+            rowData.push('"' + cellText + '"');
+        });
+        
+        csvContent += rowData.join(',') + '\n';
+    }
+    
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'movement_history_' + new Date().toISOString().split('T')[0] + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Print history
+function printHistory() {
+    window.print();
+}
+
+// Auto-set today's date for "To Date" when "From Date" is selected
+document.getElementById('date_from').addEventListener('change', function() {
+    const dateFrom = this.value;
+    const dateTo = document.getElementById('date_to');
+    
+    if (dateFrom && !dateTo.value) {
+        dateTo.value = new Date().toISOString().split('T')[0];
+    }
+});
+</script>
+
+<style media="print">
+/* Print styles */
+.btn, .card-header, .pagination, .navbar, footer, .collapse {
+    display: none !important;
+}
+
+.card {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.table {
+    font-size: 12px;
+}
+
+@page {
+    margin: 0.5in;
+}
+</style>
+{% endblock %}

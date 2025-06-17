@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block title %}Expiry Monitor - Healthcare Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Expiry Monitor
+        </h1>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card bg-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ expired_items|length }}</h4>
+                        <p class="card-text">Expired Items</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ expiring_items|length }}</h4>
+                        <p class="card-text">Expiring Soon (30 days)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expired Items Section -->
+{% if expired_items %}
+<div class="card mb-4">
+    <div class="card-header bg-danger">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-times-circle me-2"></i>
+            Expired Items ({{ expired_items|length }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-danger">
+            <strong><i class="fas fa-exclamation-triangle me-2"></i>Immediate Action Required!</strong>
+            These items have already expired and should be removed from inventory or disposed of according to your facility's protocols.
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped" id="expiredTable">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Quantity</th>
+                        <th>Bag</th>
+                        <th>Expired Date</th>
+                        <th>Days Overdue</th>
+                        <th>Batch</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in expired_items %}
+                    <tr>
+                        <td><strong>{{ item.name }}</strong></td>
+                        <td>
+                            <span class="badge bg-secondary">{{ item.type }}</span>
+                        </td>
+                        <td>{{ item.size or '-' }}</td>
+                        <td>
+                            <span class="badge bg-danger">{{ item.quantity }}</span>
+                        </td>
+                        <td>{{ item.bag.name }}</td>
+                        <td>
+                            <strong class="text-danger">{{ item.expiry_date.strftime('%m/%d/%Y') }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-danger">
+                                {{ (today - item.expiry_date).days }} days
+                            </span>
+                        </td>
+                        <td>{{ item.batch_number or '-' }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-warning" 
+                                        onclick="showDisposeModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
+                                    <i class="fas fa-trash"></i> Dispose
+                                </button>
+                                <button type="button" class="btn btn-outline-info" 
+                                        onclick="showUpdateExpiryModal('{{ item.id }}', '{{ item.name }}', '{{ item.expiry_date.strftime('%Y-%m-%d') }}')">
+                                    <i class="fas fa-edit"></i> Update
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Expiring Soon Section -->
+{% if expiring_items %}
+<div class="card mb-4">
+    <div class="card-header bg-warning">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-clock me-2"></i>
+            Expiring Soon ({{ expiring_items|length }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <strong><i class="fas fa-clock me-2"></i>Attention Required!</strong>
+            These items will expire within the next 30 days. Consider using them soon or updating their expiry dates if applicable.
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped" id="expiringTable">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Quantity</th>
+                        <th>Bag</th>
+                        <th>Expiry Date</th>
+                        <th>Days Left</th>
+                        <th>Batch</th>
+                        <th>Priority</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in expiring_items %}
+                    <tr>
+                        <td><strong>{{ item.name }}</strong></td>
+                        <td>
+                            <span class="badge bg-secondary">{{ item.type }}</span>
+                        </td>
+                        <td>{{ item.size or '-' }}</td>
+                        <td>
+                            <span class="badge bg-warning">{{ item.quantity }}</span>
+                        </td>
+                        <td>{{ item.bag.name }}</td>
+                        <td>{{ item.expiry_date.strftime('%m/%d/%Y') }}</td>
+                        <td>
+                            {% set days_left = (item.expiry_date - today).days %}
+                            <span class="badge bg-{% if days_left <= 7 %}danger{% elif days_left <= 14 %}warning{% else %}info{% endif %}">
+                                {{ days_left }} days
+                            </span>
+                        </td>
+                        <td>{{ item.batch_number or '-' }}</td>
+                        <td>
+                            {% set days_left = (item.expiry_date - today).days %}
+                            {% if days_left <= 7 %}
+                                <span class="badge bg-danger">Critical</span>
+                            {% elif days_left <= 14 %}
+                                <span class="badge bg-warning">High</span>
+                            {% else %}
+                                <span class="badge bg-info">Medium</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if item.bag.name != 'Cabinet' %}
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
+                                    <i class="fas fa-minus"></i> Use
+                                </button>
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-info" 
+                                        onclick="showUpdateExpiryModal('{{ item.id }}', '{{ item.name }}', '{{ item.expiry_date.strftime('%Y-%m-%d') }}')">
+                                    <i class="fas fa-edit"></i> Update
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- No Issues Section -->
+{% if not expired_items and not expiring_items %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+        <h4 class="text-success">All Items Good!</h4>
+        <p class="text-muted">No expired or expiring items found in your inventory.</p>
+        <a href="{{ url_for('inventory') }}" class="btn btn-primary">
+            <i class="fas fa-list me-2"></i>View Inventory
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="btn-group flex-wrap" role="group">
+                    <a href="{{ url_for('inventory') }}?expiry=expired" class="btn btn-outline-danger">
+                        <i class="fas fa-times-circle me-1"></i>View All Expired
+                    </a>
+                    <a href="{{ url_for('inventory') }}?expiry=expiring" class="btn btn-outline-warning">
+                        <i class="fas fa-clock me-1"></i>View All Expiring
+                    </a>
+                    <button type="button" class="btn btn-outline-info" onclick="exportExpiryReport()">
+                        <i class="fas fa-download me-1"></i>Export Report
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="printExpiryReport()">
+                        <i class="fas fa-print me-1"></i>Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dispose Modal -->
+<div class="modal fade" id="disposeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title">Dispose Expired Item</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('usage') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="disposeItemId" name="item_id">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will remove the item from inventory and cannot be undone.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Item</label>
+                        <input type="text" class="form-control" id="disposeItemName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="disposeQuantity" class="form-label">Quantity to Dispose</label>
+                        <input type="number" class="form-control" id="disposeQuantity" name="quantity" min="1" required>
+                        <div class="form-text">Available: <span id="disposeMaxQuantity"></span></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="disposeNotes" class="form-label">Disposal Notes</label>
+                        <textarea class="form-control" id="disposeNotes" name="notes" rows="3" 
+                                  placeholder="Reason for disposal, disposal method, etc." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Dispose Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Expiry Modal -->
+<div class="modal fade" id="updateExpiryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Expiry Date</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> This feature would require backend implementation to update item expiry dates.
+                </div>
+                <p class="text-muted">Item: <strong id="updateItemName"></strong></p>
+                <p class="text-muted">Current Expiry: <strong id="currentExpiry"></strong></p>
+                <div class="mb-3">
+                    <label for="newExpiryDate" class="form-label">New Expiry Date</label>
+                    <input type="date" class="form-control" id="newExpiryDate">
+                </div>
+                <div class="mb-3">
+                    <label for="updateReason" class="form-label">Reason for Update</label>
+                    <textarea class="form-control" id="updateReason" rows="3" 
+                              placeholder="Why is the expiry date being updated?"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateExpiry()">
+                    <i class="fas fa-save me-2"></i>Update Expiry
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Usage Modal (for expiring items) -->
+<div class="modal fade" id="usageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Use Expiring Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('usage') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="usageItemId" name="item_id">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-clock me-2"></i>
+                        This item is expiring soon. Using it now will help prevent waste.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Item</label>
+                        <input type="text" class="form-control" id="usageItemName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="usageQuantity" class="form-label">Quantity to Use</label>
+                        <input type="number" class="form-control" id="usageQuantity" name="quantity" min="1" required>
+                        <div class="form-text">Available: <span id="usageMaxQuantity"></span></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="usageNotes" class="form-label">Usage Notes</label>
+                        <textarea class="form-control" id="usageNotes" name="notes" rows="3" 
+                                  placeholder="Patient, procedure, etc."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-minus me-2"></i>Record Usage
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Initialize DataTables
+$(document).ready(function() {
+    $('#expiredTable').DataTable({
+        responsive: true,
+        pageLength: 25,
+        order: [[6, 'desc']], // Sort by days overdue
+        columnDefs: [
+            { orderable: false, targets: [-1] }
+        ]
+    });
+    
+    $('#expiringTable').DataTable({
+        responsive: true,
+        pageLength: 25,
+        order: [[6, 'asc']], // Sort by days left (ascending)
+        columnDefs: [
+            { orderable: false, targets: [-1] }
+        ]
+    });
+});
+
+// Show dispose modal
+function showDisposeModal(itemId, itemName, maxQuantity) {
+    document.getElementById('disposeItemId').value = itemId;
+    document.getElementById('disposeItemName').value = itemName;
+    document.getElementById('disposeMaxQuantity').textContent = maxQuantity;
+    document.getElementById('disposeQuantity').max = maxQuantity;
+    document.getElementById('disposeQuantity').value = maxQuantity; // Default to dispose all
+    document.getElementById('disposeNotes').value = 'Expired item disposal';
+    
+    const modal = new bootstrap.Modal(document.getElementById('disposeModal'));
+    modal.show();
+}
+
+// Show update expiry modal
+function showUpdateExpiryModal(itemId, itemName, currentExpiry) {
+    document.getElementById('updateItemName').textContent = itemName;
+    document.getElementById('currentExpiry').textContent = currentExpiry;
+    document.getElementById('newExpiryDate').value = '';
+    document.getElementById('updateReason').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('updateExpiryModal'));
+    modal.show();
+}
+
+// Show usage modal
+function showUsageModal(itemId, itemName, maxQuantity) {
+    document.getElementById('usageItemId').value = itemId;
+    document.getElementById('usageItemName').value = itemName;
+    document.getElementById('usageMaxQuantity').textContent = maxQuantity;
+    document.getElementById('usageQuantity').max = maxQuantity;
+    document.getElementById('usageQuantity').value = '';
+    document.getElementById('usageNotes').value = 'Used before expiry';
+    
+    const modal = new bootstrap.Modal(document.getElementById('usageModal'));
+    modal.show();
+}
+
+// Update expiry (placeholder function)
+function updateExpiry() {
+    alert('Expiry update functionality would need to be implemented in the backend.');
+    bootstrap.Modal.getInstance(document.getElementById('updateExpiryModal')).hide();
+}
+
+// Export expiry report
+function exportExpiryReport() {
+    const today = new Date().toISOString().split('T')[0];
+    let csvContent = 'Status,Item Name,Type,Size,Quantity,Bag,Expiry Date,Days Until/Past Expiry,Batch,Priority\n';
+    
+    // Add expired items
+    {% for item in expired_items %}
+    csvContent += 'Expired,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ (today - item.expiry_date).days }},"{{ item.batch_number or '' }}","Critical"\n';
+    {% endfor %}
+    
+    // Add expiring items
+    {% for item in expiring_items %}
+    {% set days_left = (item.expiry_date - today).days %}
+    csvContent += 'Expiring Soon,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ days_left }},"{{ item.batch_number or '' }}","{% if days_left <= 7 %}Critical{% elif days_left <= 14 %}High{% else %}Medium{% endif %}"\n';
+    {% endfor %}
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'expiry_report_' + today + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Print expiry report
+function printExpiryReport() {
+    window.print();
+}
+</script>
+
+<style media="print">
+.btn, .modal, .navbar, footer, .card-header .btn-group {
+    display: none !important;
+}
+
+.card {
+    border: 1px solid #dee2e6 !important;
+    page-break-inside: avoid;
+}
+
+.table {
+    font-size: 12px;
+}
+
+@page {
+    margin: 0.5in;
+    size: landscape;
+}
+</style>
+{% endblock %}

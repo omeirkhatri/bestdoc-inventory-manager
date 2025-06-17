@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory - Healthcare Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-list me-2"></i>
+            Inventory
+        </h1>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-filter me-2"></i>
+            Filters
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ current_filters.search }}" placeholder="Item name, size, batch...">
+            </div>
+            <div class="col-md-2">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="">All Types</option>
+                    {% for item_type in item_types %}
+                    <option value="{{ item_type }}" {% if current_filters.type == item_type %}selected{% endif %}>
+                        {{ item_type }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="bag" class="form-label">Bag</label>
+                <select class="form-select" id="bag" name="bag">
+                    <option value="">All Bags</option>
+                    {% for bag in bags %}
+                    <option value="{{ bag.name }}" {% if current_filters.bag == bag.name %}selected{% endif %}>
+                        {{ bag.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="expiry" class="form-label">Expiry Status</label>
+                <select class="form-select" id="expiry" name="expiry">
+                    <option value="">All Items</option>
+                    <option value="expired" {% if current_filters.expiry == 'expired' %}selected{% endif %}>Expired</option>
+                    <option value="expiring" {% if current_filters.expiry == 'expiring' %}selected{% endif %}>Expiring Soon</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-search me-1"></i>Filter
+                </button>
+                <a href="{{ url_for('inventory') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            Items ({{ items|length }} found)
+        </h5>
+        <div>
+            <a href="{{ url_for('add_items') }}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus me-1"></i>Add Items
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-striped" id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Quantity</th>
+                        <th>Bag</th>
+                        <th>Expiry Date</th>
+                        <th>Batch</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.name }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ item.type }}</span>
+                        </td>
+                        <td>{{ item.size or '-' }}</td>
+                        <td>
+                            <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">
+                                {{ item.quantity }}
+                            </span>
+                        </td>
+                        <td>{{ item.bag.name }}</td>
+                        <td>
+                            {% if item.expiry_date %}
+                                {{ item.expiry_date.strftime('%m/%d/%Y') }}
+                            {% else %}
+                                <span class="text-muted">No expiry</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.batch_number or '-' }}</td>
+                        <td>
+                            {% if item.expiry_status == 'expired' %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>Expired
+                                </span>
+                            {% elif item.expiry_status == 'expiring' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>Expiring Soon
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Good
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if item.bag.name == 'Cabinet' %}
+                                <button type="button" class="btn btn-outline-primary" 
+                                        onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-outline-warning" 
+                                        onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No items found</h5>
+            <p class="text-muted">Try adjusting your filters or <a href="{{ url_for('add_items') }}">add some items</a>.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Transfer Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Transfer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('transfer') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="transferItemId" name="item_id">
+                    <div class="mb-3">
+                        <label class="form-label">Item</label>
+                        <input type="text" class="form-control" id="transferItemName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transferToBag" class="form-label">Transfer to Bag</label>
+                        <select class="form-select" id="transferToBag" name="to_bag_id" required>
+                            <option value="">Select destination...</option>
+                            {% for bag in bags %}
+                                {% if bag.name != 'Cabinet' %}
+                                <option value="{{ bag.id }}">{{ bag.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transferQuantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="transferQuantity" name="quantity" min="1" required>
+                        <div class="form-text">Available: <span id="transferMaxQuantity"></span></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Transfer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Usage Modal -->
+<div class="modal fade" id="usageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Record Usage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('usage') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="usageItemId" name="item_id">
+                    <div class="mb-3">
+                        <label class="form-label">Item</label>
+                        <input type="text" class="form-control" id="usageItemName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="usageQuantity" class="form-label">Quantity Used</label>
+                        <input type="number" class="form-control" id="usageQuantity" name="quantity" min="1" required>
+                        <div class="form-text">Available: <span id="usageMaxQuantity"></span></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="usageNotes" class="form-label">Notes (optional)</label>
+                        <textarea class="form-control" id="usageNotes" name="notes" rows="2" placeholder="Patient, procedure, etc."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Record Usage</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#inventoryTable').DataTable({
+        responsive: true,
+        pageLength: 25,
+        order: [[0, 'asc']],
+        columnDefs: [
+            { orderable: false, targets: [-1] } // Disable sorting on Actions column
+        ]
+    });
+});
+
+// Show transfer modal
+function showTransferModal(itemId, itemName, maxQuantity) {
+    document.getElementById('transferItemId').value = itemId;
+    document.getElementById('transferItemName').value = itemName;
+    document.getElementById('transferMaxQuantity').textContent = maxQuantity;
+    document.getElementById('transferQuantity').max = maxQuantity;
+    document.getElementById('transferQuantity').value = '';
+    document.getElementById('transferToBag').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('transferModal'));
+    modal.show();
+}
+
+// Show usage modal
+function showUsageModal(itemId, itemName, maxQuantity) {
+    document.getElementById('usageItemId').value = itemId;
+    document.getElementById('usageItemName').value = itemName;
+    document.getElementById('usageMaxQuantity').textContent = maxQuantity;
+    document.getElementById('usageQuantity').max = maxQuantity;
+    document.getElementById('usageQuantity').value = '';
+    document.getElementById('usageNotes').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('usageModal'));
+    modal.show();
+}
+
+// Auto-submit filters on change (optional)
+document.querySelectorAll('#search, #type, #bag, #expiry').forEach(element => {
+    element.addEventListener('change', function() {
+        // Uncomment the line below to auto-submit filters
+        // this.form.submit();
+    });
+});
+</script>
+{% endblock %}
