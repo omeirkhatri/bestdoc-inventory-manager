@@ -6,6 +6,7 @@ class Bag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.String(255))
+    location = db.Column(db.String(50), default='bag')  # 'cabinet' or 'bag'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship to items
@@ -16,6 +17,9 @@ class Bag(db.Model):
     
     def get_total_items(self):
         return sum(item.quantity for item in self.items if item.quantity > 0)
+    
+    def is_cabinet(self):
+        return self.location == 'cabinet'
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -69,6 +73,7 @@ class MovementHistory(db.Model):
     notes = db.Column(db.Text)
     expiry_date = db.Column(db.Date)  # For wastage tracking
     batch_number = db.Column(db.String(100))  # For better tracking
+    patient_name = db.Column(db.String(200))  # For usage tracking
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
     def __repr__(self):
