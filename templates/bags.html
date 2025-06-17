@@ -1,127 +1,231 @@
 {% extends "base.html" %}
 
-{% block title %}Bag Management - Healthcare Inventory{% endblock %}
+{% block title %}Storage Management - Healthcare Inventory{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
         <h1 class="mb-4">
-            <i class="fas fa-briefcase me-2"></i>
-            Bag Management
+            <i class="fas fa-warehouse me-2"></i>
+            Storage Management
         </h1>
     </div>
 </div>
 
-<!-- Add New Bag -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-plus me-2"></i>
-            Add New Bag
-        </h5>
-    </div>
-    <div class="card-body">
-        <form method="POST">
-            <input type="hidden" name="action" value="add">
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="add_name" class="form-label">Bag Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="add_name" name="name" required 
-                           placeholder="e.g., Emergency Bag 1, ICU Bag, etc.">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="add_description" class="form-label">Description</label>
-                    <input type="text" class="form-control" id="add_description" name="description" 
-                           placeholder="Optional description of the bag's purpose">
-                </div>
-                <div class="col-md-2 mb-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-success w-100">
-                        <i class="fas fa-plus me-1"></i>Add Bag
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs mb-4" id="storageTabsNav" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="cabinets-tab" data-bs-toggle="tab" data-bs-target="#cabinets" 
+                type="button" role="tab" aria-controls="cabinets" aria-selected="true">
+            <i class="fas fa-archive me-2"></i>Cabinets
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="bags-tab" data-bs-toggle="tab" data-bs-target="#bags" 
+                type="button" role="tab" aria-controls="bags" aria-selected="false">
+            <i class="fas fa-briefcase me-2"></i>Medical Bags
+        </button>
+    </li>
+</ul>
 
-<!-- Existing Bags -->
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-list me-2"></i>
-            Existing Bags ({{ bags|length }})
-        </h5>
+<div class="tab-content" id="storageTabsContent">
+    <!-- Cabinets Tab -->
+    <div class="tab-pane fade show active" id="cabinets" role="tabpanel" aria-labelledby="cabinets-tab">
+        <!-- Add New Cabinet -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    Add New Cabinet
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="action" value="add">
+                    <input type="hidden" name="location" value="cabinet">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="add_cabinet_name" class="form-label">Cabinet Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="add_cabinet_name" name="name" required 
+                                   placeholder="e.g., Main Cabinet, Emergency Cabinet, etc.">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="add_cabinet_description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="add_cabinet_description" name="description" 
+                                   placeholder="Optional description of the cabinet's purpose">
+                        </div>
+                        <div class="col-md-2 mb-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-plus me-1"></i>Add Cabinet
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Existing Cabinets -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-archive me-2"></i>
+                    Existing Cabinets
+                </h5>
+            </div>
+            <div class="card-body">
+                {% set cabinets = bags|selectattr("location", "equalto", "cabinet")|list %}
+                {% if cabinets %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Cabinet Name</th>
+                                <th>Description</th>
+                                <th>Total Items</th>
+                                <th>Created</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bag in cabinets %}
+                            <tr>
+                                <td>
+                                    <strong>{{ bag.name }}</strong>
+                                    <i class="fas fa-archive text-primary ms-2"></i>
+                                </td>
+                                <td>{{ bag.description or 'No description' }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ bag.get_total_items() }} items</span>
+                                </td>
+                                <td>{{ bag.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary" 
+                                                onclick="editCabinet({{ bag.id }}, '{{ bag.name }}', '{{ bag.description or '' }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        {% if bag.get_total_items() == 0 and bag.name != 'Cabinet' %}
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                onclick="deleteCabinet({{ bag.id }}, '{{ bag.name }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-archive fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No cabinets found. Add one above to get started.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        {% if bags %}
-        <div class="table-responsive">
-            <table class="table table-striped" id="bagsTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Total Items</th>
-                        <th>Unique Items</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for bag in bags %}
-                    <tr>
-                        <td>
-                            <strong>{{ bag.name }}</strong>
-                            {% if bag.name == 'Cabinet' %}
-                            <span class="badge bg-primary ms-2">Default</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ bag.description or '-' }}</td>
-                        <td>
-                            <span class="badge bg-{% if bag.get_total_items() == 0 %}secondary{% else %}primary{% endif %}">
-                                {{ bag.get_total_items() }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-info">
-                                {{ bag.items|selectattr('quantity', 'greaterthan', 0)|list|length }}
-                            </span>
-                        </td>
-                        <td>
-                            <small>{{ bag.created_at.strftime('%m/%d/%Y') }}</small>
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="{{ url_for('inventory') }}?bag={{ bag.name }}" class="btn btn-outline-info">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                {% if bag.name != 'Cabinet' %}
-                                <button type="button" class="btn btn-outline-primary" 
-                                        onclick="showEditModal('{{ bag.id }}', '{{ bag.name }}', '{{ bag.description or '' }}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button type="button" class="btn btn-outline-danger" 
-                                        onclick="showDeleteModal('{{ bag.id }}', '{{ bag.name }}', {{ bag.get_total_items() }})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                                {% else %}
-                                <button type="button" class="btn btn-outline-secondary" disabled title="Cannot edit Cabinet">
-                                    <i class="fas fa-lock"></i>
-                                </button>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+    <!-- Medical Bags Tab -->
+    <div class="tab-pane fade" id="bags" role="tabpanel" aria-labelledby="bags-tab">
+        <!-- Add New Bag -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    Add New Medical Bag
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="action" value="add">
+                    <input type="hidden" name="location" value="bag">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="add_bag_name" class="form-label">Bag Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="add_bag_name" name="name" required 
+                                   placeholder="e.g., DOC Bag 1, PHY Bag 1, etc.">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="add_bag_description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="add_bag_description" name="description" 
+                                   placeholder="Optional description of the bag's purpose">
+                        </div>
+                        <div class="col-md-2 mb-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-plus me-1"></i>Add Bag
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
-        {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
-            <h5 class="text-muted">No Bags Found</h5>
-            <p class="text-muted">Start by adding your first medical bag above.</p>
+
+        <!-- Existing Medical Bags -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-briefcase me-2"></i>
+                    Existing Medical Bags
+                </h5>
+            </div>
+            <div class="card-body">
+                {% set medical_bags = bags|selectattr("location", "equalto", "bag")|list %}
+                {% if medical_bags %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Bag Name</th>
+                                <th>Description</th>
+                                <th>Total Items</th>
+                                <th>Created</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bag in medical_bags %}
+                            <tr>
+                                <td>
+                                    <strong>{{ bag.name }}</strong>
+                                    <i class="fas fa-briefcase text-success ms-2"></i>
+                                </td>
+                                <td>{{ bag.description or 'No description' }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ bag.get_total_items() }} items</span>
+                                </td>
+                                <td>{{ bag.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('inventory') }}?bag={{ bag.name }}" class="btn btn-outline-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-primary" 
+                                                onclick="editBag({{ bag.id }}, '{{ bag.name }}', '{{ bag.description or '' }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        {% if bag.get_total_items() == 0 %}
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                onclick="deleteBag({{ bag.id }}, '{{ bag.name }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No medical bags found. Add one above to get started.</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        {% endif %}
     </div>
 </div>
 
@@ -391,44 +495,50 @@ document.getElementById('add_name').addEventListener('focus', function() {
     }
 });
 
-// Real-time name validation
-document.getElementById('add_name').addEventListener('input', function() {
-    const name = this.value.trim().toLowerCase();
-    const existingNames = Array.from(document.querySelectorAll('#bagsTable tbody tr td:first-child strong'))
-                               .map(el => el.textContent.trim().toLowerCase());
+// Cabinet management functions
+function editCabinet(cabinetId, cabinetName, cabinetDescription) {
+    document.getElementById('edit_bag_id').value = cabinetId;
+    document.getElementById('edit_name').value = cabinetName;
+    document.getElementById('edit_description').value = cabinetDescription;
     
-    if (name && existingNames.includes(name)) {
-        this.setCustomValidity('A bag with this name already exists');
-        this.reportValidity();
-    } else {
-        this.setCustomValidity('');
-    }
-});
+    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+    modal.show();
+}
 
-// Edit modal name validation
-document.getElementById('edit_name').addEventListener('input', function() {
-    const name = this.value.trim().toLowerCase();
-    const currentBagId = document.getElementById('edit_bag_id').value;
-    
-    // Get existing names excluding current bag
-    const existingNames = [];
-    document.querySelectorAll('#bagsTable tbody tr').forEach(row => {
-        const editBtn = row.querySelector('button[onclick*="showEditModal"]');
-        if (editBtn) {
-            const bagId = editBtn.getAttribute('onclick').match(/'(\d+)'/)[1];
-            if (bagId !== currentBagId) {
-                const bagName = row.querySelector('td:first-child strong').textContent.trim().toLowerCase();
-                existingNames.push(bagName);
-            }
-        }
-    });
-    
-    if (name && existingNames.includes(name)) {
-        this.setCustomValidity('A bag with this name already exists');
-        this.reportValidity();
-    } else {
-        this.setCustomValidity('');
+function deleteCabinet(cabinetId, cabinetName) {
+    if (confirm(`Are you sure you want to delete the cabinet "${cabinetName}"?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="bag_id" value="${cabinetId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
     }
-});
+}
+
+// Medical bag management functions
+function editBag(bagId, bagName, bagDescription) {
+    document.getElementById('edit_bag_id').value = bagId;
+    document.getElementById('edit_name').value = bagName;
+    document.getElementById('edit_description').value = bagDescription;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+    modal.show();
+}
+
+function deleteBag(bagId, bagName) {
+    if (confirm(`Are you sure you want to delete the medical bag "${bagName}"?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="bag_id" value="${bagId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
 {% endblock %}

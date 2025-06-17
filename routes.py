@@ -559,19 +559,22 @@ def handle_bag_management():
         if action == 'add':
             name = request.form.get('name', '').strip()
             description = request.form.get('description', '').strip()
+            location = request.form.get('location', 'bag')  # Default to 'bag' if not specified
             
             if not name:
-                flash("Bag name is required", "danger")
+                flash("Name is required", "danger")
                 return redirect(url_for('bags'))
             
             if Bag.query.filter_by(name=name).first():
-                flash("Bag with this name already exists", "danger")
+                flash("A storage location with this name already exists", "danger")
                 return redirect(url_for('bags'))
             
-            bag = Bag(name=name, description=description)
+            bag = Bag(name=name, description=description, location=location)
             db.session.add(bag)
             db.session.commit()
-            flash(f"Successfully created bag: {name}", "success")
+            
+            storage_type = "cabinet" if location == "cabinet" else "medical bag"
+            flash(f"Successfully created {storage_type}: {name}", "success")
             
         elif action == 'edit':
             bag_id = request.form.get('bag_id')
@@ -579,39 +582,44 @@ def handle_bag_management():
             description = request.form.get('description', '').strip()
             
             if not bag_id or not name:
-                flash("Bag ID and name are required", "danger")
+                flash("ID and name are required", "danger")
                 return redirect(url_for('bags'))
             
             bag = Bag.query.get_or_404(bag_id)
             
-            # Check if name is taken by another bag
+            # Check if name is taken by another storage location
             existing = Bag.query.filter_by(name=name).first()
             if existing and existing.id != bag.id:
-                flash("Bag with this name already exists", "danger")
+                flash("A storage location with this name already exists", "danger")
                 return redirect(url_for('bags'))
             
             bag.name = name
             bag.description = description
             db.session.commit()
-            flash(f"Successfully updated bag: {name}", "success")
+            
+            storage_type = "cabinet" if bag.location == "cabinet" else "medical bag"
+            flash(f"Successfully updated {storage_type}: {name}", "success")
             
         elif action == 'delete':
             bag_id = request.form.get('bag_id')
             bag = Bag.query.get_or_404(bag_id)
             
-            # Don't allow deleting Cabinet
+            # Don't allow deleting the default Cabinet
             if bag.name == 'Cabinet':
-                flash("Cannot delete the Cabinet bag", "danger")
+                flash("Cannot delete the default Cabinet", "danger")
                 return redirect(url_for('bags'))
             
-            # Check if bag has items
-            if bag.items:
-                flash("Cannot delete bag with items. Please transfer items first.", "danger")
+            # Check if storage location has items
+            if bag.get_total_items() > 0:
+                storage_type = "cabinet" if bag.location == "cabinet" else "medical bag"
+                flash(f"Cannot delete {storage_type} with items. Please transfer items first.", "danger")
                 return redirect(url_for('bags'))
             
+            storage_type = "cabinet" if bag.location == "cabinet" else "medical bag"
+            storage_name = bag.name
             db.session.delete(bag)
             db.session.commit()
-            flash("Successfully deleted bag", "success")
+            flash(f"Successfully deleted {storage_type}: {storage_name}", "success")
     
     except Exception as e:
         db.session.rollback()
