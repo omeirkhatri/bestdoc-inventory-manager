@@ -144,7 +144,6 @@ def handle_csv_upload(file):
                         size=row.get('size', '').strip() or None,
                         quantity=int(row['quantity']),
                         expiry_date=expiry_date,
-                        batch_number=row.get('batch_number', '').strip() or None,
                         bag_id=bag.id
                     )
                     
