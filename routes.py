@@ -442,7 +442,37 @@ def handle_usage():
 @app.route('/history')
 def history():
     page = request.args.get('page', 1, type=int)
-    movements = MovementHistory.query.order_by(MovementHistory.timestamp.desc()).paginate(
+    movement_filter = request.args.get('type_filter', '')
+    item_filter = request.args.get('item_filter', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    
+    query = MovementHistory.query
+    
+    # Apply filters
+    if movement_filter:
+        query = query.filter(MovementHistory.movement_type == movement_filter)
+    
+    if item_filter:
+        query = query.filter(MovementHistory.item_name.ilike(f'%{item_filter}%'))
+    
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+            query = query.filter(MovementHistory.timestamp >= from_date)
+        except ValueError:
+            flash("Invalid from date format", "warning")
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+            # Add one day to include the entire to_date
+            to_date = datetime.combine(to_date, datetime.max.time())
+            query = query.filter(MovementHistory.timestamp <= to_date)
+        except ValueError:
+            flash("Invalid to date format", "warning")
+    
+    movements = query.order_by(MovementHistory.timestamp.desc()).paginate(
         page=page, per_page=50, error_out=False
     )
     return render_template('history.html', movements=movements)
@@ -550,6 +580,114 @@ def handle_bag_management():
         flash(f"Error: {str(e)}", "danger")
     
     return redirect(url_for('bags'))
+
+@app.route('/wastage', methods=['GET', 'POST'])
+def wastage():
+    if request.method == 'POST':
+        return handle_wastage()
+    
+    # Get expired items for disposal
+    today = date.today()
+    expired_items = Item.query.filter(
+        and_(
+            Item.expiry_date.isnot(None),
+            Item.expiry_date < today,
+            Item.quantity > 0
+        )
+    ).order_by(Item.expiry_date).all()
+    
+    # Get wastage history
+    wastage_history = MovementHistory.query.filter_by(movement_type='wastage').order_by(
+        MovementHistory.timestamp.desc()
+    ).limit(10).all()
+    
+    return render_template('wastage.html', expired_items=expired_items, wastage_history=wastage_history)
+
+def handle_wastage():
+    try:
+        item_id = request.form.get('item_id')
+        quantity_wasted = int(request.form.get('quantity', 0))
+        reason = request.form.get('reason', '')
+        
+        if not item_id or quantity_wasted <= 0:
+            flash("Please provide valid wastage details", "danger")
+            return redirect(url_for('wastage'))
+        
+        item = Item.query.get_or_404(item_id)
+        
+        if quantity_wasted > item.quantity:
+            flash("Cannot waste more items than available", "danger")
+            return redirect(url_for('wastage'))
+        
+        # Reduce quantity
+        item.quantity -= quantity_wasted
+        item.updated_at = datetime.utcnow()
+        
+        # Log the wastage
+        movement = MovementHistory(
+            item_name=item.name,
+            item_type=item.type,
+            item_size=item.size,
+            quantity=quantity_wasted,
+            movement_type='wastage',
+            from_bag=item.bag.name,
+            notes=reason or f"Wastage of {quantity_wasted} units",
+            expiry_date=item.expiry_date,
+            batch_number=item.batch_number
+        )
+        db.session.add(movement)
+        
+        db.session.commit()
+        flash(f"Successfully recorded wastage of {quantity_wasted} units of {item.name}", "success")
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error recording wastage: {str(e)}", "danger")
+    
+    return redirect(url_for('wastage'))
+
+@app.route('/api/items/search')
+def api_search_items():
+    """API endpoint for item name autocomplete"""
+    query = request.args.get('q', '').strip()
+    if not query or len(query) < 2:
+        return jsonify([])
+    
+    # Search in current inventory
+    items = db.session.query(Item.name, Item.type, Item.size).filter(
+        Item.name.ilike(f'%{query}%')
+    ).distinct().limit(10).all()
+    
+    # Search in movement history for historical items
+    history_items = db.session.query(MovementHistory.item_name, MovementHistory.item_type, MovementHistory.item_size).filter(
+        MovementHistory.item_name.ilike(f'%{query}%')
+    ).distinct().limit(10).all()
+    
+    # Combine and deduplicate results
+    results = []
+    seen = set()
+    
+    for item in items:
+        key = (item.name, item.type, item.size)
+        if key not in seen:
+            results.append({
+                'name': item.name,
+                'type': item.type,
+                'size': item.size or ''
+            })
+            seen.add(key)
+    
+    for item in history_items:
+        key = (item.item_name, item.item_type, item.item_size)
+        if key not in seen:
+            results.append({
+                'name': item.item_name,
+                'type': item.item_type,
+                'size': item.item_size or ''
+            })
+            seen.add(key)
+    
+    return jsonify(results[:10])
 
 @app.errorhandler(404)
 def not_found_error(error):

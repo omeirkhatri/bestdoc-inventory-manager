@@ -63,10 +63,12 @@ class MovementHistory(db.Model):
     item_type = db.Column(db.String(100), nullable=False)
     item_size = db.Column(db.String(50))
     quantity = db.Column(db.Integer, nullable=False)
-    movement_type = db.Column(db.String(50), nullable=False)  # 'transfer', 'usage', 'addition'
+    movement_type = db.Column(db.String(50), nullable=False)  # 'transfer', 'usage', 'addition', 'wastage'
     from_bag = db.Column(db.String(100))
     to_bag = db.Column(db.String(100))
     notes = db.Column(db.Text)
+    expiry_date = db.Column(db.Date)  # For wastage tracking
+    batch_number = db.Column(db.String(100))  # For better tracking
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
     def __repr__(self):

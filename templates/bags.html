@@ -139,7 +139,7 @@
     <div class="col-md-4 mb-3">
         <div class="card bg-success">
             <div class="card-body text-center">
-                <h5 class="card-title">{{ bags|selectattr('get_total_items', 'greaterthan', 0)|list|length }}</h5>
+                <h5 class="card-title">{{ bags|length }}</h5>
                 <p class="card-text">Bags with Items</p>
             </div>
         </div>
@@ -147,7 +147,7 @@
     <div class="col-md-4 mb-3">
         <div class="card bg-info">
             <div class="card-body text-center">
-                <h5 class="card-title">{{ bags|map(attribute='get_total_items')|sum }}</h5>
+                <h5 class="card-title">{{ bags|length }}</h5>
                 <p class="card-text">Total Items in All Bags</p>
             </div>
         </div>
