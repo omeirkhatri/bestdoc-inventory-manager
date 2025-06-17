@@ -50,7 +50,9 @@
                             <div class="row">
                                 <div class="col-md-3 mb-2">
                                     <label class="form-label">Item Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="name" required>
+                                    <input type="text" class="form-control item-name-input" name="name" required 
+                                           autocomplete="off" placeholder="Start typing item name...">
+                                    <div class="dropdown-menu item-suggestions" style="display: none;"></div>
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label class="form-label">Type <span class="text-danger">*</span></label>
@@ -71,12 +73,24 @@
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label class="form-label">Expiry Date</label>
-                                    <input type="date" class="form-control" name="expiry_date">
+                                    <div class="input-group">
+                                        <input type="date" class="form-control" name="expiry_date">
+                                        <button type="button" class="btn btn-outline-secondary no-expiry-btn" 
+                                                title="No expiry date">
+                                            <i class="fas fa-infinity"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="col-md-1 mb-2 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-danger btn-sm remove-row" style="display: none;">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <div class="btn-group-vertical w-100">
+                                        <button type="button" class="btn btn-outline-success btn-sm clone-item-btn" 
+                                                title="Clone this item for quick entry">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" style="display: none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
@@ -163,26 +177,203 @@
 
 {% block extra_scripts %}
 <script>
-// Add new row functionality
-document.getElementById('addRowBtn').addEventListener('click', function() {
-    const itemRows = document.getElementById('itemRows');
-    const firstRow = itemRows.querySelector('.item-row');
-    const newRow = firstRow.cloneNode(true);
-    
-    // Clear all input values
-    newRow.querySelectorAll('input, select').forEach(input => {
-        if (input.type === 'checkbox' || input.type === 'radio') {
-            input.checked = false;
-        } else {
-            input.value = '';
+let itemSuggestions = [];
+
+// Initialize autocomplete for item names
+function initializeAutocomplete() {
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('item-name-input')) {
+            handleItemNameInput(e.target);
         }
     });
+    
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.item-name-input') && !e.target.closest('.item-suggestions')) {
+            hideAllSuggestions();
+        }
+    });
+}
+
+function handleItemNameInput(input) {
+    const query = input.value.trim();
+    const suggestionsDiv = input.nextElementSibling;
+    
+    if (query.length < 2) {
+        hideSuggestions(suggestionsDiv);
+        return;
+    }
+    
+    // Debounced search
+    clearTimeout(input.searchTimeout);
+    input.searchTimeout = setTimeout(() => {
+        searchItems(query, suggestionsDiv, input);
+    }, 300);
+}
+
+function searchItems(query, suggestionsDiv, input) {
+    fetch(`/api/items/search?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(items => {
+            showSuggestions(items, suggestionsDiv, input);
+        })
+        .catch(error => {
+            console.error('Error searching items:', error);
+            hideSuggestions(suggestionsDiv);
+        });
+}
+
+function showSuggestions(items, suggestionsDiv, input) {
+    if (items.length === 0) {
+        hideSuggestions(suggestionsDiv);
+        return;
+    }
+    
+    suggestionsDiv.innerHTML = '';
+    items.forEach(item => {
+        const suggestionItem = document.createElement('a');
+        suggestionItem.className = 'dropdown-item';
+        suggestionItem.href = '#';
+        suggestionItem.innerHTML = `
+            <div>
+                <strong>${item.name}</strong>
+                <br><small class="text-muted">${item.type}${item.size ? ' - ' + item.size : ''}</small>
+            </div>
+        `;
+        
+        suggestionItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            selectItem(item, input);
+            hideSuggestions(suggestionsDiv);
+        });
+        
+        suggestionsDiv.appendChild(suggestionItem);
+    });
+    
+    suggestionsDiv.style.display = 'block';
+    suggestionsDiv.style.position = 'absolute';
+    suggestionsDiv.style.zIndex = '1000';
+    suggestionsDiv.style.width = input.offsetWidth + 'px';
+}
+
+function selectItem(item, input) {
+    const row = input.closest('.item-row');
+    
+    // Fill in the item details
+    input.value = item.name;
+    
+    const typeSelect = row.querySelector('select[name="type"]');
+    if (typeSelect && item.type) {
+        typeSelect.value = item.type;
+    }
+    
+    const sizeInput = row.querySelector('input[name="size"]');
+    if (sizeInput && item.size) {
+        sizeInput.value = item.size;
+    }
+    
+    // Focus on quantity field
+    const quantityInput = row.querySelector('input[name="quantity"]');
+    if (quantityInput) {
+        quantityInput.focus();
+    }
+}
+
+function hideSuggestions(suggestionsDiv) {
+    suggestionsDiv.style.display = 'none';
+}
+
+function hideAllSuggestions() {
+    document.querySelectorAll('.item-suggestions').forEach(div => {
+        hideSuggestions(div);
+    });
+}
+
+// Add new row functionality
+document.getElementById('addRowBtn').addEventListener('click', function() {
+    addNewRow();
+});
+
+function addNewRow(templateRow = null) {
+    const itemRows = document.getElementById('itemRows');
+    const sourceRow = templateRow || itemRows.querySelector('.item-row');
+    const newRow = sourceRow.cloneNode(true);
+    
+    // Clear all input values unless it's a clone
+    if (!templateRow) {
+        newRow.querySelectorAll('input, select').forEach(input => {
+            if (input.type === 'checkbox' || input.type === 'radio') {
+                input.checked = false;
+            } else {
+                input.value = '';
+            }
+        });
+    } else {
+        // If cloning, clear only quantity and expiry date
+        const quantityInput = newRow.querySelector('input[name="quantity"]');
+        const expiryInput = newRow.querySelector('input[name="expiry_date"]');
+        if (quantityInput) quantityInput.value = '';
+        if (expiryInput) expiryInput.value = '';
+    }
     
     // Show remove button
     newRow.querySelector('.remove-row').style.display = 'block';
     
+    // Hide suggestions for the new row
+    const suggestionsDiv = newRow.querySelector('.item-suggestions');
+    if (suggestionsDiv) {
+        hideSuggestions(suggestionsDiv);
+    }
+    
     itemRows.appendChild(newRow);
     updateRemoveButtons();
+    
+    // Focus on the appropriate field
+    if (templateRow) {
+        const quantityInput = newRow.querySelector('input[name="quantity"]');
+        if (quantityInput) quantityInput.focus();
+    } else {
+        const nameInput = newRow.querySelector('input[name="name"]');
+        if (nameInput) nameInput.focus();
+    }
+}
+
+// Clone item functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.clone-item-btn')) {
+        const row = e.target.closest('.item-row');
+        const nameInput = row.querySelector('input[name="name"]');
+        const typeSelect = row.querySelector('select[name="type"]');
+        
+        if (nameInput.value.trim() && typeSelect.value) {
+            addNewRow(row);
+        } else {
+            alert('Please fill in the item name and type before cloning');
+        }
+    }
+});
+
+// No expiry date functionality
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.no-expiry-btn')) {
+        const button = e.target.closest('.no-expiry-btn');
+        const expiryInput = button.parentElement.querySelector('input[name="expiry_date"]');
+        
+        if (expiryInput.disabled) {
+            // Re-enable expiry date
+            expiryInput.disabled = false;
+            expiryInput.value = '';
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+            button.title = 'No expiry date';
+        } else {
+            // Disable expiry date
+            expiryInput.disabled = true;
+            expiryInput.value = '';
+            button.classList.remove('btn-outline-secondary');
+            button.classList.add('btn-success');
+            button.title = 'Expiry date disabled';
+        }
+    }
 });
 
 // Remove row functionality
