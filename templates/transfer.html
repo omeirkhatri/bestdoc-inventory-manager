@@ -96,11 +96,12 @@
                     <div class="mb-3">
                         <label for="to_bag_id" class="form-label">Destination Bag <span class="text-danger">*</span></label>
                         <select class="form-select" id="to_bag_id" name="to_bag_id" required>
-                            <option value="">Select destination bag...</option>
+                            <option value="">Select destination...</option>
+                            {% if cabinet %}
+                            <option value="{{ cabinet.id }}">{{ cabinet.name }} (Cabinet)</option>
+                            {% endif %}
                             {% for bag in bags %}
-                                {% if bag.name != 'Cabinet' %}
-                                <option value="{{ bag.id }}">{{ bag.name }}</option>
-                                {% endif %}
+                            <option value="{{ bag.id }}">{{ bag.name }}</option>
                             {% endfor %}
                         </select>
                     </div>

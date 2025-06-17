@@ -417,12 +417,14 @@ def usage():
     if request.method == 'POST':
         return handle_usage()
     
-    bags = Bag.query.all()
+    # Only show medical bags for usage (not cabinet)
+    bags = Bag.query.filter_by(location='bag').all()
     bag_items = {}
     
     for bag in bags:
-        if bag.name != 'Cabinet':  # Only show non-cabinet bags for usage
-            bag_items[bag.name] = Item.query.filter_by(bag_id=bag.id).filter(Item.quantity > 0).order_by(Item.name).all()
+        items = Item.query.filter_by(bag_id=bag.id).filter(Item.quantity > 0).order_by(Item.name).all()
+        if items:  # Only include bags that have items
+            bag_items[bag.name] = items
     
     return render_template('usage.html', bags=bags, bag_items=bag_items)
 
