@@ -208,42 +208,47 @@ def handle_manual_addition():
         items_added = 0
         
         for i in range(len(names)):
-            if names[i].strip() and types[i].strip() and quantities[i].strip():
-                # Parse expiry date
-                expiry_date = None
-                if expiry_dates[i].strip():
-                    try:
-                        expiry_date = datetime.strptime(expiry_dates[i], '%Y-%m-%d').date()
-                    except ValueError:
-                        flash(f"Invalid expiry date format for item {i+1}", "warning")
-                        continue
-                
-                # Create item
-                item = Item(
-                    name=names[i].strip(),
-                    type=types[i].strip(),
-                    size=sizes[i].strip() if sizes[i].strip() else None,
-                    quantity=int(quantities[i]),
-                    expiry_date=expiry_date,
-                    batch_number=batch_numbers[i].strip() if batch_numbers[i].strip() else None,
-                    bag_id=bag.id
-                )
-                
-                db.session.add(item)
-                
-                # Log the addition
-                movement = MovementHistory(
-                    item_name=item.name,
-                    item_type=item.type,
-                    item_size=item.size,
-                    quantity=item.quantity,
-                    movement_type='addition',
-                    to_bag=bag.name,
-                    notes="Added manually"
-                )
-                db.session.add(movement)
-                
-                items_added += 1
+            if i < len(names) and i < len(types) and i < len(quantities):
+                if names[i].strip() and types[i].strip() and quantities[i].strip():
+                    # Parse expiry date
+                    expiry_date = None
+                    if i < len(expiry_dates) and expiry_dates[i].strip():
+                        try:
+                            expiry_date = datetime.strptime(expiry_dates[i], '%Y-%m-%d').date()
+                        except ValueError:
+                            flash(f"Invalid expiry date format for item {i+1}", "warning")
+                            continue
+                    
+                    # Get size and batch number safely
+                    size = sizes[i].strip() if i < len(sizes) and sizes[i].strip() else None
+                    batch_number = batch_numbers[i].strip() if i < len(batch_numbers) and batch_numbers[i].strip() else None
+                    
+                    # Create item
+                    item = Item(
+                        name=names[i].strip(),
+                        type=types[i].strip(),
+                        size=size,
+                        quantity=int(quantities[i]),
+                        expiry_date=expiry_date,
+                        batch_number=batch_number,
+                        bag_id=bag.id
+                    )
+                    
+                    db.session.add(item)
+                    
+                    # Log the addition
+                    movement = MovementHistory(
+                        item_name=item.name,
+                        item_type=item.type,
+                        item_size=item.size,
+                        quantity=item.quantity,
+                        movement_type='addition',
+                        to_bag=bag.name,
+                        notes="Added manually"
+                    )
+                    db.session.add(movement)
+                    
+                    items_added += 1
         
         db.session.commit()
         flash(f"Successfully added {items_added} items", "success")
