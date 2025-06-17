@@ -197,7 +197,7 @@ def handle_manual_addition():
         sizes = request.form.getlist('size')
         quantities = request.form.getlist('quantity')
         expiry_dates = request.form.getlist('expiry_date')
-        batch_numbers = request.form.getlist('batch_number')
+
         bag_id = request.form.get('bag_id')
         
         if not bag_id:
@@ -219,9 +219,8 @@ def handle_manual_addition():
                             flash(f"Invalid expiry date format for item {i+1}", "warning")
                             continue
                     
-                    # Get size and batch number safely
+                    # Get size safely
                     size = sizes[i].strip() if i < len(sizes) and sizes[i].strip() else None
-                    batch_number = batch_numbers[i].strip() if i < len(batch_numbers) and batch_numbers[i].strip() else None
                     
                     # Create item
                     item = Item(
@@ -230,7 +229,6 @@ def handle_manual_addition():
                         size=size,
                         quantity=int(quantities[i]),
                         expiry_date=expiry_date,
-                        batch_number=batch_number,
                         bag_id=bag.id
                     )
                     
@@ -276,7 +274,7 @@ def inventory():
             or_(
                 Item.name.ilike(f'%{search}%'),
                 Item.size.ilike(f'%{search}%'),
-                Item.batch_number.ilike(f'%{search}%')
+                Item.type.ilike(f'%{search}%')
             )
         )
     
@@ -386,7 +384,6 @@ def handle_transfer():
                 size=item.size,
                 quantity=quantity,
                 expiry_date=item.expiry_date,
-                batch_number=item.batch_number,
                 bag_id=to_bag_id
             )
             db.session.add(new_item)
@@ -468,8 +465,7 @@ def handle_usage():
             from_bag=item.bag.name,
             patient_name=patient_name,
             notes=notes or f"Used {quantity_used} units for patient {patient_name}",
-            expiry_date=item.expiry_date,
-            batch_number=item.batch_number
+            expiry_date=item.expiry_date
         )
         db.session.add(movement)
         
@@ -675,8 +671,7 @@ def handle_wastage():
             movement_type='wastage',
             from_bag=item.bag.name,
             notes=reason or f"Wastage of {quantity_wasted} units",
-            expiry_date=item.expiry_date,
-            batch_number=item.batch_number
+            expiry_date=item.expiry_date
         )
         db.session.add(movement)
         

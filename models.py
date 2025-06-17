@@ -28,7 +28,7 @@ class Item(db.Model):
     size = db.Column(db.String(50))  # 22G, 5ml, etc.
     quantity = db.Column(db.Integer, nullable=False, default=0)
     expiry_date = db.Column(db.Date)  # Optional
-    batch_number = db.Column(db.String(100))  # For tracking batches
+    date_added = db.Column(db.DateTime, default=datetime.utcnow)  # When item was added
     
     # Foreign key to bag
     bag_id = db.Column(db.Integer, db.ForeignKey('bag.id'), nullable=False)
@@ -72,7 +72,7 @@ class MovementHistory(db.Model):
     to_bag = db.Column(db.String(100))
     notes = db.Column(db.Text)
     expiry_date = db.Column(db.Date)  # For wastage tracking
-    batch_number = db.Column(db.String(100))  # For better tracking
+    date_added = db.Column(db.DateTime, default=datetime.utcnow)  # When movement occurred
     patient_name = db.Column(db.String(200))  # For usage tracking
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
