@@ -315,15 +315,27 @@ def transfer():
     if request.method == 'POST':
         return handle_transfer()
     
-    bags = Bag.query.all()
-    cabinet = Bag.query.filter_by(name='Cabinet').first()
-    cabinet_items = []
+    # Get cabinet and bags
+    cabinet = Bag.query.filter_by(location='cabinet').first()
+    bags = Bag.query.filter_by(location='bag').all()
     
+    # Get cabinet items
+    cabinet_items = []
     if cabinet:
-        # Group items by name, type, size for FIFO display
         cabinet_items = Item.query.filter_by(bag_id=cabinet.id).filter(Item.quantity > 0).order_by(Item.name, Item.expiry_date).all()
     
-    return render_template('transfer.html', bags=bags, cabinet_items=cabinet_items)
+    # Get items in medical bags for potential return to cabinet
+    bag_items = {}
+    for bag in bags:
+        items = Item.query.filter_by(bag_id=bag.id).filter(Item.quantity > 0).order_by(Item.name).all()
+        if items:
+            bag_items[bag.name] = items
+    
+    return render_template('transfer.html', 
+                         bags=bags, 
+                         cabinet=cabinet,
+                         cabinet_items=cabinet_items, 
+                         bag_items=bag_items)
 
 def handle_transfer():
     try:
