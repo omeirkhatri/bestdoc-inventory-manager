@@ -140,9 +140,16 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="patient_name" class="form-label">Patient Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="patient_name" name="patient_name" required 
+                               placeholder="Enter patient name or ID">
+                        <div class="form-text">Required for usage tracking and compliance</div>
+                    </div>
+
+                    <div class="mb-3">
                         <label for="notes" class="form-label">Notes</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3" 
-                                  placeholder="Patient name, procedure, reason for use, etc."></textarea>
+                                  placeholder="Procedure details, treatment notes, etc."></textarea>
                         <div class="form-text">Optional: Add details about the usage</div>
                     </div>
 

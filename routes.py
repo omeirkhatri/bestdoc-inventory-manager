@@ -13,10 +13,15 @@ def dashboard():
     # Initialize default types if needed
     init_default_types()
     
-    # Get dashboard statistics
-    total_items = db.session.query(func.sum(Item.quantity)).scalar() or 0
-    total_unique_items = Item.query.count()
-    total_bags = Bag.query.count()
+    # Get cabinet and bag inventories separately
+    cabinet = Bag.query.filter_by(location='cabinet').first()
+    bags = Bag.query.filter_by(location='bag').all()
+    
+    # Get summary statistics
+    cabinet_items = db.session.query(func.sum(Item.quantity)).join(Bag).filter(Bag.location == 'cabinet').scalar() or 0
+    bag_items = db.session.query(func.sum(Item.quantity)).join(Bag).filter(Bag.location == 'bag').scalar() or 0
+    total_items = cabinet_items + bag_items
+    total_bags = len(bags)
     
     # Items expiring soon (within 30 days)
     thirty_days_from_now = date.today() + timedelta(days=30)
@@ -38,10 +43,17 @@ def dashboard():
         )
     ).all()
     
-    # Low stock items (quantity <= 5)
-    low_stock_items = Item.query.filter(
-        and_(Item.quantity <= 5, Item.quantity > 0)
+    # Low stock items in cabinet (quantity <= 10)
+    low_stock_cabinet = Item.query.join(Bag).filter(
+        and_(
+            Bag.location == 'cabinet',
+            Item.quantity <= 10,
+            Item.quantity > 0
+        )
     ).all()
+    
+    # Empty bags
+    empty_bags = [bag for bag in bags if bag.get_total_items() == 0]
     
     # Recent movements
     recent_movements = MovementHistory.query.order_by(
@@ -50,7 +62,7 @@ def dashboard():
     
     # Bag statistics
     bags_with_counts = []
-    for bag in Bag.query.all():
+    for bag in bags:
         item_count = sum(item.quantity for item in bag.items if item.quantity > 0)
         bags_with_counts.append({
             'name': bag.name,
@@ -60,11 +72,15 @@ def dashboard():
     
     return render_template('dashboard.html',
                          total_items=total_items,
-                         total_unique_items=total_unique_items,
+                         cabinet_items=cabinet_items,
+                         bag_items=bag_items,
+                         cabinet=cabinet,
+                         bags=bags,
                          total_bags=total_bags,
                          expiring_items=expiring_items,
                          expired_items=expired_items,
-                         low_stock_items=low_stock_items,
+                         low_stock_cabinet=low_stock_cabinet,
+                         empty_bags=empty_bags,
                          recent_movements=recent_movements,
                          bags_with_counts=bags_with_counts)
 
@@ -402,10 +418,15 @@ def handle_usage():
     try:
         item_id = request.form.get('item_id')
         quantity_used = int(request.form.get('quantity', 0))
+        patient_name = request.form.get('patient_name', '').strip()
         notes = request.form.get('notes', '')
         
         if not item_id or quantity_used <= 0:
             flash("Please provide valid usage details", "danger")
+            return redirect(url_for('usage'))
+        
+        if not patient_name:
+            flash("Patient name is required for usage tracking", "danger")
             return redirect(url_for('usage'))
         
         item = Item.query.get_or_404(item_id)
@@ -418,7 +439,7 @@ def handle_usage():
         item.quantity -= quantity_used
         item.updated_at = datetime.utcnow()
         
-        # Log the usage
+        # Log the usage with patient information
         movement = MovementHistory(
             item_name=item.name,
             item_type=item.type,
@@ -426,7 +447,10 @@ def handle_usage():
             quantity=quantity_used,
             movement_type='usage',
             from_bag=item.bag.name,
-            notes=notes or f"Used {quantity_used} units"
+            patient_name=patient_name,
+            notes=notes or f"Used {quantity_used} units for patient {patient_name}",
+            expiry_date=item.expiry_date,
+            batch_number=item.batch_number
         )
         db.session.add(movement)
         
