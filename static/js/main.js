@@ -497,6 +497,7 @@ const ProductManager = {
         // Add event listeners for item name inputs
         document.querySelectorAll('.item-name-input').forEach(input => {
             this.attachProductChecker(input);
+            this.attachItemSearch(input);
         });
         
         // Handle dynamic row addition
@@ -516,6 +517,122 @@ const ProductManager = {
                 this.removeItemRow(e.target.closest('.item-row'));
             }
         });
+    },
+
+    attachItemSearch: function(input) {
+        if (!input) return;
+        
+        const suggestionsContainer = input.nextElementSibling;
+        if (!suggestionsContainer || !suggestionsContainer.classList.contains('item-suggestions')) {
+            return;
+        }
+        
+        let debounceTimer;
+        
+        input.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            const query = e.target.value.trim();
+            
+            if (query.length < 2) {
+                this.hideSuggestions(suggestionsContainer);
+                return;
+            }
+            
+            debounceTimer = setTimeout(() => {
+                this.searchItems(input, query);
+            }, 300);
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                this.hideSuggestions(suggestionsContainer);
+            }
+        });
+    },
+
+    searchItems: function(input, query) {
+        const suggestionsContainer = input.nextElementSibling;
+        
+        fetch(`/api/search_items?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                this.showSuggestions(input, suggestionsContainer, data);
+            })
+            .catch(error => {
+                console.warn('Error searching items:', error);
+                this.hideSuggestions(suggestionsContainer);
+            });
+    },
+
+    showSuggestions: function(input, container, items) {
+        if (!items || items.length === 0) {
+            this.hideSuggestions(container);
+            return;
+        }
+        
+        const html = items.map(item => `
+            <button type="button" class="dropdown-item suggestion-item" 
+                    data-name="${item.name}" 
+                    data-type="${item.type}" 
+                    data-brand="${item.brand || ''}" 
+                    data-size="${item.size || ''}">
+                <div class="fw-bold">${item.name}</div>
+                <small class="text-muted">
+                    ${item.type}${item.brand ? ' - ' + item.brand : ''}${item.size ? ' (' + item.size + ')' : ''}
+                </small>
+            </button>
+        `).join('');
+        
+        container.innerHTML = html;
+        container.style.display = 'block';
+        
+        // Add click handlers to suggestions
+        container.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                this.selectSuggestion(input, e.target.closest('.suggestion-item'));
+            });
+        });
+    },
+
+    selectSuggestion: function(input, suggestionItem) {
+        const row = input.closest('.item-row');
+        const name = suggestionItem.getAttribute('data-name');
+        const type = suggestionItem.getAttribute('data-type');
+        const brand = suggestionItem.getAttribute('data-brand');
+        const size = suggestionItem.getAttribute('data-size');
+        
+        // Fill in the form fields
+        input.value = name;
+        
+        const typeSelect = row.querySelector('select[name="type"]');
+        if (typeSelect && type) {
+            typeSelect.value = type;
+        }
+        
+        const brandInput = row.querySelector('input[name="brand"]');
+        if (brandInput && brand) {
+            brandInput.value = brand;
+        }
+        
+        const sizeInput = row.querySelector('input[name="size"]');
+        if (sizeInput && size) {
+            sizeInput.value = size;
+        }
+        
+        // Hide suggestions
+        const suggestionsContainer = input.nextElementSibling;
+        this.hideSuggestions(suggestionsContainer);
+        
+        // Trigger product check to update minimum stock field
+        this.checkExistingProduct(input);
+    },
+
+    hideSuggestions: function(container) {
+        if (container) {
+            container.style.display = 'none';
+            container.innerHTML = '';
+        }
     },
     
     attachProductChecker: function(input) {
@@ -600,10 +717,11 @@ const ProductManager = {
             removeBtn.style.display = 'block';
         }
         
-        // Attach product checker to new name input
+        // Attach product checker and item search to new name input
         const nameInput = newRow.querySelector('.item-name-input');
         if (nameInput) {
             this.attachProductChecker(nameInput);
+            this.attachItemSearch(nameInput);
         }
         
         // Show minimum stock field by default for new rows
@@ -617,13 +735,11 @@ const ProductManager = {
     cloneItemRow: function(sourceRow) {
         const newRow = sourceRow.cloneNode(true);
         
-        // Keep most values but clear quantity and batch
+        // Keep most values but clear quantity and expiry date
         const quantityInput = newRow.querySelector('input[name="quantity"]');
-        const batchInput = newRow.querySelector('input[name="batch_number"]');
         const expiryInput = newRow.querySelector('input[name="expiry_date"]');
         
         if (quantityInput) quantityInput.value = '';
-        if (batchInput) batchInput.value = '';
         if (expiryInput) expiryInput.value = '';
         
         // Show remove button
@@ -632,10 +748,11 @@ const ProductManager = {
             removeBtn.style.display = 'block';
         }
         
-        // Attach product checker to cloned name input
+        // Attach product checker and item search to cloned name input
         const nameInput = newRow.querySelector('.item-name-input');
         if (nameInput) {
             this.attachProductChecker(nameInput);
+            this.attachItemSearch(nameInput);
         }
         
         sourceRow.parentNode.insertBefore(newRow, sourceRow.nextSibling);

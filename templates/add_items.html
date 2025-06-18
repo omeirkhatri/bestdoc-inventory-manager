@@ -64,22 +64,16 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2 mb-2">
+                                    <label class="form-label">Brand</label>
+                                    <input type="text" class="form-control item-brand-input" name="brand" placeholder="Brand name (optional)">
+                                </div>
+                                <div class="col-md-2 mb-2">
                                     <label class="form-label">Size</label>
                                     <input type="text" class="form-control" name="size" placeholder="e.g., 22G, 5ml">
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label class="form-label">Quantity <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" name="quantity" min="1" required>
-                                </div>
-                                <div class="col-md-2 mb-2">
-                                    <label class="form-label">Expiry Date</label>
-                                    <div class="input-group">
-                                        <input type="date" class="form-control" name="expiry_date">
-                                        <button type="button" class="btn btn-outline-secondary no-expiry-btn" 
-                                                title="No expiry date">
-                                            <i class="fas fa-infinity"></i>
-                                        </button>
-                                    </div>
                                 </div>
                                 <div class="col-md-1 mb-2 d-flex align-items-end">
                                     <div class="btn-group-vertical w-100">
@@ -94,8 +88,15 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6">
-
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Expiry Date</label>
+                                    <div class="input-group">
+                                        <input type="date" class="form-control" name="expiry_date">
+                                        <button type="button" class="btn btn-outline-secondary no-expiry-btn" 
+                                                title="No expiry date">
+                                            <i class="fas fa-infinity"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label">Minimum Stock <span class="text-muted">(new products only)</span></label>

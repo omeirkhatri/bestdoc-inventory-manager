@@ -259,6 +259,7 @@ def handle_manual_addition():
                     
                     # Get additional fields safely
                     size = sizes[i].strip() if i < len(sizes) and sizes[i].strip() else None
+                    brand = brands[i].strip() if i < len(brands) and brands[i].strip() else None
                     
                     # Handle product creation/lookup
                     product_name = names[i].strip()
@@ -286,6 +287,7 @@ def handle_manual_addition():
                     item = Item(
                         name=product_name,
                         type=product_type,
+                        brand=brand,
                         size=size,
                         quantity=int(quantities[i]),
                         expiry_date=expiry_date,
@@ -848,7 +850,7 @@ def api_search_items():
         return jsonify([])
     
     # Search in current inventory
-    items = db.session.query(Item.name, Item.type, Item.size).filter(
+    items = db.session.query(Item.name, Item.type, Item.brand, Item.size).filter(
         Item.name.ilike(f'%{query}%')
     ).distinct().limit(10).all()
     
@@ -862,21 +864,23 @@ def api_search_items():
     seen = set()
     
     for item in items:
-        key = (item.name, item.type, item.size)
+        key = (item.name, item.type, item.brand, item.size)
         if key not in seen:
             results.append({
                 'name': item.name,
                 'type': item.type,
+                'brand': item.brand or '',
                 'size': item.size or ''
             })
             seen.add(key)
     
     for item in history_items:
-        key = (item.item_name, item.item_type, item.item_size)
+        key = (item.item_name, item.item_type, '', item.item_size)
         if key not in seen:
             results.append({
                 'name': item.item_name,
                 'type': item.item_type,
+                'brand': '',
                 'size': item.item_size or ''
             })
             seen.add(key)
