@@ -44,5 +44,16 @@ with app.app_context():
         db.session.commit()
         logging.info("Created default Cabinet bag")
 
+# Register template filters for date formatting
+@app.template_filter('datetime_gmt4')
+def datetime_gmt4_filter(dt):
+    from models import format_datetime_gmt4
+    return format_datetime_gmt4(dt)
+
+@app.template_filter('date_gmt4')
+def date_gmt4_filter(dt):
+    from models import format_date_gmt4
+    return format_date_gmt4(dt)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

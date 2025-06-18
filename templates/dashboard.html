@@ -218,7 +218,7 @@
                             {% for movement in recent_movements %}
                             <tr>
                                 <td>
-                                    <small>{{ movement.timestamp.strftime('%m/%d %H:%M') }}</small>
+                                    <small>{{ movement.timestamp|datetime_gmt4 }}</small>
                                 </td>
                                 <td>{{ movement.item_name }}</td>
                                 <td>

@@ -159,7 +159,7 @@
                                         <td>{{ item.bag.name }}</td>
                                         <td>
                                             {% if item.expiry_date %}
-                                                {{ item.expiry_date.strftime('%m/%d/%Y') }}
+                                                {{ item.expiry_date|date_gmt4 }}
                                             {% else %}
                                                 <span class="text-muted">No expiry</span>
                                             {% endif %}

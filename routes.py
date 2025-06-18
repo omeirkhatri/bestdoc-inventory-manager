@@ -6,7 +6,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, Product, init_default_types
+from models import Item, Bag, MovementHistory, ItemType, Product, init_default_types, format_datetime_gmt4, format_date_gmt4
 
 @app.route('/')
 def dashboard():
