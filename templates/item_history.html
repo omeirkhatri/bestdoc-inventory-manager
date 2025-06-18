@@ -97,6 +97,7 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
+                        <th>Brand</th>
                         <th>Size</th>
                         <th>Quantity</th>
                         <th>Current Bag</th>
@@ -109,6 +110,13 @@
                 <tbody>
                     {% for item in current_items %}
                     <tr>
+                        <td>
+                            {% if item.brand %}
+                                <span class="badge bg-info">{{ item.brand }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
                         <td>{{ item.size or '-' }}</td>
                         <td>
                             <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">

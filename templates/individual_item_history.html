@@ -100,7 +100,11 @@
                         </div>
                         <div class="col-md-3">
                             <strong>Brand:</strong><br>
-                            <span class="text-secondary">{{ item.brand or 'Not specified' }}</span>
+                            {% if item.brand %}
+                                <span class="badge bg-info">{{ item.brand }}</span>
+                            {% else %}
+                                <span class="text-muted">Not specified</span>
+                            {% endif %}
                         </div>
                         <div class="col-md-3">
                             <strong>Last Updated:</strong><br>
