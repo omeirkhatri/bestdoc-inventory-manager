@@ -38,7 +38,6 @@ def logout():
 
 @app.route('/')
 @login_required
-@login_required
 def dashboard():
     # Initialize default types if needed
     init_default_types()
