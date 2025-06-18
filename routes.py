@@ -1418,6 +1418,62 @@ def quick_restock():
     
     return redirect(url_for('dashboard'))
 
+@app.route('/api/bulk_update_bag_minimums', methods=['POST'])
+@login_required
+def bulk_update_bag_minimums():
+    """Bulk update multiple bag minimums at once"""
+    try:
+        data = request.get_json()
+        changes = data.get('changes', [])
+        
+        if not changes:
+            return jsonify({'success': False, 'error': 'No changes provided'})
+        
+        updates_count = 0
+        
+        for change in changes:
+            bag_id = change.get('bag_id')
+            product_id = change.get('product_id')
+            minimum_quantity = change.get('minimum_quantity', 0)
+            
+            if not bag_id or not product_id:
+                continue
+            
+            # Find existing minimum or create new one
+            existing_minimum = BagMinimum.query.filter_by(
+                bag_id=bag_id, 
+                product_id=product_id
+            ).first()
+            
+            if minimum_quantity > 0:
+                if existing_minimum:
+                    existing_minimum.minimum_quantity = minimum_quantity
+                    existing_minimum.updated_at = datetime.utcnow()
+                else:
+                    new_minimum = BagMinimum(
+                        bag_id=bag_id,
+                        product_id=product_id,
+                        minimum_quantity=minimum_quantity
+                    )
+                    db.session.add(new_minimum)
+                updates_count += 1
+            else:
+                # Remove minimum if quantity is 0
+                if existing_minimum:
+                    db.session.delete(existing_minimum)
+                    updates_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully updated {updates_count} minimum quantities'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/api/get_last_action')
 @login_required
 def get_last_action():
