@@ -408,6 +408,7 @@ def inventory():
                          products=filtered_products,
                          bags=bags,
                          item_types=item_types,
+                         today=date.today(),
                          current_filters={
                              'search': search,
                              'type': type_filter,

@@ -96,7 +96,6 @@
                                 {{ (today - item.expiry_date).days }} days
                             </span>
                         </td>
-                        <td></td>
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
                                 <button type="button" class="btn btn-outline-warning" 
@@ -167,7 +166,6 @@
                                 {{ days_left }} days
                             </span>
                         </td>
-                        <td></td>
                         <td>
                             {% set days_left = (item.expiry_date - today).days %}
                             {% if days_left <= 7 %}

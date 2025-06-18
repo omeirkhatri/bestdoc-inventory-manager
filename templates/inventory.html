@@ -208,14 +208,13 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% if group.items and group.items[0] %}
-                                                    {% set first_item = group.items[0] %}
-                                                    {% if first_item.is_expired %}
+                                                {% if group.expiry_date %}
+                                                    {% if group.expiry_date < today %}
                                                         <span class="status-indicator expired">
                                                             <i class="fas fa-times-circle"></i>
                                                             Expired
                                                         </span>
-                                                    {% elif first_item.expires_soon %}
+                                                    {% elif (group.expiry_date - today).days <= 30 %}
                                                         <span class="status-indicator expiring">
                                                             <i class="fas fa-clock"></i>
                                                             Expiring Soon
@@ -235,19 +234,18 @@
                                             </td>
                                             <td>
                                                 <div class="compact-actions">
-                                                    {% if group.items %}
-                                                        {% set first_item = group.items[0] %}
+                                                    {% if group.items and group.items|length > 0 %}
                                                         <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                                onclick="showTransferModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }}, '{{ group.bags[0].name }}')"
+                                                                onclick="showTransferModal('{{ group.items[0].id }}', '{{ group.items[0].name }}', {{ group.total_quantity }}, '{{ group.bags[0].name }}')"
                                                                 title="Transfer items">
                                                             <i class="fas fa-exchange-alt"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-outline-warning btn-sm" 
-                                                                onclick="showUsageModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }})"
+                                                                onclick="showUsageModal('{{ group.items[0].id }}', '{{ group.items[0].name }}', {{ group.total_quantity }})"
                                                                 title="Record usage">
                                                             <i class="fas fa-minus"></i>
                                                         </button>
-                                                        <a href="{{ url_for('individual_item_history', item_id=first_item.id) }}" 
+                                                        <a href="{{ url_for('individual_item_history', item_id=group.items[0].id) }}" 
                                                            class="btn btn-outline-info btn-sm" 
                                                            title="View item history">
                                                             <i class="fas fa-history"></i>
