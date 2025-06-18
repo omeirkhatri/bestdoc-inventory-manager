@@ -35,8 +35,11 @@
                                 <h6 class="mb-1">{{ item.name }}</h6>
                                 <p class="mb-1">
                                     <span class="badge bg-secondary me-2">{{ item.type }}</span>
+                                    {% if item.brand %}
+                                    <span class="badge bg-info me-2">{{ item.brand }}</span>
+                                    {% endif %}
                                     {% if item.size %}
-                                    <span class="badge bg-info me-2">{{ item.size }}</span>
+                                    <span class="badge bg-warning me-2">{{ item.size }}</span>
                                     {% endif %}
                                     <span class="badge bg-primary">{{ item.quantity }} units</span>
                                 </p>
