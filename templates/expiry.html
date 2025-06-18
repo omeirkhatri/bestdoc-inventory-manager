@@ -442,7 +442,7 @@ function exportExpiryReport() {
     // Add expiring items
     {% for item in expiring_items %}
     {% set days_left = (item.expiry_date - today).days %}
-    csvContent += 'Expiring Soon,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ days_left }},"","{% if days_left <= 7 %}Critical{% elif days_left <= 14 %}High{% else %}Medium{% endif %}"\n';
+    csvContent += 'Expiring Soon,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ days_left }},"{% if days_left <= 7 %}Critical{% elif days_left <= 14 %}High{% else %}Medium{% endif %}"\n';
     {% endfor %}
     
     const blob = new Blob([csvContent], { type: 'text/csv' });

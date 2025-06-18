@@ -348,7 +348,7 @@ const statusData = {
     labels: ['Good', 'Expiring Soon', 'Expired', 'Low Stock'],
     datasets: [{
         data: [
-            {{ total_items - expiring_items|length - expired_items|length }},
+            {{ (total_items - expired_items|length - expiring_items|length - low_stock_items|length) }},
             {{ expiring_items|length }},
             {{ expired_items|length }},
             {{ low_stock_items|length }}

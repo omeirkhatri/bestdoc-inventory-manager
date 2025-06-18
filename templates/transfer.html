@@ -136,19 +136,17 @@
                     {% for bag in bags %}
                         {% if bag.name != 'Cabinet' %}
                         <div class="col-md-6 mb-2">
-                            <a href="{{ url_for('inventory') }}?bag={{ bag.id }}" class="text-decoration-none">
-                                <div class="card border bag-card-clickable">
-                                    <div class="card-body py-2">
-                                        <h6 class="card-title mb-1 text-body">{{ bag.name }}</h6>
-                                        <small class="text-body-secondary">
-                                            {{ bag.get_total_items() }} items
-                                            {% if bag.description %}
-                                            <br>{{ bag.description }}
-                                            {% endif %}
-                                        </small>
-                                    </div>
+                            <div class="card border bag-card-clickable" onclick="filterByBag('{{ bag.name }}', {{ bag.id }})" style="cursor: pointer;">
+                                <div class="card-body py-2">
+                                    <h6 class="card-title mb-1">{{ bag.name }}</h6>
+                                    <small class="text-muted">
+                                        {{ bag.get_total_items() }} items
+                                        {% if bag.description %}
+                                        <br>{{ bag.description }}
+                                        {% endif %}
+                                    </small>
                                 </div>
-                            </a>
+                            </div>
                         </div>
                         {% endif %}
                     {% endfor %}
@@ -294,6 +292,12 @@ function clearSelection() {
     document.querySelectorAll('.list-group-item').forEach(item => {
         item.classList.remove('active');
     });
+}
+
+// Bag filtering functionality
+function filterByBag(bagName, bagId) {
+    // Navigate to inventory page with bag filter
+    window.location.href = '/inventory?bag=' + bagId;
 }
 
 // Search functionality for transfer items
