@@ -864,8 +864,91 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Healthcare Inventory Management System loaded successfully');
 });
 
+// Missing global functions for templates
+function editMinimumStock(productId, currentStock) {
+    const newStock = prompt(`Enter new minimum stock for this product (current: ${currentStock}):`);
+    if (newStock !== null && !isNaN(newStock) && newStock >= 0) {
+        fetch('/api/update_minimum_stock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                minimum_stock: parseInt(newStock)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Utils.showToast('Minimum stock updated successfully', 'success');
+                location.reload();
+            } else {
+                Utils.showToast('Error updating minimum stock: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            Utils.showToast('Error updating minimum stock', 'error');
+            console.error('Error:', error);
+        });
+    }
+}
+
+function showTransferModal(itemId, itemName, quantity, bagName) {
+    // Find or create transfer modal
+    let modal = document.getElementById('transferModal');
+    if (!modal) {
+        console.error('Transfer modal not found');
+        return;
+    }
+    
+    // Populate modal with item data
+    const modalTitle = modal.querySelector('.modal-title');
+    const itemNameField = modal.querySelector('#transfer_item_name');
+    const quantityField = modal.querySelector('#transfer_quantity');
+    const fromBagField = modal.querySelector('#transfer_from_bag');
+    const itemIdField = modal.querySelector('#transfer_item_id');
+    
+    if (modalTitle) modalTitle.textContent = `Transfer ${itemName}`;
+    if (itemNameField) itemNameField.value = itemName;
+    if (quantityField) quantityField.max = quantity;
+    if (fromBagField) fromBagField.value = bagName;
+    if (itemIdField) itemIdField.value = itemId;
+    
+    // Show modal
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+}
+
+function showUsageModal(itemId, itemName, quantity) {
+    // Find or create usage modal
+    let modal = document.getElementById('usageModal');
+    if (!modal) {
+        console.error('Usage modal not found');
+        return;
+    }
+    
+    // Populate modal with item data
+    const modalTitle = modal.querySelector('.modal-title');
+    const itemNameField = modal.querySelector('#usage_item_name');
+    const quantityField = modal.querySelector('#usage_quantity');
+    const itemIdField = modal.querySelector('#usage_item_id');
+    
+    if (modalTitle) modalTitle.textContent = `Record Usage: ${itemName}`;
+    if (itemNameField) itemNameField.value = itemName;
+    if (quantityField) quantityField.max = quantity;
+    if (itemIdField) itemIdField.value = itemId;
+    
+    // Show modal
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
+}
+
 // Export utilities for use in other scripts
 window.InventoryUtils = Utils;
 window.InventoryForms = FormValidation;
 window.InventoryModals = ModalManager;
 window.InventoryExport = DataExport;
+window.editMinimumStock = editMinimumStock;
+window.showTransferModal = showTransferModal;
+window.showUsageModal = showUsageModal;

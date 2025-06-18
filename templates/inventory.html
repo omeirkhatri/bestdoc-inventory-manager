@@ -234,7 +234,7 @@
                                             </td>
                                             <td>
                                                 <div class="compact-actions">
-                                                    {% if group.items %}
+                                                    {% if group.items and group.items|length > 0 %}
                                                         {% set first_item = group.items[0] %}
                                                         <button type="button" class="btn btn-outline-primary btn-sm" 
                                                                 onclick="showTransferModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }}, '{{ first_item.bag.name }}')"
