@@ -335,20 +335,9 @@
         // Global editing functions
         window.editProductField = function(field, currentValue, productId) {
             if (field === 'type') {
-                showTypeSelectionModal(currentValue, productId, 'product');
+                showInlineTypeEditor(field, currentValue, productId, 'product');
             } else {
-                let inputType = 'text';
-                let placeholder = `Enter ${field.replace('_', ' ')}`;
-                
-                if (field === 'minimum_stock') {
-                    inputType = 'number';
-                    placeholder = 'Enter minimum stock number';
-                }
-                
-                const value = prompt(`Edit ${field.replace('_', ' ')}:`, currentValue);
-                if (value !== null && value.trim() !== '' && value !== currentValue) {
-                    updateProductField(field, value.trim(), productId);
-                }
+                showInlineEditor(field, currentValue, productId, 'product');
             }
         };
 
@@ -396,12 +385,9 @@
 
         window.editItemField = function(field, currentValue, itemId) {
             if (field === 'type') {
-                showTypeSelectionModal(currentValue, itemId, 'item');
+                showInlineTypeEditor(field, currentValue, itemId, 'item');
             } else {
-                const value = prompt(`Edit ${field}:`, currentValue);
-                if (value !== null && value.trim() !== currentValue) {
-                    updateItemField(field, value.trim(), itemId);
-                }
+                showInlineEditor(field, currentValue, itemId, 'item');
             }
         };
 
@@ -482,8 +468,38 @@
             });
         };
 
-        // Type selection modal function
-        window.showTypeSelectionModal = function(currentValue, itemId, itemType) {
+        // Inline editing functions
+        window.showInlineEditor = function(field, currentValue, itemId, itemType) {
+            const elementId = itemType === 'product' ? 
+                (field === 'name' ? 'productName' : field === 'minimum_stock' ? 'productMinStock' : 'productType') :
+                (field === 'name' ? 'itemName' : field === 'size' ? 'itemSize' : 'itemType');
+            
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const originalContent = element.innerHTML;
+            
+            let inputType = 'text';
+            if (field === 'minimum_stock') inputType = 'number';
+            
+            const inputHtml = `
+                <div class="d-flex align-items-center">
+                    <input type="${inputType}" class="form-control form-control-sm me-2" 
+                           value="${currentValue}" id="inline-edit-${field}" style="width: 150px;">
+                    <button class="btn btn-sm btn-success me-1" onclick="saveInlineEdit('${field}', ${itemId}, '${itemType}')">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('${elementId}', '${originalContent}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            element.innerHTML = inputHtml;
+            document.getElementById(`inline-edit-${field}`).focus();
+        };
+        
+        window.showInlineTypeEditor = function(field, currentValue, itemId, itemType) {
             const availableTypes = [
                 'Catheters & Containers',
                 'Consumable Dressings/Swabs',
@@ -493,68 +509,50 @@
                 'Needles & Syringes'
             ];
             
-            // Create modal HTML
-            const modalHtml = `
-                <div class="modal fade" id="typeSelectionModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Select Item Type</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label for="typeSelect" class="form-label">Choose a type:</label>
-                                    <select class="form-select" id="typeSelect">
-                                        ${availableTypes.map(type => 
-                                            `<option value="${type}" ${type === currentValue ? 'selected' : ''}>${type}</option>`
-                                        ).join('')}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" onclick="confirmTypeSelection(${itemId}, '${itemType}')">Update Type</button>
-                            </div>
-                        </div>
-                    </div>
+            const elementId = itemType === 'product' ? 'productType' : 'itemType';
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const originalContent = element.innerHTML;
+            
+            const selectOptions = availableTypes.map(type => 
+                `<option value="${type}" ${type === currentValue ? 'selected' : ''}>${type}</option>`
+            ).join('');
+            
+            const selectHtml = `
+                <div class="d-flex align-items-center">
+                    <select class="form-select form-select-sm me-2" id="inline-edit-${field}" style="width: 200px;">
+                        ${selectOptions}
+                    </select>
+                    <button class="btn btn-sm btn-success me-1" onclick="saveInlineEdit('${field}', ${itemId}, '${itemType}')">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('${elementId}', '${originalContent}')">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             `;
             
-            // Remove existing modal if any
-            const existingModal = document.getElementById('typeSelectionModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            // Add modal to body
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('typeSelectionModal'));
-            modal.show();
+            element.innerHTML = selectHtml;
+            document.getElementById(`inline-edit-${field}`).focus();
         };
         
-        window.confirmTypeSelection = function(itemId, itemType) {
-            const selectedType = document.getElementById('typeSelect').value;
+        window.saveInlineEdit = function(field, itemId, itemType) {
+            const inputElement = document.getElementById(`inline-edit-${field}`);
+            const newValue = inputElement.value.trim();
             
             if (itemType === 'product') {
-                updateProductField('type', selectedType, itemId);
+                updateProductField(field, newValue, itemId);
             } else if (itemType === 'item') {
-                updateItemField('type', selectedType, itemId);
+                updateItemField(field, newValue, itemId);
             }
-            
-            // Hide modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('typeSelectionModal'));
-            modal.hide();
-            
-            // Remove modal from DOM after hiding
-            setTimeout(() => {
-                const modalElement = document.getElementById('typeSelectionModal');
-                if (modalElement) {
-                    modalElement.remove();
-                }
-            }, 300);
+        };
+        
+        window.cancelInlineEdit = function(elementId, originalContent) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = originalContent;
+            }
         };
 
         // Legacy function for backward compatibility
