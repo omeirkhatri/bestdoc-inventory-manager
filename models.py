@@ -70,6 +70,12 @@ class Product(db.Model):
     name = db.Column(db.String(200), nullable=False, unique=True)
     type = db.Column(db.String(100), nullable=False)
     minimum_stock = db.Column(db.Integer, nullable=False, default=0)
+    
+    # Box/piece tracking fields
+    units_per_box = db.Column(db.Integer, nullable=True)  # How many pieces in one box (e.g., 100 for alcohol swabs)
+    packaging_unit = db.Column(db.String(50), default='pieces')  # 'pieces', 'vials', 'tablets', etc.
+    box_description = db.Column(db.String(100))  # e.g., "Box of 100 swabs", "Box of 5 vials"
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship to items (batches)
@@ -80,7 +86,15 @@ class Product(db.Model):
     
     @property
     def total_quantity(self):
-        return sum(item.quantity for item in self.items if item.quantity > 0)
+        return sum(item.total_pieces for item in self.items if item.total_pieces > 0)
+    
+    @property
+    def total_boxes(self):
+        return sum(item.boxes for item in self.items)
+    
+    @property
+    def total_loose_pieces(self):
+        return sum(item.loose_pieces for item in self.items)
     
     @property
     def is_low_stock(self):
@@ -92,14 +106,29 @@ class Product(db.Model):
     
     @property
     def active_batches(self):
-        return [item for item in self.items if item.quantity > 0]
+        return [item for item in self.items if item.total_pieces > 0]
+    
+    @property
+    def has_box_tracking(self):
+        return self.units_per_box is not None and self.units_per_box > 0
+    
+    def get_packaging_display(self):
+        """Get display format for this product's packaging"""
+        if self.has_box_tracking:
+            return f"Box of {self.units_per_box} {self.packaging_unit}"
+        return self.packaging_unit or "pieces"
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.String(100), nullable=False)  # Consumables, Pharmacy Vials, IV Vials, etc.
     size = db.Column(db.String(50))  # 22G, 5ml, etc.
-    quantity = db.Column(db.Integer, nullable=False, default=0)
+    
+    # Box/piece tracking
+    boxes = db.Column(db.Integer, nullable=False, default=0)  # Number of full boxes
+    loose_pieces = db.Column(db.Integer, nullable=False, default=0)  # Number of loose pieces
+    quantity = db.Column(db.Integer, nullable=False, default=0)  # Legacy field - will be calculated property
+    
     expiry_date = db.Column(db.Date)  # Optional
     date_added = db.Column(db.DateTime, default=datetime.utcnow)  # When item was added
     batch_number = db.Column(db.String(100))  # For tracking different batches
@@ -113,7 +142,74 @@ class Item(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def __repr__(self):
-        return f'<Item {self.name} ({self.quantity})>'
+        return f'<Item {self.name} ({self.total_pieces} pieces)>'
+    
+    @property
+    def total_pieces(self):
+        """Calculate total pieces = (boxes × units_per_box) + loose_pieces"""
+        if self.product and self.product.units_per_box:
+            return (self.boxes * self.product.units_per_box) + self.loose_pieces
+        return self.loose_pieces
+    
+    @property
+    def packaging_display(self):
+        """Display format: '2 boxes + 3 vials' or '15 pieces'"""
+        if self.product and self.product.units_per_box and self.boxes > 0:
+            if self.loose_pieces > 0:
+                return f"{self.boxes} boxes + {self.loose_pieces} {self.product.packaging_unit}"
+            else:
+                return f"{self.boxes} boxes"
+        else:
+            unit = self.product.packaging_unit if self.product else "pieces"
+            return f"{self.loose_pieces} {unit}"
+    
+    def add_stock(self, boxes=0, pieces=0):
+        """Add boxes and/or pieces to inventory"""
+        self.boxes += boxes
+        self.loose_pieces += pieces
+        self.quantity = self.total_pieces  # Update legacy field
+        db.session.commit()
+    
+    def remove_stock(self, pieces_to_remove):
+        """Remove pieces, automatically breaking boxes if needed"""
+        if pieces_to_remove > self.total_pieces:
+            raise ValueError("Not enough stock available")
+        
+        remaining = pieces_to_remove
+        
+        # First remove from loose pieces
+        if self.loose_pieces >= remaining:
+            self.loose_pieces -= remaining
+            remaining = 0
+        else:
+            remaining -= self.loose_pieces
+            self.loose_pieces = 0
+        
+        # Then break boxes if needed
+        if remaining > 0 and self.product and self.product.units_per_box:
+            boxes_to_break = (remaining + self.product.units_per_box - 1) // self.product.units_per_box
+            if boxes_to_break > self.boxes:
+                raise ValueError("Not enough boxes to break")
+            
+            self.boxes -= boxes_to_break
+            pieces_from_boxes = boxes_to_break * self.product.units_per_box
+            self.loose_pieces = pieces_from_boxes - remaining
+        
+        self.quantity = self.total_pieces  # Update legacy field
+        db.session.commit()
+    
+    def can_remove_boxes(self, boxes_to_remove):
+        """Check if we can remove full boxes"""
+        return self.boxes >= boxes_to_remove
+    
+    def remove_boxes(self, boxes_to_remove):
+        """Remove full boxes"""
+        if not self.can_remove_boxes(boxes_to_remove):
+            raise ValueError("Not enough full boxes available")
+        
+        self.boxes -= boxes_to_remove
+        self.quantity = self.total_pieces
+        db.session.commit()
     
     @property
     def is_expired(self):
@@ -147,7 +243,13 @@ class MovementHistory(db.Model):
     item_name = db.Column(db.String(200), nullable=False)
     item_type = db.Column(db.String(100), nullable=False)
     item_size = db.Column(db.String(50))
-    quantity = db.Column(db.Integer, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)  # Total pieces moved
+    
+    # Box/piece tracking for movements
+    boxes_moved = db.Column(db.Integer, default=0)
+    pieces_moved = db.Column(db.Integer, default=0)
+    movement_description = db.Column(db.String(200))  # e.g., "2 boxes + 3 vials"
+    
     movement_type = db.Column(db.String(50), nullable=False)  # 'transfer', 'usage', 'addition', 'wastage'
     from_bag = db.Column(db.String(100))
     to_bag = db.Column(db.String(100))
