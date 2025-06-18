@@ -45,14 +45,14 @@
                                         {% if item_data.size %}
                                             <br><small class="text-muted">Size: {{ item_data.size }}</small>
                                         {% endif %}
-                                        <br><small class="text-muted">Type: {{ item_data.items[0].type }}</small>
+                                        <br><small class="text-muted">Type: {{ item_data.type }}</small>
                                     </td>
                                     <td>
                                         <span class="badge bg-info">{{ item_data.current_qty }}</span>
                                         <!-- Hidden fields to store current data -->
                                         <input type="hidden" name="current_qty_{{ loop.index }}" value="{{ item_data.current_qty }}">
                                         <input type="hidden" name="item_name_{{ loop.index }}" value="{{ item_data.name }}">
-                                        <input type="hidden" name="item_type_{{ loop.index }}" value="{{ item_data.items[0].type }}">
+                                        <input type="hidden" name="item_type_{{ loop.index }}" value="{{ item_data.type }}">
                                         <input type="hidden" name="item_size_{{ loop.index }}" value="{{ item_data.size or '' }}">
                                     </td>
                                     <td>

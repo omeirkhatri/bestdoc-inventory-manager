@@ -254,7 +254,8 @@ body {
     gap: 0.25rem;
     justify-content: flex-end;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 
 .action-buttons .btn {
@@ -263,6 +264,37 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Inventory layout improvements */
+.accordion-button {
+    padding: 1rem 1.25rem;
+}
+
+.accordion-button .d-flex {
+    width: 100%;
+}
+
+.accordion-button .action-buttons {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Ensure proper spacing and alignment in inventory headers */
+.accordion-header .d-flex.justify-content-between {
+    align-items: center;
+    gap: 1rem;
+}
+
+.accordion-header .badge {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.accordion-header .text-muted {
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 /* Transfer modal specific styles */

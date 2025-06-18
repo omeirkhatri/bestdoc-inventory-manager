@@ -53,7 +53,7 @@
                             <strong>Expiry Date:</strong><br>
                             {% if item.expiry_date %}
                                 <span class="{% if item.is_expired %}text-danger{% elif item.expires_soon %}text-warning{% else %}text-success{% endif %}">
-                                    {{ item.expiry_date.strftime('%d/%m/%y') }}
+                                    {{ item.expiry_date|date_gmt4 }}
                                 </span>
                             {% else %}
                                 N/A

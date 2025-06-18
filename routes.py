@@ -851,6 +851,7 @@ def weekly_check():
                 'name': item.name,
                 'size': item.size,
                 'current_qty': 0,
+                'type': item.type,
                 'items': []
             }
         grouped_items[key]['current_qty'] += item.quantity
