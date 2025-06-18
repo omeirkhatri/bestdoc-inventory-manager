@@ -191,14 +191,20 @@ function initializeAutocomplete() {
         }
     });
     
-    // Only hide suggestions when clicking outside both input and suggestions
+    // Only hide suggestions when clicking FAR outside - give more tolerance
     document.addEventListener('click', function(e) {
-        // Don't hide if clicking on input or suggestions
-        if (e.target.closest('.item-name-input') || e.target.closest('.item-suggestions')) {
+        // Don't hide if clicking on input, suggestions, or any form element
+        if (e.target.closest('.item-name-input') || 
+            e.target.closest('.item-suggestions') || 
+            e.target.closest('.item-row') ||
+            e.target.closest('input') ||
+            e.target.closest('select')) {
             return;
         }
-        // Hide suggestions when clicking elsewhere
-        hideAllSuggestions();
+        // Only hide if clicking completely outside the form area
+        setTimeout(() => {
+            hideAllSuggestions();
+        }, 500); // 500ms delay before hiding
     });
     
     // Handle focus events to show suggestions again if there's content
@@ -261,7 +267,7 @@ function handleItemNameInput(input) {
     }, 500);
     
     if (query.length < 2) {
-        hideSuggestions(suggestionsDiv);
+        // Don't hide suggestions immediately - let them stay visible
         return;
     }
     
@@ -283,8 +289,20 @@ function searchItems(query, suggestionsDiv, input) {
 }
 
 function showSuggestions(items, suggestionsDiv, input) {
+    // NEVER auto-hide suggestions - only hide when user explicitly dismisses
     if (items.length === 0) {
-        hideSuggestions(suggestionsDiv);
+        // Show a "no results" message instead of hiding
+        suggestionsDiv.innerHTML = '<div class="dropdown-item text-muted"><em>No matching items found</em></div>';
+        suggestionsDiv.style.display = 'block';
+        suggestionsDiv.style.position = 'absolute';
+        suggestionsDiv.style.zIndex = '9999';
+        suggestionsDiv.style.width = input.offsetWidth + 'px';
+        suggestionsDiv.style.maxHeight = '300px';
+        suggestionsDiv.style.overflowY = 'auto';
+        suggestionsDiv.style.border = '1px solid #ccc';
+        suggestionsDiv.style.backgroundColor = 'var(--bs-body-bg)';
+        suggestionsDiv.style.borderRadius = '0.375rem';
+        suggestionsDiv.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)';
         return;
     }
     
