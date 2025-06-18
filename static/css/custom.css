@@ -577,6 +577,81 @@ body {
     font-weight: 600;
 }
 
+/* Inventory details table improvements */
+.details-table {
+    margin-top: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+
+.details-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    padding: 0.75rem;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.details-table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.details-table tbody tr:hover {
+    background-color: rgba(79, 209, 199, 0.05);
+}
+
+.details-table .compact-actions {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.details-table .compact-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Status indicators for inventory */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-indicator.expired {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.status-indicator.expiring {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.status-indicator.good {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+}
+
+/* Improve badge spacing in details table */
+.details-table .badge {
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+}
+
+.details-table .badge:last-child {
+    margin-right: 0;
+}
+
 /* Main content area */
 .main-content {
     margin-left: 260px;

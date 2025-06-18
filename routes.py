@@ -958,8 +958,18 @@ def individual_item_history(item_id):
     """Show detailed history for a specific individual item"""
     item = Item.query.get_or_404(item_id)
     
-    # Get the product this item belongs to
+    # Get or create the product this item belongs to
     product = item.product
+    if not product:
+        # If item doesn't have a linked product, create one or find existing
+        product = Product.query.filter_by(name=item.name, type=item.type).first()
+        if not product:
+            product = Product(name=item.name, type=item.type, minimum_stock=0)
+            db.session.add(product)
+            db.session.commit()
+        # Link the item to the product
+        item.product_id = product.id
+        db.session.commit()
     
     # Get all items for this product across all locations
     items = Item.query.filter_by(product_id=product.id).order_by(Item.bag_id, Item.quantity.desc()).all()
