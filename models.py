@@ -220,6 +220,20 @@ class UndoAction(db.Model):
     def __repr__(self):
         return f'<UndoAction {self.action_type}: {self.description}>'
 
+class PermanentDeletion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    entity_type = db.Column(db.String(50), nullable=False)  # 'bag', 'item', 'product'
+    entity_name = db.Column(db.String(200), nullable=False)  # Name of deleted entity
+    entity_data = db.Column(db.Text, nullable=False)  # JSON of original entity data
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    deletion_timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    is_restored = db.Column(db.Boolean, default=False)  # Track if this deletion was undone
+    
+    user = db.relationship('User', backref='permanent_deletions')
+
+    def __repr__(self):
+        return f'<PermanentDeletion {self.entity_type}: {self.entity_name}>'
+
 # Initialize default item types - Updated for simplified system
 def init_default_types():
     default_types = [

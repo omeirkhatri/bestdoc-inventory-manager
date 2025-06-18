@@ -38,7 +38,7 @@ db.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    from models import User
+    from models import User, PermanentDeletion
     return User.query.get(int(user_id))
 
 # Register Jinja filters
@@ -100,7 +100,9 @@ with app.app_context():
         db.session.commit()
         logging.info("Created default user")
     
-    # Create bags if they don't exist
+    # Create bags if they don't exist and haven't been permanently deleted
+    from models import PermanentDeletion
+    
     bags_data = [
         {'name': 'Cabinet', 'description': 'Central storage cabinet', 'location': 'cabinet'},
         {'name': 'Emergency Bag 1', 'description': 'Primary emergency response bag', 'location': 'bag'},
@@ -110,7 +112,14 @@ with app.app_context():
     
     created_bags = {}
     for bag_data in bags_data:
-        if not Bag.query.filter_by(name=bag_data['name']).first():
+        # Check if this bag was permanently deleted and not restored
+        permanently_deleted = PermanentDeletion.query.filter_by(
+            entity_type='bag',
+            entity_name=bag_data['name'],
+            is_restored=False
+        ).first()
+        
+        if not permanently_deleted and not Bag.query.filter_by(name=bag_data['name']).first():
             bag = Bag(
                 name=bag_data['name'],
                 description=bag_data['description'],
@@ -121,7 +130,9 @@ with app.app_context():
             created_bags[bag_data['name']] = bag
             logging.info(f"Created bag: {bag_data['name']}")
         else:
-            created_bags[bag_data['name']] = Bag.query.filter_by(name=bag_data['name']).first()
+            existing_bag = Bag.query.filter_by(name=bag_data['name']).first()
+            if existing_bag:
+                created_bags[bag_data['name']] = existing_bag
     
     # Create products if they don't exist
     products_data = [

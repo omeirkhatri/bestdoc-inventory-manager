@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, init_default_types, format_datetime_gmt4, format_date_gmt4
+from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, PermanentDeletion, init_default_types, format_datetime_gmt4, format_date_gmt4
 import json
 
 # Authentication routes
@@ -787,14 +787,28 @@ def handle_bag_management():
                 flash("Error: Cabinet not found", "danger")
                 return redirect(url_for('bags'))
             
-            # Prepare undo data
+            # Store complete bag data for permanent deletion tracking
+            bag_data = {
+                'id': bag.id,
+                'name': bag.name,
+                'description': bag.description,
+                'location': bag.location,
+                'created_at': bag.created_at.isoformat() if bag.created_at else None
+            }
+            
+            # Prepare undo data with complete page state
             undo_data = {
                 'bag_id': bag.id,
                 'bag_name': bag.name,
                 'bag_description': bag.description,
                 'bag_location': bag.location,
                 'transferred_items': [],
-                'deleted_minimums': []
+                'deleted_minimums': [],
+                'page_state': {
+                    'total_bags_before': Bag.query.count(),
+                    'cabinet_items_before': Item.query.filter_by(bag_id=cabinet.id).count(),
+                    'deleted_bag_data': bag_data
+                }
             }
             
             # Transfer all items to cabinet and track for undo
@@ -839,7 +853,16 @@ def handle_bag_management():
                 })
                 db.session.delete(minimum)
             
-            # Create undo action
+            # Record permanent deletion
+            permanent_deletion = PermanentDeletion(
+                entity_type='bag',
+                entity_name=bag.name,
+                entity_data=json.dumps(bag_data),
+                user_id=current_user.id
+            )
+            db.session.add(permanent_deletion)
+            
+            # Create undo action with complete page state
             undo_action = UndoAction(
                 action_type='delete_bag',
                 action_data=json.dumps(undo_data),
