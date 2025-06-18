@@ -35,108 +35,119 @@
 </div>
 
 <!-- Summary Cards -->
-<div class="row mb-3 dashboard-section">
-    <div class="col-md-3 col-sm-6 mb-3">
+<div class="row mb-4 dashboard-section">
+    <div class="col-md-2-4 col-sm-6 mb-3">
         <a href="{{ url_for('inventory') }}" class="text-decoration-none">
-            <div class="card stat-card stat-card-teal stat-card-compact">
-                <div class="card-body">
+            <div class="stat-card stat-card-blue">
+                <div class="stat-content">
                     <div class="stat-icon">
                         <i class="fas fa-boxes"></i>
                     </div>
-                    <div class="stat-number">{{ total_items }}</div>
-                    <div class="stat-label">Total Items</div>
-                    <div class="stat-change">
-                        <i class="fas fa-arrow-up me-1"></i>
-                        Active inventory
+                    <div class="stat-info">
+                        <div class="stat-number">{{ total_items }}</div>
+                        <div class="stat-label">Total Items</div>
                     </div>
+                </div>
+                <div class="stat-footer">
+                    <span class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i>
+                        Active
+                    </span>
                 </div>
             </div>
         </a>
     </div>
     
-    <div class="col-md-3 col-sm-6 mb-3">
+    <div class="col-md-2-4 col-sm-6 mb-3">
         <a href="{{ url_for('inventory') }}" class="text-decoration-none">
-            <div class="card stat-card stat-card-green stat-card-compact">
-                <div class="card-body">
+            <div class="stat-card stat-card-green">
+                <div class="stat-content">
                     <div class="stat-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-number">{{ total_unique_items }}</div>
+                        <div class="stat-label">Unique Items</div>
+                    </div>
+                </div>
+                <div class="stat-footer">
+                    <span class="stat-trend neutral">
                         <i class="fas fa-list"></i>
-                    </div>
-                    <div class="stat-number">{{ total_unique_items }}</div>
-                    <div class="stat-label">Unique Items</div>
-                    <div class="stat-change">
-                        <i class="fas fa-check me-1"></i>
-                        Different types
-                    </div>
+                        Types
+                    </span>
                 </div>
             </div>
         </a>
     </div>
     
-    <div class="col-md-3 col-sm-6 mb-3">
+    <div class="col-md-2-4 col-sm-6 mb-3">
+        <a href="{{ url_for('inventory') }}?expiry=low_stock" class="text-decoration-none">
+            <div class="stat-card stat-card-warning">
+                <div class="stat-content">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-number">{{ low_stock_items|length }}</div>
+                        <div class="stat-label">Low Stock</div>
+                    </div>
+                </div>
+                <div class="stat-footer">
+                    <span class="stat-trend warning">
+                        <i class="fas fa-chart-line-down"></i>
+                        Below minimum
+                    </span>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-2-4 col-sm-6 mb-3">
         <a href="{{ url_for('expiry') }}" class="text-decoration-none">
-            <div class="card stat-card stat-card-orange stat-card-compact">
-                <div class="card-body">
+            <div class="stat-card stat-card-orange">
+                <div class="stat-content">
                     <div class="stat-icon">
                         <i class="fas fa-clock"></i>
                     </div>
-                    <div class="stat-number">{{ expiring_items|length }}</div>
-                    <div class="stat-label">Expiring Soon</div>
-                    <div class="stat-change">
-                        <i class="fas fa-exclamation me-1"></i>
-                        Need attention
+                    <div class="stat-info">
+                        <div class="stat-number">{{ expiring_items|length }}</div>
+                        <div class="stat-label">Expiring Soon</div>
                     </div>
+                </div>
+                <div class="stat-footer">
+                    <span class="stat-trend warning">
+                        <i class="fas fa-hourglass-half"></i>
+                        30 days
+                    </span>
                 </div>
             </div>
         </a>
     </div>
     
-    <div class="col-md-3 col-sm-6 mb-3">
+    <div class="col-md-2-4 col-sm-6 mb-3">
         <a href="{{ url_for('expiry') }}" class="text-decoration-none">
-            <div class="card stat-card stat-card-red stat-card-compact">
-                <div class="card-body">
+            <div class="stat-card stat-card-red">
+                <div class="stat-content">
                     <div class="stat-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
+                        <i class="fas fa-times-circle"></i>
                     </div>
-                    <div class="stat-number">{{ expired_items|length }}</div>
-                    <div class="stat-label">Expired Items</div>
-                    <div class="stat-change">
-                        <i class="fas fa-ban me-1"></i>
-                        Immediate action
+                    <div class="stat-info">
+                        <div class="stat-number">{{ expired_items|length }}</div>
+                        <div class="stat-label">Expired Items</div>
                     </div>
+                </div>
+                <div class="stat-footer">
+                    <span class="stat-trend negative">
+                        <i class="fas fa-ban"></i>
+                        Action needed
+                    </span>
                 </div>
             </div>
         </a>
     </div>
 </div>
 
-<!-- Charts Row -->
-<div class="row mb-3 dashboard-section">
-    <div class="col-md-6 mb-3">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Items by Bag</h5>
-            </div>
-            <div class="card-body">
-                <div class="dashboard-charts">
-                    <canvas id="bagChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6 mb-3">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Stock Status</h5>
-            </div>
-            <div class="card-body">
-                <div class="dashboard-charts">
-                    <canvas id="statusChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Alerts Section -->
 {% if expired_items or expiring_items or low_stock_items %}
@@ -228,69 +239,10 @@
 
 {% block extra_scripts %}
 <script>
-// Bag Chart
-const bagCtx = document.getElementById('bagChart').getContext('2d');
-const bagData = {
-    labels: [{% for bag in bags_with_counts %}'{{ bag.name }}'{% if not loop.last %},{% endif %}{% endfor %}],
-    datasets: [{
-        data: [{% for bag in bags_with_counts %}{{ bag.count }}{% if not loop.last %},{% endif %}{% endfor %}],
-        backgroundColor: [
-            'rgba(54, 162, 235, 0.8)',
-            'rgba(255, 99, 132, 0.8)',
-            'rgba(255, 206, 86, 0.8)',
-            'rgba(75, 192, 192, 0.8)',
-            'rgba(153, 102, 255, 0.8)',
-            'rgba(255, 159, 64, 0.8)'
-        ]
-    }]
-};
-
-new Chart(bagCtx, {
-    type: 'doughnut',
-    data: bagData,
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        }
-    }
-});
-
-// Status Chart
-const statusCtx = document.getElementById('statusChart').getContext('2d');
-const statusData = {
-    labels: ['Good', 'Expiring Soon', 'Expired', 'Low Stock'],
-    datasets: [{
-        data: [
-            {{ (total_items - expired_items|length - expiring_items|length - low_stock_items|length) }},
-            {{ expiring_items|length }},
-            {{ expired_items|length }},
-            {{ low_stock_items|length }}
-        ],
-        backgroundColor: [
-            'rgba(40, 167, 69, 0.8)',
-            'rgba(255, 193, 7, 0.8)',
-            'rgba(220, 53, 69, 0.8)',
-            'rgba(23, 162, 184, 0.8)'
-        ]
-    }]
-};
-
-new Chart(statusCtx, {
-    type: 'doughnut',
-    data: statusData,
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        }
-    }
+// Dashboard initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any dashboard-specific interactions here
+    console.log('Dashboard loaded successfully');
 });
 
 // Show Friday banner only on Fridays

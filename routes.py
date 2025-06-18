@@ -75,7 +75,19 @@ def dashboard():
         )
     ).all()
     
-    # Low stock items in cabinet (quantity <= 10)
+    # Low stock items (using product minimum stock thresholds)
+    low_stock_products = Product.query.filter(Product.minimum_stock > 0).all()
+    low_stock_items = []
+    for product in low_stock_products:
+        total_qty = sum(item.quantity for item in product.items if item.quantity > 0)
+        if total_qty <= product.minimum_stock:
+            low_stock_items.append({
+                'product': product,
+                'current_qty': total_qty,
+                'minimum_stock': product.minimum_stock
+            })
+    
+    # Low stock items in cabinet (quantity <= 10) - for alerts section
     low_stock_cabinet = Item.query.join(Bag).filter(
         and_(
             Bag.location == 'cabinet',
@@ -112,6 +124,7 @@ def dashboard():
                          total_bags=total_bags,
                          expiring_items=expiring_items,
                          expired_items=expired_items,
+                         low_stock_items=low_stock_items,
                          low_stock_cabinet=low_stock_cabinet,
                          empty_bags=empty_bags,
                          recent_movements=recent_movements,
