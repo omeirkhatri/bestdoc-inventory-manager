@@ -757,6 +757,13 @@ const ProductManager = {
     cloneItemRow: function(sourceRow) {
         const newRow = sourceRow.cloneNode(true);
         
+        // Explicitly copy select field values (cloneNode doesn't preserve selected values)
+        const sourceTypeSelect = sourceRow.querySelector('select[name="type"]');
+        const newTypeSelect = newRow.querySelector('select[name="type"]');
+        if (sourceTypeSelect && newTypeSelect) {
+            newTypeSelect.value = sourceTypeSelect.value;
+        }
+        
         // Keep ALL values including type and expiry date - only clear quantity
         const quantityInput = newRow.querySelector('input[name="quantity"]');
         if (quantityInput) quantityInput.value = '';
