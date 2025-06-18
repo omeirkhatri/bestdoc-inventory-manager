@@ -753,6 +753,24 @@ def item_history(product_id):
                          current_batches=current_batches,
                          movement_history=movement_history)
 
+@app.route('/individual_item_history/<int:item_id>')
+def individual_item_history(item_id):
+    """Show detailed history for a specific individual item"""
+    item = Item.query.get_or_404(item_id)
+    
+    # Get movement history for this specific item only
+    movements = MovementHistory.query.filter(
+        db.and_(
+            MovementHistory.item_name == item.name,
+            MovementHistory.item_type == item.type,
+            MovementHistory.item_size == item.size
+        )
+    ).order_by(MovementHistory.timestamp.desc()).all()
+    
+    return render_template('individual_item_history.html', 
+                         item=item, 
+                         movements=movements)
+
 @app.route('/api/check_existing_product')
 def api_check_existing_product():
     """API endpoint to check if a product already exists"""

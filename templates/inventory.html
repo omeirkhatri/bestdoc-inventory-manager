@@ -183,7 +183,7 @@
                                         <td>
                                             <div class="action-buttons">
                                                 <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                        onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})"
+                                                        onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
                                                         title="Transfer items">
                                                     <i class="fas fa-exchange-alt"></i>
                                                 </button>
@@ -192,9 +192,9 @@
                                                         title="Record usage">
                                                     <i class="fas fa-minus"></i>
                                                 </button>
-                                                <a href="{{ url_for('item_history', product_id=product.id) }}" 
+                                                <a href="{{ url_for('individual_item_history', item_id=item.id) }}" 
                                                    class="btn btn-outline-info btn-sm" 
-                                                   title="View history">
+                                                   title="View item history">
                                                     <i class="fas fa-history"></i>
                                                 </a>
                                             </div>
@@ -235,13 +235,11 @@
                         <input type="text" class="form-control" id="transferItemName" readonly>
                     </div>
                     <div class="mb-3">
-                        <label for="transferToBag" class="form-label">Transfer to Bag</label>
+                        <label for="transferToBag" class="form-label">Transfer to</label>
                         <select class="form-select" id="transferToBag" name="to_bag_id" required>
                             <option value="">Select destination...</option>
                             {% for bag in bags %}
-                                {% if bag.name != 'Cabinet' %}
-                                <option value="{{ bag.id }}">{{ bag.name }}</option>
-                                {% endif %}
+                            <option value="{{ bag.id }}" data-bag-name="{{ bag.name }}">{{ bag.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -310,13 +308,28 @@ $(document).ready(function() {
 });
 
 // Show transfer modal for individual items
-function showTransferModal(itemId, itemName, maxQuantity) {
+function showTransferModal(itemId, itemName, maxQuantity, currentBagName) {
     document.getElementById('transferItemId').value = itemId;
     document.getElementById('transferItemName').value = itemName;
     document.getElementById('transferMaxQuantity').textContent = maxQuantity;
     document.getElementById('transferQuantity').max = maxQuantity;
     document.getElementById('transferQuantity').value = '';
-    document.getElementById('transferToBag').value = '';
+    
+    // Reset all options and grey out current bag
+    const select = document.getElementById('transferToBag');
+    select.value = '';
+    
+    Array.from(select.options).forEach(option => {
+        if (option.dataset.bagName === currentBagName) {
+            option.disabled = true;
+            option.style.color = '#6c757d';
+            option.textContent = `${currentBagName} (current location)`;
+        } else {
+            option.disabled = false;
+            option.style.color = '';
+            option.textContent = option.dataset.bagName;
+        }
+    });
     
     const modal = new bootstrap.Modal(document.getElementById('transferModal'));
     modal.show();

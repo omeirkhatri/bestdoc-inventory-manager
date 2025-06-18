@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Individual Item History{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Individual Item History</h2>
+                    <p class="text-muted">History for specific item batch</p>
+                </div>
+                <a href="{{ url_for('inventory') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Inventory
+                </a>
+            </div>
+
+            <!-- Item Details Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Item Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Name:</strong><br>
+                            <span class="text-primary">{{ item.name }}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>Type:</strong><br>
+                            <span class="badge bg-secondary">{{ item.type }}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>Size:</strong><br>
+                            <span class="badge bg-info">{{ item.size or 'N/A' }}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>Current Quantity:</strong><br>
+                            <span class="badge bg-success">{{ item.quantity }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Current Location:</strong><br>
+                            <span class="badge bg-primary">{{ item.bag.name }}</span>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <strong>Batch Number:</strong><br>
+                            {{ item.batch_number or 'Not specified' }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Expiry Date:</strong><br>
+                            {% if item.expiry_date %}
+                                <span class="{% if item.is_expired() %}text-danger{% elif item.expires_soon() %}text-warning{% else %}text-success{% endif %}">
+                                    {{ item.expiry_date.strftime('%Y-%m-%d') }}
+                                </span>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Date Added:</strong><br>
+                            {{ item.date_added.strftime('%Y-%m-%d %H:%M') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Movement History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Movement History</h5>
+                </div>
+                <div class="card-body">
+                    {% if movements %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                    <th>Quantity</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Patient</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for movement in movements %}
+                                <tr>
+                                    <td>{{ movement.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        {% if movement.movement_type == 'addition' %}
+                                            <span class="badge bg-success">Added</span>
+                                        {% elif movement.movement_type == 'transfer' %}
+                                            <span class="badge bg-primary">Transfer</span>
+                                        {% elif movement.movement_type == 'usage' %}
+                                            <span class="badge bg-warning">Used</span>
+                                        {% elif movement.movement_type == 'wastage' %}
+                                            <span class="badge bg-danger">Wasted</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ movement.movement_type.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if movement.movement_type in ['usage', 'wastage'] %}
+                                            <span class="text-danger">-{{ movement.quantity }}</span>
+                                        {% else %}
+                                            <span class="text-success">+{{ movement.quantity }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ movement.from_bag or '-' }}</td>
+                                    <td>{{ movement.to_bag or '-' }}</td>
+                                    <td>{{ movement.patient_name or '-' }}</td>
+                                    <td>{{ movement.notes or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Movement History</h5>
+                        <p class="text-muted">This item has no recorded movements yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
