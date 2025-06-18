@@ -102,19 +102,19 @@ def dashboard():
     # Bags below minimum quantities
     low_stock_bags = []
     for bag in bags:
-        bag_items = []
+        bag_low_items = []
         for minimum in bag.minimums:
             if minimum.is_below_minimum():
-                bag_items.append({
+                bag_low_items.append({
                     'product': minimum.product,
                     'current': minimum.current_quantity(),
                     'minimum': minimum.minimum_quantity,
                     'shortage': minimum.shortage_amount()
                 })
-        if bag_items:
+        if bag_low_items:
             low_stock_bags.append({
                 'bag': bag,
-                'items': bag_items
+                'low_items': bag_low_items
             })
     
     # Recent movements
@@ -992,19 +992,19 @@ def bag_minimums():
     # Get bags that need restocking
     low_stock_bags = []
     for bag in bags:
-        bag_items = []
+        bag_low_items = []
         for minimum in bag.minimums:
             if minimum.is_below_minimum():
-                bag_items.append({
+                bag_low_items.append({
                     'product': minimum.product,
                     'current': minimum.current_quantity(),
                     'minimum': minimum.minimum_quantity,
                     'shortage': minimum.shortage_amount()
                 })
-        if bag_items:
+        if bag_low_items:
             low_stock_bags.append({
                 'bag': bag,
-                'items': bag_items
+                'low_items': bag_low_items
             })
     
     return render_template('bag_minimums.html', 

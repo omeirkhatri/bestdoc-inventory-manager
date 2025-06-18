@@ -171,7 +171,7 @@
                             <h6 class="card-title text-warning mb-1">
                                 <i class="fas fa-briefcase me-1"></i>{{ bag_info.bag.name }}
                             </h6>
-                            {% for item in bag_info.items %}
+                            {% for item in bag_info.low_items %}
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <small>{{ item.product.name }}</small>
                                 <span class="badge bg-warning text-dark">

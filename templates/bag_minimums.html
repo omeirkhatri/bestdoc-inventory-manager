@@ -27,7 +27,7 @@
                                 <h6 class="card-title text-warning">
                                     <i class="fas fa-briefcase me-2"></i>{{ bag_info.bag.name }}
                                 </h6>
-                                {% for item in bag_info.items %}
+                                {% for item in bag_info.low_items %}
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <small>{{ item.product.name }}</small>
                                     <span class="badge bg-warning text-dark">
