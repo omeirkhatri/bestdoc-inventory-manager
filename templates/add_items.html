@@ -215,8 +215,19 @@ function handleItemNameInput(input) {
 }
 
 function searchItems(query, suggestionsDiv, input) {
-    fetch(`/api/items/search?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
+    fetch(`/api/items/search?q=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(items => {
             showSuggestions(items, suggestionsDiv, input);
         })
