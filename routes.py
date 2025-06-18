@@ -543,6 +543,26 @@ def handle_transfer():
         )
         db.session.add(movement)
         
+        # Create undo action
+        undo_data = {
+            'action_type': 'transfer',
+            'item_id': item.id,
+            'from_bag_id': from_bag.id,
+            'to_bag_id': to_bag.id,
+            'quantity': quantity,
+            'item_name': item.name,
+            'existing_item_id': existing_item.id if existing_item else None,
+            'new_item_created': existing_item is None
+        }
+        
+        undo_action = UndoAction(
+            action_type='transfer',
+            action_data=json.dumps(undo_data),
+            description=f"Transfer {quantity} {item.name} from {from_bag.name} to {to_bag.name}",
+            user_id=current_user.id
+        )
+        db.session.add(undo_action)
+        
         db.session.commit()
         flash(f"Successfully transferred {quantity} units of {item.name} from {from_bag.name} to {to_bag.name}", "success")
         
@@ -1164,6 +1184,49 @@ def undo_last_action():
             ).delete()
             
             success_message = f"Restored bag '{action_data['bag_name']}' with all items and settings"
+        
+        elif last_action.action_type == 'transfer':
+            # Reverse the transfer
+            from_bag = Bag.query.get(action_data['from_bag_id'])
+            to_bag = Bag.query.get(action_data['to_bag_id'])
+            
+            if action_data['new_item_created']:
+                # Delete the item that was created in destination bag
+                dest_item = Item.query.filter_by(
+                    name=action_data['item_name'],
+                    bag_id=action_data['to_bag_id']
+                ).first()
+                if dest_item:
+                    db.session.delete(dest_item)
+            else:
+                # Reduce quantity from existing item in destination bag
+                dest_item = Item.query.get(action_data['existing_item_id'])
+                if dest_item:
+                    dest_item.quantity -= action_data['quantity']
+                    if dest_item.quantity <= 0:
+                        db.session.delete(dest_item)
+            
+            # Restore quantity to source item
+            source_item = Item.query.get(action_data['item_id'])
+            if source_item:
+                source_item.quantity += action_data['quantity']
+                source_item.updated_at = datetime.utcnow()
+            
+            # Remove the transfer movement history
+            MovementHistory.query.filter(
+                and_(
+                    MovementHistory.item_name == action_data['item_name'],
+                    MovementHistory.from_bag == from_bag.name,
+                    MovementHistory.to_bag == to_bag.name,
+                    MovementHistory.quantity == action_data['quantity'],
+                    MovementHistory.movement_type == 'transfer'
+                )
+            ).delete()
+            
+            success_message = f"Reversed transfer of {action_data['quantity']} {action_data['item_name']} from {to_bag.name} back to {from_bag.name}"
+        
+        else:
+            return jsonify({'success': False, 'error': 'Unknown action type'})
         
         # Mark the undo action as used
         last_action.is_used = True
