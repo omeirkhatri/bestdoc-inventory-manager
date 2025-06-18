@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Weekly Check - Healthcare Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-calendar-check me-2"></i>
+            Weekly Check
+        </h1>
+        <p class="text-muted mb-4">
+            Update counts for consumable items. Enter the actual count you observe, and the system will automatically calculate usage or adjustments.
+        </p>
+    </div>
+</div>
+
+{% if grouped_items %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>
+                    Consumable Items Check
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('handle_weekly_check') }}">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Current Qty</th>
+                                    <th>New Count</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key, item_data in grouped_items.items() %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item_data.name }}</strong>
+                                        {% if item_data.size %}
+                                            <br><small class="text-muted">Size: {{ item_data.size }}</small>
+                                        {% endif %}
+                                        <br><small class="text-muted">Type: {{ item_data.items[0].type }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ item_data.current_qty }}</span>
+                                        <!-- Hidden fields to store current data -->
+                                        <input type="hidden" name="current_qty_{{ loop.index }}" value="{{ item_data.current_qty }}">
+                                        <input type="hidden" name="item_name_{{ loop.index }}" value="{{ item_data.name }}">
+                                        <input type="hidden" name="item_type_{{ loop.index }}" value="{{ item_data.items[0].type }}">
+                                        <input type="hidden" name="item_size_{{ loop.index }}" value="{{ item_data.size or '' }}">
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               name="new_count_{{ loop.index }}" 
+                                               class="form-control weekly-check-input"
+                                               style="width: 100px;"
+                                               min="0" 
+                                               value="{{ item_data.current_qty }}"
+                                               data-current="{{ item_data.current_qty }}">
+                                    </td>
+                                    <td>
+                                        <span class="delta-indicator" id="delta_{{ loop.index }}"></span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-check me-2"></i>
+                            Complete Weekly Check
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
+                <h5>No Consumable Items Found</h5>
+                <p class="text-muted">
+                    No items requiring weekly check were found. Items of type "Consumable Dressings/Swabs" and "Catheters & Containers" will appear here.
+                </p>
+                <a href="{{ url_for('add_items') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Add Items
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.weekly-check-input {
+    width: 100px !important;
+}
+
+.delta-indicator {
+    font-weight: bold;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.delta-positive {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.delta-negative {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.delta-zero {
+    background-color: #e2e3e5;
+    color: #6c757d;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to all weekly check inputs
+    const inputs = document.querySelectorAll('.weekly-check-input');
+    
+    inputs.forEach(function(input) {
+        input.addEventListener('input', function() {
+            updateDeltaIndicator(this);
+        });
+        
+        // Initialize delta indicators
+        updateDeltaIndicator(input);
+    });
+    
+    function updateDeltaIndicator(input) {
+        const currentQty = parseInt(input.dataset.current);
+        const newCount = parseInt(input.value) || 0;
+        const delta = newCount - currentQty;
+        
+        // Find the corresponding delta indicator
+        const inputName = input.name;
+        const index = inputName.replace('new_count_', '');
+        const indicator = document.getElementById('delta_' + index);
+        
+        if (indicator) {
+            // Clear previous classes
+            indicator.className = 'delta-indicator';
+            
+            if (delta === 0) {
+                indicator.textContent = 'No change';
+                indicator.classList.add('delta-zero');
+            } else if (delta > 0) {
+                indicator.textContent = '+' + delta + ' (Adjustment)';
+                indicator.classList.add('delta-positive');
+            } else {
+                indicator.textContent = delta + ' (Usage)';
+                indicator.classList.add('delta-negative');
+            }
+        }
+    }
+});
+</script>
+
+{% endblock %}

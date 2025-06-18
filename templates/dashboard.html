@@ -12,6 +12,28 @@
     </div>
 </div>
 
+<!-- Friday Banner -->
+<div class="row mb-4" id="fridayBanner" style="display: none;">
+    <div class="col-12">
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <h5 class="alert-heading">
+                <i class="fas fa-calendar-check me-2"></i>
+                Friday Weekly Check Reminder
+            </h5>
+            <p class="mb-2">It's Friday! Time to perform your weekly consumable items check.</p>
+            <hr>
+            <div class="d-flex align-items-center justify-content-between">
+                <small class="text-muted">Update counts for consumable dressings, swabs, catheters, and containers.</small>
+                <a href="{{ url_for('weekly_check') }}" class="btn btn-info btn-sm">
+                    <i class="fas fa-clipboard-check me-1"></i>
+                    Start Weekly Check
+                </a>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <!-- Summary Cards -->
 <div class="row mb-4">
     <div class="col-md-3 col-sm-6 mb-3">

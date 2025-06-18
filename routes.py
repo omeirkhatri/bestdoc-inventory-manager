@@ -829,6 +829,123 @@ def api_search_items():
     
     return jsonify(results[:10])
 
+@app.route('/weekly_check')
+def weekly_check():
+    """Display weekly check page for consumable items"""
+    # Get all items that require weekly check (types 4 and 5)
+    weekly_check_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
+    
+    consumable_items = Item.query.filter(
+        and_(
+            Item.type.in_(weekly_check_types),
+            Item.quantity > 0
+        )
+    ).order_by(Item.name, Item.size).all()
+    
+    # Group items by name and size for easier display
+    grouped_items = {}
+    for item in consumable_items:
+        key = f"{item.name} ({item.size})" if item.size else item.name
+        if key not in grouped_items:
+            grouped_items[key] = {
+                'name': item.name,
+                'size': item.size,
+                'current_qty': 0,
+                'items': []
+            }
+        grouped_items[key]['current_qty'] += item.quantity
+        grouped_items[key]['items'].append(item)
+    
+    return render_template('weekly_check.html', grouped_items=grouped_items)
+
+@app.route('/weekly_check', methods=['POST'])
+def handle_weekly_check():
+    """Process weekly check form submission"""
+    if request.method == 'POST':
+        try:
+            # Get today's date to check if it's Friday
+            today = datetime.now()
+            
+            # Process each item's new count
+            bulk_movements = []
+            
+            for key, value in request.form.items():
+                if key.startswith('new_count_'):
+                    item_key = key.replace('new_count_', '')
+                    new_count = int(value) if value.strip() else 0
+                    
+                    # Get current quantity from hidden field
+                    current_qty_key = f'current_qty_{item_key}'
+                    current_qty = int(request.form.get(current_qty_key, 0))
+                    
+                    # Get item details from hidden fields
+                    item_name = request.form.get(f'item_name_{item_key}', '')
+                    item_type = request.form.get(f'item_type_{item_key}', '')
+                    item_size = request.form.get(f'item_size_{item_key}', '')
+                    
+                    # Calculate delta
+                    delta = new_count - current_qty
+                    
+                    if delta != 0:
+                        # Determine movement type
+                        movement_type = 'USAGE' if delta < 0 else 'ADJUSTMENT'
+                        
+                        # Create movement record
+                        movement = MovementHistory(
+                            item_name=item_name,
+                            item_type=item_type,
+                            item_size=item_size,
+                            quantity=abs(delta),
+                            movement_type=f'BULK_WEEKLY_CHECK_{movement_type}',
+                            notes=f'Weekly check: {current_qty} → {new_count} (Δ{delta:+d})',
+                            timestamp=datetime.utcnow()
+                        )
+                        bulk_movements.append(movement)
+                        
+                        # Update actual item quantities
+                        # Find all items with this name/size combination
+                        items_to_update = Item.query.filter(
+                            and_(
+                                Item.name == item_name,
+                                Item.type == item_type,
+                                Item.size == item_size if item_size else Item.size.is_(None),
+                                Item.quantity > 0
+                            )
+                        ).all()
+                        
+                        if delta < 0:
+                            # Usage - reduce quantities
+                            remaining_to_reduce = abs(delta)
+                            for item in items_to_update:
+                                if remaining_to_reduce <= 0:
+                                    break
+                                
+                                if item.quantity <= remaining_to_reduce:
+                                    remaining_to_reduce -= item.quantity
+                                    item.quantity = 0
+                                else:
+                                    item.quantity -= remaining_to_reduce
+                                    remaining_to_reduce = 0
+                        else:
+                            # Adjustment - add to first available item or create new if needed
+                            if items_to_update:
+                                items_to_update[0].quantity += delta
+                            # If no items exist, we'd need to create one, but that's unusual for weekly check
+            
+            # Save all movements and item updates
+            for movement in bulk_movements:
+                db.session.add(movement)
+            
+            db.session.commit()
+            
+            flash(f'Weekly check completed successfully! {len(bulk_movements)} items updated.', 'success')
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error processing weekly check: {str(e)}', 'error')
+    
+    return redirect(url_for('weekly_check'))
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404

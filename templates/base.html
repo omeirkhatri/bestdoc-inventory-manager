@@ -77,6 +77,12 @@
                     </a>
                 </div>
                 <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'weekly_check' %}active{% endif %}" href="{{ url_for('weekly_check') }}">
+                        <i class="fas fa-calendar-check"></i>
+                        Weekly Check
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
                     <a class="sidebar-nav-link {% if request.endpoint == 'expiry' %}active{% endif %}" href="{{ url_for('expiry') }}">
                         <i class="fas fa-exclamation-triangle"></i>
                         Expiry

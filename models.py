@@ -91,6 +91,12 @@ class Item(db.Model):
         elif self.expires_soon:
             return 'expiring'
         return 'good'
+    
+    @property
+    def is_weekly_check_item(self):
+        """Check if this item type requires weekly check (types 4 and 5)"""
+        weekly_check_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
+        return self.type in weekly_check_types
 
 class MovementHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -118,23 +124,26 @@ class ItemType(db.Model):
     def __repr__(self):
         return f'<ItemType {self.name}>'
 
-# Initialize default item types
+# Initialize default item types - Updated for simplified system
 def init_default_types():
     default_types = [
-        'Consumables',
-        'Pharmacy Vials',
-        'IV Vials',
-        'Syringes',
-        'Needles',
-        'Bandages',
-        'Medications',
-        'Equipment',
-        'Supplies'
+        'Medications/Vials',
+        'IV Fluids/Solutions', 
+        'Needles & Syringes',
+        'Consumable Dressings/Swabs',
+        'Catheters & Containers',
+        'Equipment/Waste'
     ]
     
     for type_name in default_types:
         if not ItemType.query.filter_by(name=type_name).first():
             item_type = ItemType(name=type_name)
             db.session.add(item_type)
+    
+    # Update existing items to type 1 if they have old types
+    existing_items = Item.query.all()
+    for item in existing_items:
+        if item.type not in default_types:
+            item.type = 'Medications/Vials'  # Default to type 1
     
     db.session.commit()
