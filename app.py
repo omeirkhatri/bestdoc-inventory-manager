@@ -41,6 +41,42 @@ def load_user(user_id):
     from models import User
     return User.query.get(int(user_id))
 
+# Register Jinja filters
+def datetime_gmt4_filter(dt):
+    """Convert datetime to GMT+4 and format as DD/MM/YY HH:MM"""
+    if not dt:
+        return ''
+    from pytz import timezone
+    import pytz
+    
+    GMT_PLUS_4 = timezone('Asia/Dubai')  # GMT+4
+    
+    if dt.tzinfo is None:
+        dt = pytz.utc.localize(dt)
+    local_dt = dt.astimezone(GMT_PLUS_4)
+    return local_dt.strftime('%d/%m/%y %H:%M')
+
+def date_gmt4_filter(dt):
+    """Convert date to GMT+4 and format as DD/MM/YY"""
+    if not dt:
+        return ''
+    from datetime import datetime
+    from pytz import timezone
+    import pytz
+    
+    GMT_PLUS_4 = timezone('Asia/Dubai')  # GMT+4
+    
+    if isinstance(dt, datetime):
+        if dt.tzinfo is None:
+            dt = pytz.utc.localize(dt)
+        local_dt = dt.astimezone(GMT_PLUS_4)
+        return local_dt.strftime('%d/%m/%y')
+    else:
+        return dt.strftime('%d/%m/%y')
+
+app.jinja_env.filters['format_datetime_gmt4'] = datetime_gmt4_filter
+app.jinja_env.filters['format_date_gmt4'] = date_gmt4_filter
+
 with app.app_context():
     # Import models to ensure tables are created
     import models  # noqa: F401

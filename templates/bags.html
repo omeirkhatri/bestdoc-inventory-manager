@@ -171,7 +171,6 @@
                 </h5>
             </div>
             <div class="card-body">
-                {% set medical_bags = bags|selectattr("location", "equalto", "bag")|list %}
                 {% if medical_bags %}
                 <div class="table-responsive">
                     <table class="table table-hover">
