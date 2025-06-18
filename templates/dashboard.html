@@ -363,19 +363,29 @@ const statusData = {
 };
 
 new Chart(statusCtx, {
-    type: 'bar',
+    type: 'pie',
     data: statusData,
     options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    usePointStyle: true
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                        return `${label}: ${value} items (${percentage}%)`;
+                    }
+                }
             }
         }
     }
