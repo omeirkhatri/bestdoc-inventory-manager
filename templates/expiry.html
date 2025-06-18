@@ -97,7 +97,7 @@
                                 {{ (today - item.expiry_date).days }} days
                             </span>
                         </td>
-                        <td>{{ item.batch_number or '-' }}</td>
+                        <td></td>
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
                                 <button type="button" class="btn btn-outline-warning" 
@@ -169,7 +169,7 @@
                                 {{ days_left }} days
                             </span>
                         </td>
-                        <td>{{ item.batch_number or '-' }}</td>
+                        <td></td>
                         <td>
                             {% set days_left = (item.expiry_date - today).days %}
                             {% if days_left <= 7 %}
@@ -438,13 +438,13 @@ function exportExpiryReport() {
     
     // Add expired items
     {% for item in expired_items %}
-    csvContent += 'Expired,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ (today - item.expiry_date).days }},"{{ item.batch_number or '' }}","Critical"\n';
+    csvContent += 'Expired,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ (today - item.expiry_date).days }},"","Critical"\n';
     {% endfor %}
     
     // Add expiring items
     {% for item in expiring_items %}
     {% set days_left = (item.expiry_date - today).days %}
-    csvContent += 'Expiring Soon,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ days_left }},"{{ item.batch_number or '' }}","{% if days_left <= 7 %}Critical{% elif days_left <= 14 %}High{% else %}Medium{% endif %}"\n';
+    csvContent += 'Expiring Soon,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ days_left }},"","{% if days_left <= 7 %}Critical{% elif days_left <= 14 %}High{% else %}Medium{% endif %}"\n';
     {% endfor %}
     
     const blob = new Blob([csvContent], { type: 'text/csv' });

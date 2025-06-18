@@ -287,7 +287,6 @@ def handle_manual_addition():
                         size=size,
                         quantity=int(quantities[i]),
                         expiry_date=expiry_date,
-                        batch_number=batch_number,
                         bag_id=bag.id,
                         product_id=product.id
                     )

@@ -111,7 +111,7 @@
                                 {{ (today - item.expiry_date).days }} days
                             </span>
                         </td>
-                        <td>{{ item.batch_number or '-' }}</td>
+                        <td></td>
                         <td>
                             <button type="button" class="btn btn-outline-danger btn-sm" 
                                     onclick="showWastageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }}, '{{ item.type }}', '{{ item.bag.name }}')">

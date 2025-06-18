@@ -39,7 +39,12 @@
                     </div>
                     <div class="col-md-3">
                         <strong>Minimum Stock:</strong><br>
-                        {{ product.minimum_stock }}
+                        <div class="d-flex align-items-center">
+                            <span id="currentMinStock">{{ product.minimum_stock }}</span>
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="editMinimumStock({{ product.id }}, {{ product.minimum_stock }})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="col-md-3">
                         <strong>Total Current Stock:</strong><br>
@@ -118,7 +123,7 @@
                                 <span class="text-muted">No expiry</span>
                             {% endif %}
                         </td>
-                        <td>{{ item.batch_number or '-' }}</td>
+                        <td></td>
                         <td>
                             {% if item.expiry_status == 'expired' %}
                                 <span class="badge bg-danger">
