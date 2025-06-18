@@ -362,12 +362,39 @@ def inventory():
                                                 Item.expiry_date >= today, 
                                                 Item.expiry_date <= thirty_days))
         
-        items = item_query.order_by(Item.size, Item.expiry_date).all()
+        items = item_query.order_by(Item.brand, Item.size, Item.expiry_date).all()
         
         if items:  # Only include products that have matching items
+            # Group items by brand, size, and expiry date
+            grouped_items = []
+            current_group = None
+            
+            for item in items:
+                # Create a key for grouping (brand, size, expiry_date)
+                group_key = (item.brand or 'No Brand', item.size or 'No Size', item.expiry_date)
+                
+                if current_group is None or current_group['key'] != group_key:
+                    # Start a new group
+                    current_group = {
+                        'key': group_key,
+                        'brand': item.brand,
+                        'size': item.size,
+                        'expiry_date': item.expiry_date,
+                        'items': [item],
+                        'total_quantity': item.quantity,
+                        'bags': [item.bag]
+                    }
+                    grouped_items.append(current_group)
+                else:
+                    # Add to existing group
+                    current_group['items'].append(item)
+                    current_group['total_quantity'] += item.quantity
+                    if item.bag not in current_group['bags']:
+                        current_group['bags'].append(item.bag)
+            
             filtered_products.append({
                 'product': product,
-                'items': items,
+                'grouped_items': grouped_items,
                 'total_quantity': sum(item.quantity for item in items),
                 'is_low_stock': product.is_low_stock
             })
