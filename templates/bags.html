@@ -265,7 +265,7 @@
             <ul class="mb-0">
                 <li><strong>Cabinet:</strong> The default Cabinet bag cannot be deleted or renamed - it serves as the central storage</li>
                 <li><strong>Naming:</strong> Use descriptive names like "Emergency Bag 1", "ICU Mobile Cart", "Trauma Kit A"</li>
-                <li><strong>Deletion:</strong> Bags can only be deleted if they contain no items - transfer items first</li>
+                <li><strong>Deletion:</strong> When deleting bags with items, all items will automatically transfer to Cabinet</li>
                 <li><strong>Organization:</strong> Consider creating bags based on location, medical specialty, or usage frequency</li>
                 <li><strong>Tracking:</strong> Each bag maintains its own inventory that can be viewed and managed separately</li>
             </ul>
@@ -318,15 +318,14 @@
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" id="delete_bag_id" name="bag_id">
                 <div class="modal-body">
-                    <div class="alert alert-danger">
+                    <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Warning:</strong> This action cannot be undone.
+                        <strong>Warning:</strong> This action can be undone using the Undo button.
                     </div>
                     <p>Are you sure you want to delete the bag "<strong id="delete_bag_name"></strong>"?</p>
-                    <div id="delete_bag_warning" class="alert alert-warning" style="display: none;">
+                    <div id="itemTransferInfo" class="alert alert-info" style="display: none;">
                         <i class="fas fa-info-circle me-2"></i>
-                        This bag contains <strong id="delete_item_count"></strong> items. 
-                        You must transfer all items before deleting the bag.
+                        <span id="itemTransferText"></span> will be automatically transferred to Cabinet.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -396,22 +395,18 @@ function showEditModal(bagId, bagName, bagDescription) {
 }
 
 // Show delete modal
-function showDeleteModal(bagId, bagName, itemCount) {
+function deleteBag(bagId, bagName, itemCount) {
     document.getElementById('delete_bag_id').value = bagId;
     document.getElementById('delete_bag_name').textContent = bagName;
-    document.getElementById('delete_item_count').textContent = itemCount;
     
-    const warningDiv = document.getElementById('delete_bag_warning');
-    const confirmBtn = document.getElementById('delete_confirm_btn');
+    const itemTransferInfo = document.getElementById('itemTransferInfo');
+    const itemTransferText = document.getElementById('itemTransferText');
     
     if (itemCount > 0) {
-        warningDiv.style.display = 'block';
-        confirmBtn.disabled = true;
-        confirmBtn.innerHTML = '<i class="fas fa-ban me-2"></i>Cannot Delete';
+        itemTransferInfo.style.display = 'block';
+        itemTransferText.textContent = `${itemCount} item${itemCount > 1 ? 's' : ''}`;
     } else {
-        warningDiv.style.display = 'none';
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = '<i class="fas fa-trash me-2"></i>Delete Bag';
+        itemTransferInfo.style.display = 'none';
     }
     
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
