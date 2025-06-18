@@ -529,6 +529,54 @@ body {
     border-left: 3px solid var(--inventory-teal);
 }
 
+/* Individual item history page table styling */
+.individual-items-table {
+    margin-bottom: 0;
+}
+
+.individual-items-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    white-space: nowrap;
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
+}
+
+.individual-items-table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+
+.individual-items-table .date-added-cell {
+    min-width: 200px;
+}
+
+.individual-items-table .date-added-cell .d-flex {
+    gap: 0.5rem;
+}
+
+.individual-items-table .actions-cell {
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+.individual-items-table tbody tr:hover {
+    background-color: rgba(79, 209, 199, 0.05);
+}
+
+/* Improved spacing for location and size badges */
+.individual-items-table .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Better alignment for quantity display */
+.individual-items-table .text-primary {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
 /* Main content area */
 .main-content {
     margin-left: 260px;

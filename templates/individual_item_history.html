@@ -33,7 +33,7 @@
                         </div>
                         <div class="col-md-2">
                             <strong>Total Quantity:</strong><br>
-                            <span class="badge bg-{% if product.total_quantity() <= product.minimum_stock %}danger{% elif product.total_quantity() <= 10 %}warning{% else %}success{% endif %}">{{ product.total_quantity() }}</span>
+                            <span class="badge bg-{% if product.total_quantity <= product.minimum_stock %}danger{% elif product.total_quantity <= 10 %}warning{% else %}success{% endif %}">{{ product.total_quantity }}</span>
                         </div>
                         <div class="col-md-2">
                             <strong>Minimum Stock:</strong><br>
@@ -63,16 +63,15 @@
                 <div class="card-body">
                     {% if items %}
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover individual-items-table">
                                 <thead>
                                     <tr>
                                         <th>Location</th>
                                         <th>Size</th>
                                         <th>Quantity</th>
-
                                         <th>Expiry Date</th>
                                         <th>Status</th>
-                                        <th>Added</th>
+                                        <th>Date Added</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -88,7 +87,6 @@
                                         <td>
                                             <strong class="text-primary">{{ item.quantity }}</strong>
                                         </td>
-                                        <td></td>
                                         <td>
                                             {% if item.expiry_date %}
                                                 {{ item.expiry_date|format_date_gmt4 }}
@@ -105,7 +103,16 @@
                                                 <span class="badge bg-success">Good</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ item.date_added|format_datetime_gmt4 }}</td>
+                                        <td class="date-added-cell">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span>{{ item.date_added|format_datetime_gmt4 }}</span>
+                                                <a href="{{ url_for('individual_item_history', item_id=item.id) }}" 
+                                                   class="btn btn-outline-info btn-sm ms-2" 
+                                                   title="View item history">
+                                                    <i class="fas fa-history"></i>
+                                                </a>
+                                            </div>
+                                        </td>
                                         <td>
                                             <div class="btn-group" role="group">
                                                 <button type="button" class="btn btn-outline-primary btn-sm" 

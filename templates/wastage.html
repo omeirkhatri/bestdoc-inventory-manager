@@ -308,14 +308,16 @@
 <script>
 // Initialize DataTables
 $(document).ready(function() {
-    $('#wastageTable').DataTable({
-        responsive: true,
-        pageLength: 25,
-        order: [[0, 'desc']],
-        columnDefs: [
-            { orderable: false, targets: [-1] }
-        ]
-    });
+    if ($('#wastageTable').length && $('#wastageTable tbody tr').length > 0) {
+        $('#wastageTable').DataTable({
+            responsive: true,
+            pageLength: 25,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [-1] }
+            ]
+        });
+    }
 });
 
 let currentWastageData = null;
