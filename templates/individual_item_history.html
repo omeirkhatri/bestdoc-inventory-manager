@@ -213,7 +213,7 @@
                 <h5 class="modal-title">Transfer Item</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('handle_transfer') }}">
+            <form method="POST" action="{{ url_for('transfer') }}">
                 <div class="modal-body">
                     <input type="hidden" id="transfer-item-id" name="item_id">
                     <div class="mb-3">
@@ -258,7 +258,7 @@
                 <h5 class="modal-title">Record Usage</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('handle_usage') }}">
+            <form method="POST" action="{{ url_for('usage') }}">
                 <div class="modal-body">
                     <input type="hidden" id="usage-item-id" name="item_id">
                     <div class="mb-3">

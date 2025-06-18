@@ -701,6 +701,61 @@ body {
     margin-right: 0;
 }
 
+/* Item History page table styling */
+.card .table-striped {
+    margin-bottom: 0;
+}
+
+.card .table-striped th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.card .table-striped td {
+    vertical-align: middle;
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card .table-striped tbody tr:hover {
+    background-color: rgba(79, 209, 199, 0.05);
+}
+
+/* Date added column with history button */
+.card .table-striped td:nth-last-child(2) .d-flex {
+    min-width: 180px;
+    gap: 0.5rem;
+}
+
+.card .table-striped .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+}
+
+.card .table-striped .btn-group {
+    display: flex;
+    gap: 0.25rem;
+}
+
+/* Responsive table improvements */
+@media (max-width: 768px) {
+    .card .table-striped th,
+    .card .table-striped td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .card .table-striped .btn-sm {
+        padding: 0.125rem 0.25rem;
+        font-size: 0.7rem;
+    }
+}
+
 /* Main content area */
 .main-content {
     margin-left: 260px;

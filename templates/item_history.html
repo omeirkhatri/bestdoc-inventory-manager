@@ -101,9 +101,9 @@
                         <th>Quantity</th>
                         <th>Current Bag</th>
                         <th>Expiry Date</th>
-
                         <th>Status</th>
                         <th>Date Added</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -123,7 +123,6 @@
                                 <span class="text-muted">No expiry</span>
                             {% endif %}
                         </td>
-                        <td></td>
                         <td>
                             {% if item.expiry_status == 'expired' %}
                                 <span class="badge bg-danger">
@@ -139,7 +138,30 @@
                                 </span>
                             {% endif %}
                         </td>
-                        <td>{{ item.date_added.strftime('%m/%d/%Y') if item.date_added else '-' }}</td>
+                        <td>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span>{{ item.date_added.strftime('%m/%d/%Y') if item.date_added else '-' }}</span>
+                                <a href="{{ url_for('individual_item_history', item_id=item.id) }}" 
+                                   class="btn btn-outline-info btn-sm ms-2" 
+                                   title="View individual item history">
+                                    <i class="fas fa-history"></i>
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                        onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
+                                        title="Transfer this item">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-warning btn-sm" 
+                                        onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})"
+                                        title="Record usage">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
