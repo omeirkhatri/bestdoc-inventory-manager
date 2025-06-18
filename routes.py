@@ -434,8 +434,7 @@ def inventory():
     
     # Get filter options
     bags = Bag.query.all()
-    item_types = db.session.query(Product.type).distinct().all()
-    item_types = [t[0] for t in item_types]
+    item_types = ItemType.query.all()
     
     return render_template('inventory.html',
                          products=filtered_products,

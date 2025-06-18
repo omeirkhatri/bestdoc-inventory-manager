@@ -32,8 +32,8 @@
                 <select class="form-select" id="type" name="type">
                     <option value="">All Types</option>
                     {% for item_type in item_types %}
-                    <option value="{{ item_type }}" {% if current_filters.type == item_type %}selected{% endif %}>
-                        {{ item_type }}
+                    <option value="{{ item_type.name }}" {% if current_filters.type == item_type.name %}selected{% endif %}>
+                        {{ item_type.name }}
                     </option>
                     {% endfor %}
                 </select>
