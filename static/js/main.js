@@ -571,20 +571,34 @@ const ProductManager = {
             return;
         }
         
-        const html = items.map(item => `
-            <button type="button" class="dropdown-item suggestion-item" 
-                    data-name="${item.name}" 
-                    data-type="${item.type}" 
-                    data-brand="${item.brand || ''}" 
-                    data-size="${item.size || ''}">
-                <div class="fw-bold">${item.name}</div>
-                <small class="text-muted">
-                    ${item.type}${item.brand ? ' - ' + item.brand : ''}${item.size ? ' (' + item.size + ')' : ''}
-                </small>
-            </button>
-        `).join('');
+        // Clear container first
+        container.innerHTML = '';
         
-        container.innerHTML = html;
+        // Create elements safely without innerHTML
+        items.forEach(item => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'dropdown-item suggestion-item';
+            button.setAttribute('data-name', item.name);
+            button.setAttribute('data-type', item.type);
+            button.setAttribute('data-brand', item.brand || '');
+            button.setAttribute('data-size', item.size || '');
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'fw-bold';
+            nameDiv.textContent = item.name;
+            
+            const detailsSmall = document.createElement('small');
+            detailsSmall.className = 'text-muted';
+            const detailsText = item.type + 
+                (item.brand ? ' - ' + item.brand : '') + 
+                (item.size ? ' (' + item.size + ')' : '');
+            detailsSmall.textContent = detailsText;
+            
+            button.appendChild(nameDiv);
+            button.appendChild(detailsSmall);
+            container.appendChild(button);
+        });
         container.style.display = 'block';
         
         // Add click handlers to suggestions
