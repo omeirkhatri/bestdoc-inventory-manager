@@ -196,11 +196,32 @@ function initializeAutocomplete() {
             hideAllSuggestions();
         }
     });
+    
+    document.addEventListener('blur', function(e) {
+        if (e.target.classList.contains('item-name-input')) {
+            setTimeout(() => {
+                const suggestionsDiv = e.target.nextElementSibling;
+                hideSuggestions(suggestionsDiv);
+            }, 200);
+        }
+    });
+    
+    // Initialize minimum stock field visibility for existing rows
+    document.querySelectorAll('.item-row').forEach(row => {
+        toggleMinimumStockField(row, true); // Show by default for new items
+    });
 }
 
 function handleItemNameInput(input) {
     const query = input.value.trim();
     const suggestionsDiv = input.nextElementSibling;
+    const row = input.closest('.item-row');
+    
+    // Check if product exists for minimum stock field visibility
+    clearTimeout(input.checkTimeout);
+    input.checkTimeout = setTimeout(() => {
+        checkIfProductExists(query, row);
+    }, 500);
     
     if (query.length < 2) {
         hideSuggestions(suggestionsDiv);
@@ -255,7 +276,7 @@ function showSuggestions(items, suggestionsDiv, input) {
             </div>
         `;
         
-        suggestionItem.addEventListener('click', function(e) {
+        suggestionItem.addEventListener('mousedown', function(e) {
             e.preventDefault();
             selectItem(item, input);
             hideSuggestions(suggestionsDiv);
@@ -291,6 +312,9 @@ function selectItem(item, input) {
         sizeInput.value = item.size;
     }
     
+    // Hide minimum stock field since this is an existing item
+    toggleMinimumStockField(row, false);
+    
     // Focus on quantity field
     const quantityInput = row.querySelector('input[name="quantity"]');
     if (quantityInput) {
@@ -306,6 +330,37 @@ function hideAllSuggestions() {
     document.querySelectorAll('.item-suggestions').forEach(div => {
         hideSuggestions(div);
     });
+}
+
+function toggleMinimumStockField(row, show) {
+    const minimumStockDiv = row.querySelector('.col-md-5');
+    if (minimumStockDiv) {
+        minimumStockDiv.style.display = show ? 'block' : 'none';
+        const minimumStockInput = row.querySelector('input[name="minimum_stock"]');
+        if (minimumStockInput && !show) {
+            minimumStockInput.value = '';
+        }
+    }
+}
+
+function checkIfProductExists(itemName, row) {
+    if (!itemName || itemName.length < 2) {
+        toggleMinimumStockField(row, true);
+        return;
+    }
+    
+    fetch(`/api/check-existing-product?name=${encodeURIComponent(itemName)}`, {
+        method: 'GET',
+        credentials: 'same-origin',
+    })
+        .then(response => response.json())
+        .then(data => {
+            toggleMinimumStockField(row, !data.exists);
+        })
+        .catch(error => {
+            console.error('Error checking product:', error);
+            toggleMinimumStockField(row, true); // Show by default on error
+        });
 }
 
 // Add new row functionality
@@ -333,6 +388,10 @@ function addNewRow(templateRow = null) {
         const quantityInput = newRow.querySelector('input[name="quantity"]');
         if (quantityInput) quantityInput.value = '';
         
+        // Clear minimum stock field for duplicated rows since it's only for new products
+        const minimumStockInput = newRow.querySelector('input[name="minimum_stock"]');
+        if (minimumStockInput) minimumStockInput.value = '';
+        
         // Keep all other fields: name, type, brand, size, expiry_date
         // No need to clear them as they should be duplicated
     }
@@ -344,6 +403,11 @@ function addNewRow(templateRow = null) {
     const suggestionsDiv = newRow.querySelector('.item-suggestions');
     if (suggestionsDiv) {
         hideSuggestions(suggestionsDiv);
+    }
+    
+    // Initialize minimum stock field visibility for new row
+    if (!templateRow) {
+        toggleMinimumStockField(newRow, true); // Show by default for new items
     }
     
     itemRows.appendChild(newRow);
