@@ -380,7 +380,7 @@ def inventory():
     for product in products:
         # Check low stock filter first (applies to entire product)
         if status_filter == 'low_stock':
-            if not product.is_low_stock():
+            if not product.is_low_stock:
                 continue
         
         # Get active items for this product
@@ -1268,23 +1268,23 @@ def quick_restock_data():
         for minimum in target_bag.minimums:
             current_qty = minimum.current_quantity()
             if current_qty < minimum.minimum_quantity:
-                # Get available quantity in Cabinet for this product
-                cabinet_qty = 0
+                # Get available items in Cabinet for this product, sorted by expiry date
                 cabinet_items = Item.query.filter_by(
                     bag_id=cabinet.id, 
                     product_id=minimum.product_id
-                ).all()
+                ).filter(Item.quantity > 0).order_by(Item.expiry_date.asc().nullslast()).all()
                 
-                for item in cabinet_items:
-                    cabinet_qty += item.quantity
-                
+                cabinet_qty = sum(item.quantity for item in cabinet_items)
                 needed = minimum.minimum_quantity - current_qty
                 
                 # Get product details for display
                 product = minimum.product
                 size = None
+                earliest_expiry = None
+                
                 if cabinet_items:
                     size = cabinet_items[0].size
+                    earliest_expiry = cabinet_items[0].expiry_date
                 
                 restock_items.append({
                     'product_id': product.id,
@@ -1293,7 +1293,15 @@ def quick_restock_data():
                     'cabinet_qty': cabinet_qty,
                     'current_qty': current_qty,
                     'minimum_qty': minimum.minimum_quantity,
-                    'needed': needed
+                    'needed': needed,
+                    'earliest_expiry': earliest_expiry,
+                    'cabinet_items_details': [
+                        {
+                            'quantity': item.quantity,
+                            'expiry_date': item.expiry_date,
+                            'brand': item.brand
+                        } for item in cabinet_items
+                    ]
                 })
         
         return jsonify({'items': restock_items})

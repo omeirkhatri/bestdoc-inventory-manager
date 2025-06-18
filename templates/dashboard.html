@@ -417,9 +417,36 @@ function showQuickRestockModal(bagName, bagId) {
             
             if (data.items && data.items.length > 0) {
                 let html = '<div class="table-responsive"><table class="table table-hover"><thead><tr>' +
-                          '<th>Item</th><th>In Cabinet</th><th>Need</th><th>Transfer Amount</th></tr></thead><tbody>';
+                          '<th>Item</th><th>In Cabinet</th><th>Earliest Expiry</th><th>Need</th><th>Transfer Amount</th></tr></thead><tbody>';
                 
                 data.items.forEach((item, index) => {
+                    let expiryText = 'No expiry';
+                    let expiryClass = 'text-muted';
+                    
+                    if (item.earliest_expiry) {
+                        const expiryDate = new Date(item.earliest_expiry);
+                        const today = new Date();
+                        const daysDiff = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                        
+                        expiryText = expiryDate.toLocaleDateString();
+                        
+                        if (daysDiff < 0) {
+                            expiryClass = 'text-danger';
+                            expiryText += ' (Expired)';
+                        } else if (daysDiff <= 30) {
+                            expiryClass = 'text-warning';
+                            expiryText += ` (${daysDiff} days)`;
+                        } else {
+                            expiryClass = 'text-success';
+                        }
+                    }
+                    
+                    // Show detailed expiry info if multiple batches
+                    let detailsHtml = '';
+                    if (item.cabinet_items_details && item.cabinet_items_details.length > 1) {
+                        detailsHtml = '<br><small class="text-muted">Multiple batches available</small>';
+                    }
+                    
                     html += `<tr>
                         <td>
                             <strong>${item.product_name}</strong>
@@ -428,6 +455,10 @@ function showQuickRestockModal(bagName, bagId) {
                         </td>
                         <td>
                             <span class="badge bg-info">${item.cabinet_qty}</span>
+                        </td>
+                        <td>
+                            <small class="${expiryClass}">${expiryText}</small>
+                            ${detailsHtml}
                         </td>
                         <td>
                             <span class="badge bg-warning">${item.needed}</span>
