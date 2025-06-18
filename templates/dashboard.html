@@ -258,4 +258,183 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+/* Modern Sleek Dashboard Cards */
+.col-md-2-4 {
+    flex: 0 0 20%;
+    max-width: 20%;
+}
+
+@media (max-width: 768px) {
+    .col-md-2-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 16px;
+    padding: 24px;
+    height: 140px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+}
+
+.stat-card-blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card-green {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-card-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card-orange {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.stat-card-red {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.stat-content {
+    display: flex;
+    align-items: center;
+    height: calc(100% - 32px);
+    position: relative;
+    z-index: 2;
+}
+
+.stat-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-footer {
+    position: absolute;
+    bottom: 16px;
+    left: 24px;
+    right: 24px;
+    z-index: 2;
+}
+
+.stat-trend {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.stat-trend i {
+    margin-right: 4px;
+    font-size: 10px;
+}
+
+.stat-trend.positive {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-trend.warning {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-trend.negative {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.stat-trend.neutral {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Card background patterns */
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Remove link decoration */
+a.text-decoration-none:hover .stat-card {
+    text-decoration: none !important;
+}
+
+/* Dashboard section spacing */
+.dashboard-section {
+    margin-bottom: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .stat-card {
+        padding: 20px;
+        height: 120px;
+    }
+    
+    .stat-number {
+        font-size: 28px;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        margin-right: 12px;
+    }
+    
+    .stat-icon i {
+        font-size: 20px;
+    }
+}
+</style>
 {% endblock %}
