@@ -339,6 +339,50 @@
 </div>
 {% endblock %}
 
+
+
+{% block extra_head %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-content {
+    margin-left: 10px;
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 function editItemField(field, currentValue, itemId) {
@@ -385,6 +429,22 @@ function updateItemField(field, value, itemId) {
     });
 }
 
+function showTransferModal(itemId, itemName, quantity, bagName) {
+    document.getElementById('transfer-item-id').value = itemId;
+    document.getElementById('transfer-item-details').textContent = `${itemName} (${quantity} units from ${bagName})`;
+    document.getElementById('transfer-quantity').max = quantity;
+    document.getElementById('transfer-quantity').value = quantity;
+    new bootstrap.Modal(document.getElementById('transferModal')).show();
+}
+
+function showUsageModal(itemId, itemName, quantity) {
+    document.getElementById('usage-item-id').value = itemId;
+    document.getElementById('usage-item-details').textContent = `${itemName} (${quantity} units available)`;
+    document.getElementById('usage-quantity').max = quantity;
+    document.getElementById('usage-quantity').value = 1;
+    new bootstrap.Modal(document.getElementById('usageModal')).show();
+}
+
 function showToast(message, type) {
     // Create toast container if it doesn't exist
     let toastContainer = document.getElementById('toast-container');
@@ -419,68 +479,6 @@ function showToast(message, type) {
     toastElement.addEventListener('hidden.bs.toast', () => {
         toastElement.remove();
     });
-}
-</script>
-{% endblock %}
-
-{% block extra_head %}
-<style>
-.timeline {
-    position: relative;
-    padding-left: 30px;
-}
-
-.timeline-item {
-    position: relative;
-}
-
-.timeline-marker {
-    position: absolute;
-    left: -30px;
-    top: 5px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: white;
-    border: 2px solid #dee2e6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: -21px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: #dee2e6;
-}
-
-.timeline-content {
-    margin-left: 10px;
-}
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-function showTransferModal(itemId, itemName, quantity, bagName) {
-    document.getElementById('transfer-item-id').value = itemId;
-    document.getElementById('transfer-item-details').textContent = `${itemName} (${quantity} units from ${bagName})`;
-    document.getElementById('transfer-quantity').max = quantity;
-    document.getElementById('transfer-quantity').value = quantity;
-    new bootstrap.Modal(document.getElementById('transferModal')).show();
-}
-
-function showUsageModal(itemId, itemName, quantity) {
-    document.getElementById('usage-item-id').value = itemId;
-    document.getElementById('usage-item-details').textContent = `${itemName} (${quantity} units available)`;
-    document.getElementById('usage-quantity').max = quantity;
-    document.getElementById('usage-quantity').value = 1;
-    new bootstrap.Modal(document.getElementById('usageModal')).show();
 }
 </script>
 {% endblock %}
