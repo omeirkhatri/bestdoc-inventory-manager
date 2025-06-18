@@ -758,18 +758,28 @@ def individual_item_history(item_id):
     """Show detailed history for a specific individual item"""
     item = Item.query.get_or_404(item_id)
     
-    # Get movement history for this specific item only
+    # Get the product this item belongs to
+    product = item.product
+    
+    # Get all items for this product across all locations
+    items = Item.query.filter_by(product_id=product.id).order_by(Item.bag_id, Item.quantity.desc()).all()
+    
+    # Get movement history for this product
     movements = MovementHistory.query.filter(
         db.and_(
-            MovementHistory.item_name == item.name,
-            MovementHistory.item_type == item.type,
-            MovementHistory.item_size == item.size
+            MovementHistory.item_name == product.name,
+            MovementHistory.item_type == product.type
         )
-    ).order_by(MovementHistory.timestamp.desc()).all()
+    ).order_by(MovementHistory.timestamp.desc()).limit(50).all()
+    
+    # Get all bags for transfer functionality
+    bags = Bag.query.order_by(Bag.name).all()
     
     return render_template('individual_item_history.html', 
-                         item=item, 
-                         movements=movements)
+                         product=product,
+                         items=items, 
+                         movements=movements,
+                         bags=bags)
 
 @app.route('/api/check_existing_product')
 def api_check_existing_product():
