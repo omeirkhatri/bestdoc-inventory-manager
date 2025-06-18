@@ -205,6 +205,21 @@ class BagMinimum(db.Model):
             return self.minimum_quantity - current
         return 0
 
+class UndoAction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    action_type = db.Column(db.String(50), nullable=False)  # 'delete_bag', 'add_item', 'transfer', etc.
+    action_data = db.Column(db.Text, nullable=False)  # JSON data to reverse the action
+    description = db.Column(db.String(200), nullable=False)  # Human readable description
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    is_used = db.Column(db.Boolean, default=False)  # Track if this undo has been used
+    
+    # Relationship
+    user = db.relationship('User', backref='undo_actions')
+    
+    def __repr__(self):
+        return f'<UndoAction {self.action_type}: {self.description}>'
+
 # Initialize default item types - Updated for simplified system
 def init_default_types():
     default_types = [

@@ -7,7 +7,8 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, init_default_types, format_datetime_gmt4, format_date_gmt4
+from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, init_default_types, format_datetime_gmt4, format_date_gmt4
+import json
 
 # Authentication routes
 @app.route('/login', methods=['GET', 'POST'])
@@ -751,17 +752,74 @@ def handle_bag_management():
                 flash("Cannot delete the default Cabinet", "danger")
                 return redirect(url_for('bags'))
             
-            # Check if storage location has items
-            if bag.get_total_items() > 0:
-                storage_type = "cabinet" if bag.location == "cabinet" else "medical bag"
-                flash(f"Cannot delete {storage_type} with items. Please transfer items first.", "danger")
+            # Get cabinet for item transfer
+            cabinet = Bag.query.filter_by(name='Cabinet').first()
+            if not cabinet:
+                flash("Error: Cabinet not found", "danger")
                 return redirect(url_for('bags'))
             
+            # Prepare undo data
+            undo_data = {
+                'bag_id': bag.id,
+                'bag_name': bag.name,
+                'bag_description': bag.description,
+                'bag_location': bag.location,
+                'transferred_items': [],
+                'deleted_minimums': []
+            }
+            
+            # Transfer all items to cabinet and track for undo
+            items_transferred = 0
+            for item in bag.items:
+                if item.quantity > 0:
+                    undo_data['transferred_items'].append({
+                        'item_id': item.id,
+                        'original_bag_id': bag.id
+                    })
+                    item.bag_id = cabinet.id
+                    items_transferred += item.quantity
+                    
+                    # Record movement
+                    movement = MovementHistory(
+                        item_name=item.name,
+                        item_type=item.type,
+                        item_size=item.size,
+                        quantity=item.quantity,
+                        movement_type='transfer',
+                        from_bag=bag.name,
+                        to_bag=cabinet.name,
+                        notes=f'Auto-transferred due to bag deletion'
+                    )
+                    db.session.add(movement)
+            
+            # Remove bag minimums and track for undo
+            for minimum in bag.minimums:
+                undo_data['deleted_minimums'].append({
+                    'bag_id': minimum.bag_id,
+                    'product_id': minimum.product_id,
+                    'minimum_quantity': minimum.minimum_quantity
+                })
+                db.session.delete(minimum)
+            
+            # Create undo action
+            undo_action = UndoAction(
+                action_type='delete_bag',
+                action_data=json.dumps(undo_data),
+                description=f"Deleted bag '{bag.name}' with {items_transferred} items transferred to Cabinet",
+                user_id=current_user.id
+            )
+            db.session.add(undo_action)
+            
+            # Delete the bag
             storage_type = "cabinet" if bag.location == "cabinet" else "medical bag"
             storage_name = bag.name
             db.session.delete(bag)
             db.session.commit()
-            flash(f"Successfully deleted {storage_type}: {storage_name}", "success")
+            
+            if items_transferred > 0:
+                flash(f"Successfully deleted {storage_type}: {storage_name}. {items_transferred} items transferred to Cabinet.", "success")
+            else:
+                flash(f"Successfully deleted {storage_type}: {storage_name}", "success")
     
     except Exception as e:
         db.session.rollback()
@@ -1055,6 +1113,89 @@ def update_bag_minimum():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/undo_last_action', methods=['POST'])
+@login_required
+def undo_last_action():
+    """Undo the last action performed by the current user"""
+    try:
+        # Get the most recent unused undo action for this user
+        last_action = UndoAction.query.filter_by(
+            user_id=current_user.id,
+            is_used=False
+        ).order_by(UndoAction.timestamp.desc()).first()
+        
+        if not last_action:
+            return jsonify({'success': False, 'error': 'No actions to undo'})
+        
+        # Parse the action data
+        action_data = json.loads(last_action.action_data)
+        
+        if last_action.action_type == 'delete_bag':
+            # Recreate the deleted bag
+            new_bag = Bag(
+                name=action_data['bag_name'],
+                description=action_data['bag_description'],
+                location=action_data['bag_location']
+            )
+            db.session.add(new_bag)
+            db.session.flush()  # Get the new bag ID
+            
+            # Transfer items back to the recreated bag
+            for item_data in action_data['transferred_items']:
+                item = Item.query.get(item_data['item_id'])
+                if item:
+                    item.bag_id = new_bag.id
+            
+            # Recreate bag minimums
+            for minimum_data in action_data['deleted_minimums']:
+                new_minimum = BagMinimum(
+                    bag_id=new_bag.id,
+                    product_id=minimum_data['product_id'],
+                    minimum_quantity=minimum_data['minimum_quantity']
+                )
+                db.session.add(new_minimum)
+            
+            # Remove the auto-transfer movement history entries
+            MovementHistory.query.filter_by(
+                from_bag=action_data['bag_name'],
+                to_bag='Cabinet',
+                notes='Auto-transferred due to bag deletion'
+            ).delete()
+            
+            success_message = f"Restored bag '{action_data['bag_name']}' with all items and settings"
+        
+        # Mark the undo action as used
+        last_action.is_used = True
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': success_message,
+            'action_description': last_action.description
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/get_last_action')
+@login_required
+def get_last_action():
+    """Get information about the last action that can be undone"""
+    last_action = UndoAction.query.filter_by(
+        user_id=current_user.id,
+        is_used=False
+    ).order_by(UndoAction.timestamp.desc()).first()
+    
+    if last_action:
+        return jsonify({
+            'has_action': True,
+            'description': last_action.description,
+            'timestamp': last_action.timestamp.isoformat()
+        })
+    else:
+        return jsonify({'has_action': False})
 
 @app.route('/weekly_check')
 @login_required

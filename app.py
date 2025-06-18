@@ -70,7 +70,6 @@ with app.app_context():
         {'name': 'Emergency Bag 1', 'description': 'Primary emergency response bag', 'location': 'bag'},
         {'name': 'Emergency Bag 2', 'description': 'Secondary emergency response bag', 'location': 'bag'},
         {'name': 'ICU Mobile Cart', 'description': 'Intensive care unit mobile equipment', 'location': 'bag'},
-        {'name': 'Trauma Kit A', 'description': 'Advanced trauma response kit', 'location': 'bag'},
     ]
     
     created_bags = {}
@@ -142,10 +141,8 @@ with app.app_context():
         {'name': 'Morphine 10mg/ml', 'type': 'Controlled Medications', 'size': '1ml', 'quantity': 3, 'bag': 'ICU Mobile Cart', 'days_to_expire': 365},
         {'name': 'Atropine 1mg/ml', 'type': 'Emergency Medications', 'size': '1ml', 'quantity': 4, 'bag': 'ICU Mobile Cart', 'days_to_expire': 730},
         {'name': 'ECG Electrodes', 'type': 'Monitoring Equipment', 'size': 'Adult', 'quantity': 12, 'bag': 'ICU Mobile Cart', 'days_to_expire': 1095},
-        
-        # Trauma Kit A items
-        {'name': 'Defibrillator Pads', 'type': 'Emergency Equipment', 'size': 'Adult', 'quantity': 2, 'bag': 'Trauma Kit A', 'days_to_expire': 730},
-        {'name': 'Nitrile Gloves Large', 'type': 'Consumable Dressings/Swabs', 'size': 'Large', 'quantity': 20, 'bag': 'Trauma Kit A', 'days_to_expire': 1460},
+        {'name': 'Defibrillator Pads', 'type': 'Emergency Equipment', 'size': 'Adult', 'quantity': 2, 'bag': 'ICU Mobile Cart', 'days_to_expire': 730},
+        {'name': 'Nitrile Gloves Large', 'type': 'Consumable Dressings/Swabs', 'size': 'Large', 'quantity': 20, 'bag': 'ICU Mobile Cart', 'days_to_expire': 1460},
     ]
     
     for item_data in items_data:
@@ -191,11 +188,8 @@ with app.app_context():
         {'bag': 'ICU Mobile Cart', 'product': 'Morphine 10mg/ml', 'minimum': 2},
         {'bag': 'ICU Mobile Cart', 'product': 'Atropine 1mg/ml', 'minimum': 3},
         {'bag': 'ICU Mobile Cart', 'product': 'ECG Electrodes', 'minimum': 10},
-        
-        # Trauma Kit A minimums
-        {'bag': 'Trauma Kit A', 'product': 'Defibrillator Pads', 'minimum': 2},
-        {'bag': 'Trauma Kit A', 'product': 'Nitrile Gloves Large', 'minimum': 15},
-        {'bag': 'Trauma Kit A', 'product': 'Sterile Gauze 4x4', 'minimum': 8},
+        {'bag': 'ICU Mobile Cart', 'product': 'Defibrillator Pads', 'minimum': 2},
+        {'bag': 'ICU Mobile Cart', 'product': 'Nitrile Gloves Large', 'minimum': 15},
     ]
     
     for minimum_data in bag_minimums_data:
