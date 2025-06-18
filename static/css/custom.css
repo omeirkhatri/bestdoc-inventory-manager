@@ -715,6 +715,24 @@ body {
     white-space: nowrap;
 }
 
+/* Dark mode table header styling */
+[data-bs-theme="dark"] .card .table-striped th,
+[data-bs-theme="dark"] .table-striped th,
+[data-bs-theme="dark"] .table th,
+[data-bs-theme="dark"] table th {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-bottom: 2px solid #495057 !important;
+}
+
+/* Ensure DataTables headers are also styled in dark mode */
+[data-bs-theme="dark"] .dataTables_wrapper .dataTable thead th,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTable thead td {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-bottom: 2px solid #495057 !important;
+}
+
 .card .table-striped td {
     vertical-align: middle;
     padding: 0.75rem;
