@@ -15,64 +15,64 @@
 <!-- Summary Cards -->
 <div class="row mb-4">
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-primary">
+        <div class="card stat-card stat-card-teal">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4 class="card-title">{{ total_items }}</h4>
-                        <p class="card-text">Total Items</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-boxes fa-2x"></i>
-                    </div>
+                <div class="stat-icon">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="stat-number">{{ total_items }}</div>
+                <div class="stat-label">Total Items</div>
+                <div class="stat-change">
+                    <i class="fas fa-arrow-up me-1"></i>
+                    Active inventory
                 </div>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-info">
+        <div class="card stat-card stat-card-green">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4 class="card-title">{{ total_unique_items }}</h4>
-                        <p class="card-text">Unique Items</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-list fa-2x"></i>
-                    </div>
+                <div class="stat-icon">
+                    <i class="fas fa-list"></i>
+                </div>
+                <div class="stat-number">{{ total_unique_items }}</div>
+                <div class="stat-label">Unique Items</div>
+                <div class="stat-change">
+                    <i class="fas fa-check me-1"></i>
+                    Different types
                 </div>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-warning">
+        <div class="card stat-card stat-card-orange">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4 class="card-title">{{ expiring_items|length }}</h4>
-                        <p class="card-text">Expiring Soon</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-clock fa-2x"></i>
-                    </div>
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-number">{{ expiring_items|length }}</div>
+                <div class="stat-label">Expiring Soon</div>
+                <div class="stat-change">
+                    <i class="fas fa-exclamation me-1"></i>
+                    Need attention
                 </div>
             </div>
         </div>
     </div>
     
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-danger">
+        <div class="card stat-card stat-card-red">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4 class="card-title">{{ expired_items|length }}</h4>
-                        <p class="card-text">Expired Items</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-exclamation-triangle fa-2x"></i>
-                    </div>
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-number">{{ expired_items|length }}</div>
+                <div class="stat-label">Expired Items</div>
+                <div class="stat-change">
+                    <i class="fas fa-ban me-1"></i>
+                    Immediate action
                 </div>
             </div>
         </div>
