@@ -225,7 +225,9 @@
             }
             
             // Close on overlay click
-            mobileOverlay.addEventListener('click', closeMobileNav);
+            if (mobileOverlay) {
+                mobileOverlay.addEventListener('click', closeMobileNav);
+            }
             
             // Close on escape key
             document.addEventListener('keydown', function(e) {

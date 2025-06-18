@@ -102,7 +102,7 @@ class Item(db.Model):
     quantity = db.Column(db.Integer, nullable=False, default=0)
     expiry_date = db.Column(db.Date)  # Optional
     date_added = db.Column(db.DateTime, default=datetime.utcnow)  # When item was added
-    batch_number = db.Column(db.String(100))  # For tracking different batches
+
     
     # Foreign keys
     bag_id = db.Column(db.Integer, db.ForeignKey('bag.id'), nullable=False)
