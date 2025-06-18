@@ -193,9 +193,12 @@ function initializeAutocomplete() {
     
     // Only hide suggestions when clicking outside both input and suggestions
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.item-name-input') && !e.target.closest('.item-suggestions')) {
-            hideAllSuggestions();
+        // Don't hide if clicking on input or suggestions
+        if (e.target.closest('.item-name-input') || e.target.closest('.item-suggestions')) {
+            return;
         }
+        // Hide suggestions when clicking elsewhere
+        hideAllSuggestions();
     });
     
     // Handle focus events to show suggestions again if there's content
@@ -204,6 +207,38 @@ function initializeAutocomplete() {
             const query = e.target.value.trim();
             if (query.length >= 2) {
                 handleItemNameInput(e.target);
+            }
+        }
+    });
+    
+    // Handle keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.target.classList.contains('item-name-input')) {
+            const suggestionsDiv = e.target.nextElementSibling;
+            const suggestions = suggestionsDiv.querySelectorAll('.dropdown-item');
+            
+            if (suggestions.length > 0 && suggestionsDiv.style.display === 'block') {
+                let activeIndex = -1;
+                suggestions.forEach((item, index) => {
+                    if (item.classList.contains('active')) {
+                        activeIndex = index;
+                    }
+                });
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeIndex = (activeIndex + 1) % suggestions.length;
+                    updateActiveSelection(suggestions, activeIndex);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeIndex = activeIndex <= 0 ? suggestions.length - 1 : activeIndex - 1;
+                    updateActiveSelection(suggestions, activeIndex);
+                } else if (e.key === 'Enter' && activeIndex >= 0) {
+                    e.preventDefault();
+                    suggestions[activeIndex].click();
+                } else if (e.key === 'Escape') {
+                    hideSuggestions(suggestionsDiv);
+                }
             }
         }
     });
@@ -230,11 +265,11 @@ function handleItemNameInput(input) {
         return;
     }
     
-    // Debounced search
+    // Immediate search without debounce to keep suggestions visible
     clearTimeout(input.searchTimeout);
     input.searchTimeout = setTimeout(() => {
         searchItems(query, suggestionsDiv, input);
-    }, 300);
+    }, 100);
 }
 
 function searchItems(query, suggestionsDiv, input) {
@@ -278,13 +313,25 @@ function showSuggestions(items, suggestionsDiv, input) {
             e.stopPropagation();
         });
         
+        // Prevent suggestions from hiding when hovering over them
+        suggestionItem.addEventListener('mouseenter', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
         suggestionsDiv.appendChild(suggestionItem);
     });
     
     suggestionsDiv.style.display = 'block';
     suggestionsDiv.style.position = 'absolute';
-    suggestionsDiv.style.zIndex = '1000';
+    suggestionsDiv.style.zIndex = '9999';
     suggestionsDiv.style.width = input.offsetWidth + 'px';
+    suggestionsDiv.style.maxHeight = '300px';
+    suggestionsDiv.style.overflowY = 'auto';
+    suggestionsDiv.style.border = '1px solid #ccc';
+    suggestionsDiv.style.backgroundColor = 'var(--bs-body-bg)';
+    suggestionsDiv.style.borderRadius = '0.375rem';
+    suggestionsDiv.style.boxShadow = '0 0.5rem 1rem rgba(0, 0, 0, 0.15)';
 }
 
 function selectItem(item, input) {
@@ -339,6 +386,17 @@ function hideSuggestions(suggestionsDiv) {
 function hideAllSuggestions() {
     document.querySelectorAll('.item-suggestions').forEach(div => {
         hideSuggestions(div);
+    });
+}
+
+function updateActiveSelection(suggestions, activeIndex) {
+    suggestions.forEach((item, index) => {
+        if (index === activeIndex) {
+            item.classList.add('active');
+            item.scrollIntoView({ block: 'nearest' });
+        } else {
+            item.classList.remove('active');
+        }
     });
 }
 
