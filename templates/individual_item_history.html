@@ -52,7 +52,7 @@
                         <div class="col-md-4">
                             <strong>Expiry Date:</strong><br>
                             {% if item.expiry_date %}
-                                <span class="{% if item.is_expired() %}text-danger{% elif item.expires_soon() %}text-warning{% else %}text-success{% endif %}">
+                                <span class="{% if item.is_expired %}text-danger{% elif item.expires_soon %}text-warning{% else %}text-success{% endif %}">
                                     {{ item.expiry_date.strftime('%Y-%m-%d') }}
                                 </span>
                             {% else %}

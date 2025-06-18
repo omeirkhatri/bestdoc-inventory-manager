@@ -1,6 +1,31 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from app import db
 from sqlalchemy import func
+import pytz
+
+# GMT+4 timezone
+GMT_PLUS_4 = pytz.timezone('Asia/Dubai')
+
+def format_datetime_gmt4(dt):
+    """Convert datetime to GMT+4 and format as DD/MM/YY HH:MM"""
+    if not dt:
+        return ''
+    if dt.tzinfo is None:
+        dt = pytz.utc.localize(dt)
+    local_dt = dt.astimezone(GMT_PLUS_4)
+    return local_dt.strftime('%d/%m/%y %H:%M')
+
+def format_date_gmt4(dt):
+    """Convert date to GMT+4 and format as DD/MM/YY"""
+    if not dt:
+        return ''
+    if isinstance(dt, datetime):
+        if dt.tzinfo is None:
+            dt = pytz.utc.localize(dt)
+        local_dt = dt.astimezone(GMT_PLUS_4)
+        return local_dt.strftime('%d/%m/%y')
+    else:
+        return dt.strftime('%d/%m/%y')
 
 class Bag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
