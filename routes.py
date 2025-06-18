@@ -205,18 +205,33 @@ def handle_csv_upload(file):
                                 errors.append(f"Row {row_num}: Invalid expiry date format")
                                 continue
                     
-                    # Create item
-                    item = Item(
+                    # Check if identical item already exists in the same bag
+                    existing_item = Item.query.filter_by(
                         name=row['name'].strip(),
                         type=row['type'].strip(),
                         brand=row.get('brand', '').strip() or None,
                         size=row.get('size', '').strip() or None,
-                        quantity=int(row['quantity']),
                         expiry_date=expiry_date,
                         bag_id=bag.id
-                    )
+                    ).first()
                     
-                    db.session.add(item)
+                    if existing_item:
+                        # Add to existing item
+                        existing_item.quantity += int(row['quantity'])
+                        existing_item.updated_at = datetime.utcnow()
+                        item = existing_item
+                    else:
+                        # Create new item
+                        item = Item(
+                            name=row['name'].strip(),
+                            type=row['type'].strip(),
+                            brand=row.get('brand', '').strip() or None,
+                            size=row.get('size', '').strip() or None,
+                            quantity=int(row['quantity']),
+                            expiry_date=expiry_date,
+                            bag_id=bag.id
+                        )
+                        db.session.add(item)
                     
                     # Log the addition
                     movement = MovementHistory(
@@ -316,19 +331,34 @@ def handle_manual_addition():
                         db.session.add(product)
                         db.session.flush()  # Get the product ID
                     
-                    # Create item
-                    item = Item(
+                    # Check if identical item already exists in the same bag
+                    existing_item = Item.query.filter_by(
                         name=product_name,
                         type=product_type,
                         brand=brand,
                         size=size,
-                        quantity=int(quantities[i]),
                         expiry_date=expiry_date,
-                        bag_id=bag.id,
-                        product_id=product.id
-                    )
+                        bag_id=bag.id
+                    ).first()
                     
-                    db.session.add(item)
+                    if existing_item:
+                        # Add to existing item
+                        existing_item.quantity += int(quantities[i])
+                        existing_item.updated_at = datetime.utcnow()
+                        item = existing_item
+                    else:
+                        # Create new item
+                        item = Item(
+                            name=product_name,
+                            type=product_type,
+                            brand=brand,
+                            size=size,
+                            quantity=int(quantities[i]),
+                            expiry_date=expiry_date,
+                            bag_id=bag.id,
+                            product_id=product.id
+                        )
+                        db.session.add(item)
                     
                     # Log the addition
                     movement = MovementHistory(
