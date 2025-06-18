@@ -361,7 +361,7 @@ def inventory():
     search = request.args.get('search', '')
     type_filter = request.args.get('type', '')
     bag_filter = request.args.get('bag', '')
-    expiry_filter = request.args.get('expiry', '')
+    status_filter = request.args.get('status', '')
     
     # Base query - get products with their items
     product_query = Product.query
@@ -378,6 +378,11 @@ def inventory():
     # Filter products based on item-level criteria and group items
     filtered_products = []
     for product in products:
+        # Check low stock filter first (applies to entire product)
+        if status_filter == 'low_stock':
+            if not product.is_low_stock():
+                continue
+        
         # Get active items for this product
         item_query = Item.query.filter(Item.product_id == product.id, Item.quantity > 0).join(Bag)
         
@@ -385,11 +390,11 @@ def inventory():
         if bag_filter:
             item_query = item_query.filter(Bag.name == bag_filter)
         
-        if expiry_filter:
+        if status_filter and status_filter != 'low_stock':
             today = date.today()
-            if expiry_filter == 'expired':
+            if status_filter == 'expired':
                 item_query = item_query.filter(and_(Item.expiry_date.isnot(None), Item.expiry_date < today))
-            elif expiry_filter == 'expiring':
+            elif status_filter == 'expiring':
                 thirty_days = today + timedelta(days=30)
                 item_query = item_query.filter(and_(Item.expiry_date.isnot(None), 
                                                 Item.expiry_date >= today, 
@@ -445,7 +450,7 @@ def inventory():
                              'search': search,
                              'type': type_filter,
                              'bag': bag_filter,
-                             'expiry': expiry_filter
+                             'status': status_filter
                          })
 
 @app.route('/transfer', methods=['GET', 'POST'])

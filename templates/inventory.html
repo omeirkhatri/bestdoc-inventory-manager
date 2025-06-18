@@ -50,11 +50,12 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label for="expiry" class="form-label">Expiry Status</label>
-                <select class="form-select" id="expiry" name="expiry">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
                     <option value="">All Items</option>
-                    <option value="expired" {% if current_filters.expiry == 'expired' %}selected{% endif %}>Expired</option>
-                    <option value="expiring" {% if current_filters.expiry == 'expiring' %}selected{% endif %}>Expiring Soon</option>
+                    <option value="low_stock" {% if current_filters.status == 'low_stock' %}selected{% endif %}>Low Stock</option>
+                    <option value="expired" {% if current_filters.status == 'expired' %}selected{% endif %}>Expired</option>
+                    <option value="expiring" {% if current_filters.status == 'expiring' %}selected{% endif %}>Expiring Soon</option>
                 </select>
             </div>
             <div class="col-md-3 d-flex align-items-end">
