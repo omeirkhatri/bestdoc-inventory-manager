@@ -208,42 +208,51 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% set first_item = group.items[0] %}
-                                                {% if first_item.expiry_status == 'expired' %}
-                                                    <span class="status-indicator expired">
-                                                        <i class="fas fa-times-circle"></i>
-                                                        Expired
-                                                    </span>
-                                                {% elif first_item.expiry_status == 'expiring' %}
-                                                    <span class="status-indicator expiring">
-                                                        <i class="fas fa-clock"></i>
-                                                        Expiring Soon
-                                                    </span>
+                                                {% if group.items and group.items[0] %}
+                                                    {% set first_item = group.items[0] %}
+                                                    {% if first_item.is_expired %}
+                                                        <span class="status-indicator expired">
+                                                            <i class="fas fa-times-circle"></i>
+                                                            Expired
+                                                        </span>
+                                                    {% elif first_item.expires_soon %}
+                                                        <span class="status-indicator expiring">
+                                                            <i class="fas fa-clock"></i>
+                                                            Expiring Soon
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="status-indicator good">
+                                                            <i class="fas fa-check-circle"></i>
+                                                            Good
+                                                        </span>
+                                                    {% endif %}
                                                 {% else %}
                                                     <span class="status-indicator good">
                                                         <i class="fas fa-check-circle"></i>
-                                                        Good
+                                                        No Expiry
                                                     </span>
                                                 {% endif %}
                                             </td>
                                             <td>
                                                 <div class="compact-actions">
-                                                    {% set first_item = group.items[0] %}
-                                                    <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                            onclick="showTransferModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }}, '{{ group.bags[0].name }}')"
-                                                            title="Transfer items">
-                                                        <i class="fas fa-exchange-alt"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-warning btn-sm" 
-                                                            onclick="showUsageModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }})"
-                                                            title="Record usage">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                    <a href="{{ url_for('individual_item_history', item_id=first_item.id) }}" 
-                                                       class="btn btn-outline-info btn-sm" 
-                                                       title="View item history">
-                                                        <i class="fas fa-history"></i>
-                                                    </a>
+                                                    {% if group.items %}
+                                                        {% set first_item = group.items[0] %}
+                                                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                                onclick="showTransferModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }}, '{{ group.bags[0].name }}')"
+                                                                title="Transfer items">
+                                                            <i class="fas fa-exchange-alt"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-warning btn-sm" 
+                                                                onclick="showUsageModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }})"
+                                                                title="Record usage">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button>
+                                                        <a href="{{ url_for('individual_item_history', item_id=first_item.id) }}" 
+                                                           class="btn btn-outline-info btn-sm" 
+                                                           title="View item history">
+                                                            <i class="fas fa-history"></i>
+                                                        </a>
+                                                    {% endif %}
                                                 </div>
                                             </td>
                                         </tr>
