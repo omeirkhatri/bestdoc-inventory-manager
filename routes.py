@@ -332,7 +332,7 @@ def inventory():
         if items:  # Only include products that have matching items
             filtered_products.append({
                 'product': product,
-                'items': items,
+                'batches': items,
                 'total_quantity': sum(item.quantity for item in items),
                 'is_low_stock': product.is_low_stock
             })

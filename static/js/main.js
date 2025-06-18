@@ -519,6 +519,8 @@ const ProductManager = {
     },
     
     attachProductChecker: function(input) {
+        if (!input) return;
+        
         let debounceTimer;
         
         input.addEventListener('input', (e) => {
@@ -563,7 +565,11 @@ const ProductManager = {
     },
     
     toggleMinimumStockField: function(input, show) {
+        if (!input) return;
+        
         const container = input.closest('.col-md-5');
+        if (!container) return;
+        
         if (show) {
             container.style.display = 'block';
             input.removeAttribute('disabled');
