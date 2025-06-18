@@ -68,6 +68,10 @@
                                     <input type="text" class="form-control" name="size" placeholder="e.g., 22G, 5ml">
                                 </div>
                                 <div class="col-md-2 mb-2">
+                                    <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="quantity" min="1" required>
+                                </div>
+                                <div class="col-md-2 mb-2">
                                     <label class="form-label">Expiry Date</label>
                                     <div class="input-group">
                                         <input type="date" class="form-control" name="expiry_date">
@@ -89,64 +93,11 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Box Tracking Section -->
                             <div class="row">
-                                <div class="col-md-3 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input box-tracking-checkbox" type="checkbox" name="has_boxes" id="has_boxes">
-                                        <label class="form-check-label" for="has_boxes">
-                                            <i class="fas fa-box me-1"></i>This item comes in boxes
-                                        </label>
-                                    </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Batch Number</label>
+                                    <input type="text" class="form-control" name="batch_number" placeholder="Optional">
                                 </div>
-                            </div>
-                            
-                            <!-- Pieces per Box (shown when checkbox is checked) -->
-                            <div class="row box-config" style="display: none;">
-                                <div class="col-md-3 mb-2">
-                                    <label class="form-label">Pieces per Box <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" name="units_per_box" min="1" placeholder="e.g., 100">
-                                </div>
-                                <div class="col-md-3 mb-2">
-                                    <label class="form-label">Unit Type</label>
-                                    <input type="text" class="form-control" name="packaging_unit" placeholder="e.g., swabs, vials, tablets" value="pieces">
-                                </div>
-                            </div>
-                            
-                            <!-- Quantity Section (Dynamic based on box tracking) -->
-                            <div class="quantity-section">
-                                <!-- Simple quantity (when no box tracking) -->
-                                <div class="simple-quantity">
-                                    <div class="row">
-                                        <div class="col-md-3 mb-2">
-                                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
-                                            <input type="number" class="form-control" name="quantity" min="1" required>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Box/piece quantity (when box tracking enabled) -->
-                                <div class="box-piece-quantity" style="display: none;">
-                                    <div class="row">
-                                        <div class="col-md-3 mb-2">
-                                            <label class="form-label">Number of Boxes</label>
-                                            <input type="number" class="form-control boxes-input" name="boxes" min="0" value="0">
-                                        </div>
-                                        <div class="col-md-3 mb-2">
-                                            <label class="form-label">Loose Pieces</label>
-                                            <input type="number" class="form-control pieces-input" name="loose_pieces" min="0" value="0">
-                                        </div>
-                                        <div class="col-md-4 mb-2">
-                                            <label class="form-label">Total</label>
-                                            <div class="form-control-plaintext">
-                                                <strong class="total-display">0 pieces</strong>
-                                                <small class="text-muted d-block breakdown-display">0 boxes + 0 loose</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                                 <div class="col-md-5">
                                     <label class="form-label">Minimum Stock <span class="text-muted">(new products only)</span></label>
                                     <input type="number" class="form-control minimum-stock-input" name="minimum_stock" 
@@ -231,97 +182,6 @@
 {% block extra_scripts %}
 <script>
 let itemSuggestions = [];
-
-// Box tracking functionality
-function initializeBoxTracking() {
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('box-tracking-checkbox')) {
-            toggleBoxTracking(e.target);
-        }
-    });
-    
-    document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('boxes-input') || 
-            e.target.classList.contains('pieces-input') || 
-            e.target.name === 'units_per_box') {
-            updateBoxTotal(e.target);
-        }
-    });
-}
-
-function toggleBoxTracking(checkbox) {
-    const itemRow = checkbox.closest('.item-row');
-    const boxConfig = itemRow.querySelector('.box-config');
-    const simpleQuantity = itemRow.querySelector('.simple-quantity');
-    const boxPieceQuantity = itemRow.querySelector('.box-piece-quantity');
-    const simpleQuantityInput = itemRow.querySelector('input[name="quantity"]');
-    
-    if (checkbox.checked) {
-        // Show box configuration
-        boxConfig.style.display = 'block';
-        simpleQuantity.style.display = 'none';
-        boxPieceQuantity.style.display = 'block';
-        
-        // Remove required from simple quantity
-        simpleQuantityInput.removeAttribute('required');
-        
-        // Set default unit type based on common items
-        const itemName = itemRow.querySelector('input[name="name"]').value.toLowerCase();
-        const unitTypeInput = itemRow.querySelector('input[name="packaging_unit"]');
-        
-        if (itemName.includes('swab')) {
-            unitTypeInput.value = 'swabs';
-        } else if (itemName.includes('vial') || itemName.includes('ondansetron')) {
-            unitTypeInput.value = 'vials';
-        } else if (itemName.includes('tablet') || itemName.includes('paracetamol')) {
-            unitTypeInput.value = 'tablets';
-        } else if (itemName.includes('pad') || itemName.includes('gauze')) {
-            unitTypeInput.value = 'pads';
-        }
-        
-    } else {
-        // Hide box configuration
-        boxConfig.style.display = 'none';
-        simpleQuantity.style.display = 'block';
-        boxPieceQuantity.style.display = 'none';
-        
-        // Add required back to simple quantity
-        simpleQuantityInput.setAttribute('required', '');
-    }
-}
-
-function updateBoxTotal(input) {
-    const itemRow = input.closest('.item-row');
-    const boxesInput = itemRow.querySelector('.boxes-input');
-    const piecesInput = itemRow.querySelector('.pieces-input');
-    const unitsPerBoxInput = itemRow.querySelector('input[name="units_per_box"]');
-    const totalDisplay = itemRow.querySelector('.total-display');
-    const breakdownDisplay = itemRow.querySelector('.breakdown-display');
-    const unitTypeInput = itemRow.querySelector('input[name="packaging_unit"]');
-    
-    if (!boxesInput || !piecesInput || !totalDisplay) return;
-    
-    const boxes = parseInt(boxesInput.value) || 0;
-    const loosePieces = parseInt(piecesInput.value) || 0;
-    const unitsPerBox = parseInt(unitsPerBoxInput.value) || 0;
-    const unitType = unitTypeInput.value || 'pieces';
-    
-    const totalPieces = (boxes * unitsPerBox) + loosePieces;
-    
-    totalDisplay.textContent = `${totalPieces} ${unitType}`;
-    breakdownDisplay.textContent = `${boxes} boxes + ${loosePieces} loose`;
-    
-    // Update label dynamically
-    const boxesLabel = itemRow.querySelector('label[for*="boxes"]');
-    if (boxesLabel && unitsPerBox > 0) {
-        boxesLabel.innerHTML = `<i class="fas fa-box me-2"></i>Number of Boxes (${unitsPerBox} ${unitType} per box)`;
-    }
-    
-    const piecesLabel = itemRow.querySelector('label[for*="pieces"]');
-    if (piecesLabel) {
-        piecesLabel.innerHTML = `<i class="fas fa-pills me-2"></i>Loose ${unitType}`;
-    }
-}
 
 // Initialize autocomplete for item names
 function initializeAutocomplete() {
@@ -574,20 +434,9 @@ document.getElementById('manualForm').addEventListener('submit', function(e) {
     itemRows.forEach(row => {
         const name = row.querySelector('input[name="name"]').value.trim();
         const type = row.querySelector('select[name="type"]').value.trim();
-        const hasBoxes = row.querySelector('input[name="has_boxes"]').checked;
+        const quantity = row.querySelector('input[name="quantity"]').value.trim();
         
-        let hasQuantity = false;
-        if (hasBoxes) {
-            const boxes = row.querySelector('input[name="boxes"]').value.trim();
-            const pieces = row.querySelector('input[name="loose_pieces"]').value.trim();
-            const unitsPerBox = row.querySelector('input[name="units_per_box"]').value.trim();
-            hasQuantity = unitsPerBox && (boxes || pieces);
-        } else {
-            const quantity = row.querySelector('input[name="quantity"]').value.trim();
-            hasQuantity = quantity;
-        }
-        
-        if (name && type && hasQuantity) {
+        if (name && type && quantity) {
             hasValidItem = true;
         }
     });
