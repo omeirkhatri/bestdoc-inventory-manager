@@ -37,67 +37,75 @@
 <!-- Summary Cards -->
 <div class="row mb-4">
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card stat-card stat-card-teal">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="fas fa-boxes"></i>
-                </div>
-                <div class="stat-number">{{ total_items }}</div>
-                <div class="stat-label">Total Items</div>
-                <div class="stat-change">
-                    <i class="fas fa-arrow-up me-1"></i>
-                    Active inventory
+        <a href="{{ url_for('inventory') }}" class="text-decoration-none">
+            <div class="card stat-card stat-card-teal stat-card-compact">
+                <div class="card-body">
+                    <div class="stat-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="stat-number">{{ total_items }}</div>
+                    <div class="stat-label">Total Items</div>
+                    <div class="stat-change">
+                        <i class="fas fa-arrow-up me-1"></i>
+                        Active inventory
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card stat-card stat-card-green">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="fas fa-list"></i>
-                </div>
-                <div class="stat-number">{{ total_unique_items }}</div>
-                <div class="stat-label">Unique Items</div>
-                <div class="stat-change">
-                    <i class="fas fa-check me-1"></i>
-                    Different types
+        <a href="{{ url_for('inventory') }}" class="text-decoration-none">
+            <div class="card stat-card stat-card-green stat-card-compact">
+                <div class="card-body">
+                    <div class="stat-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="stat-number">{{ total_unique_items }}</div>
+                    <div class="stat-label">Unique Items</div>
+                    <div class="stat-change">
+                        <i class="fas fa-check me-1"></i>
+                        Different types
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card stat-card stat-card-orange">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stat-number">{{ expiring_items|length }}</div>
-                <div class="stat-label">Expiring Soon</div>
-                <div class="stat-change">
-                    <i class="fas fa-exclamation me-1"></i>
-                    Need attention
+        <a href="{{ url_for('expiry') }}" class="text-decoration-none">
+            <div class="card stat-card stat-card-orange stat-card-compact">
+                <div class="card-body">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number">{{ expiring_items|length }}</div>
+                    <div class="stat-label">Expiring Soon</div>
+                    <div class="stat-change">
+                        <i class="fas fa-exclamation me-1"></i>
+                        Need attention
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card stat-card stat-card-red">
-            <div class="card-body">
-                <div class="stat-icon">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="stat-number">{{ expired_items|length }}</div>
-                <div class="stat-label">Expired Items</div>
-                <div class="stat-change">
-                    <i class="fas fa-ban me-1"></i>
-                    Immediate action
+        <a href="{{ url_for('expiry') }}" class="text-decoration-none">
+            <div class="card stat-card stat-card-red stat-card-compact">
+                <div class="card-body">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-number">{{ expired_items|length }}</div>
+                    <div class="stat-label">Expired Items</div>
+                    <div class="stat-change">
+                        <i class="fas fa-ban me-1"></i>
+                        Immediate action
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
@@ -137,52 +145,82 @@
                     Alerts
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 {% if expired_items %}
-                <div class="alert alert-danger">
-                    <h6><i class="fas fa-times-circle me-2"></i>Expired Items ({{ expired_items|length }})</h6>
-                    <div class="row">
-                        {% for item in expired_items[:5] %}
-                        <div class="col-md-6">
-                            <small>{{ item.name }} ({{ item.bag.name }}) - Expired {{ item.expiry_date }}</small>
-                        </div>
-                        {% endfor %}
+                <div class="alert alert-danger mb-2 mx-3 mt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="fas fa-times-circle me-2"></i>Expired Items ({{ expired_items|length }})</h6>
+                        <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#expiredItems">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
                     </div>
-                    {% if expired_items|length > 5 %}
-                    <small><a href="{{ url_for('expiry') }}" class="text-white">View all {{ expired_items|length }} expired items</a></small>
-                    {% endif %}
+                    <div class="collapse" id="expiredItems">
+                        <hr class="my-2">
+                        <div class="alert-items-list">
+                            {% for item in expired_items %}
+                            <div class="alert-item-row">
+                                <small><strong>{{ item.name }}</strong> in {{ item.bag.name }} - Expired {{ item.expiry_date.strftime('%d/%m/%Y') if item.expiry_date else 'No date' }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-2">
+                            <a href="{{ url_for('expiry') }}" class="btn btn-sm btn-outline-light">
+                                <i class="fas fa-external-link-alt me-1"></i>View All in Expiry Page
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
                 
                 {% if expiring_items %}
-                <div class="alert alert-warning">
-                    <h6><i class="fas fa-clock me-2"></i>Expiring Soon ({{ expiring_items|length }})</h6>
-                    <div class="row">
-                        {% for item in expiring_items[:5] %}
-                        <div class="col-md-6">
-                            <small>{{ item.name }} ({{ item.bag.name }}) - Expires {{ item.expiry_date }}</small>
-                        </div>
-                        {% endfor %}
+                <div class="alert alert-warning mb-2 mx-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Expiring Soon ({{ expiring_items|length }})</h6>
+                        <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#expiringItems">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
                     </div>
-                    {% if expiring_items|length > 5 %}
-                    <small><a href="{{ url_for('expiry') }}" class="text-dark">View all {{ expiring_items|length }} expiring items</a></small>
-                    {% endif %}
+                    <div class="collapse" id="expiringItems">
+                        <hr class="my-2">
+                        <div class="alert-items-list">
+                            {% for item in expiring_items %}
+                            <div class="alert-item-row">
+                                <small><strong>{{ item.name }}</strong> in {{ item.bag.name }} - Expires {{ item.expiry_date.strftime('%d/%m/%Y') if item.expiry_date else 'No date' }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-2">
+                            <a href="{{ url_for('expiry') }}" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-external-link-alt me-1"></i>View All in Expiry Page
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
                 
                 {% if low_stock_items %}
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-arrow-down me-2"></i>Low Stock ({{ low_stock_items|length }})</h6>
-                    <div class="row">
-                        {% for item in low_stock_items[:5] %}
-                        <div class="col-md-6">
-                            <small>{{ item.name }} ({{ item.bag.name }}) - Only {{ item.quantity }} left</small>
-                        </div>
-                        {% endfor %}
+                <div class="alert alert-info mb-3 mx-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="fas fa-arrow-down me-2"></i>Low Stock ({{ low_stock_items|length }})</h6>
+                        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#lowStockItems">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
                     </div>
-                    {% if low_stock_items|length > 5 %}
-                    <small><a href="{{ url_for('inventory') }}?search=&type=&bag=&expiry=" class="text-info">View all low stock items</a></small>
-                    {% endif %}
+                    <div class="collapse" id="lowStockItems">
+                        <hr class="my-2">
+                        <div class="alert-items-list">
+                            {% for item in low_stock_items %}
+                            <div class="alert-item-row">
+                                <small><strong>{{ item.name }}</strong> in {{ item.bag.name }} - Only {{ item.quantity }} left</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-2">
+                            <a href="{{ url_for('inventory') }}" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-external-link-alt me-1"></i>View All in Inventory
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
             </div>

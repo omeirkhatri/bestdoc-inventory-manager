@@ -343,6 +343,79 @@ body {
     padding: 1rem;
 }
 
+/* Compact stat cards */
+.stat-card-compact {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stat-card-compact:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-compact .card-body {
+    padding: 1rem;
+    min-height: 120px;
+}
+
+.stat-card-compact .stat-number {
+    font-size: 1.8rem;
+    margin: 0.5rem 0;
+}
+
+.stat-card-compact .stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card-compact .stat-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.stat-card-compact .stat-change {
+    font-size: 0.8rem;
+}
+
+/* Alert items styling */
+.alert-items-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.alert-item-row {
+    padding: 0.25rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.alert-item-row:last-child {
+    border-bottom: none;
+}
+
+.alert .collapse .btn {
+    font-size: 0.8rem;
+}
+
+/* Scrollbar styling for alert lists */
+.alert-items-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.alert-items-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.alert-items-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.alert-items-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
 /* Badge styling */
 .inventory-item-left .badge,
 .inventory-item-right .badge {
