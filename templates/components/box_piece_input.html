@@ -1,0 +1,79 @@
+<!-- Box/Piece Input Component -->
+<div class="box-piece-container" data-product-id="{{ product.id if product else '' }}">
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Box Input -->
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control box-input" 
+                       id="boxes_{{ suffix }}" name="boxes_{{ suffix }}" 
+                       min="0" value="0" 
+                       data-units-per-box="{{ product.units_per_box if product and product.units_per_box else 0 }}">
+                <label for="boxes_{{ suffix }}">
+                    <i class="fas fa-box me-2"></i>
+                    {% if product and product.has_box_tracking %}
+                        Boxes ({{ product.units_per_box }} {{ product.packaging_unit }} per box)
+                    {% else %}
+                        Boxes
+                    {% endif %}
+                </label>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <!-- Loose Pieces Input -->
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control pieces-input" 
+                       id="pieces_{{ suffix }}" name="pieces_{{ suffix }}" 
+                       min="0" value="0">
+                <label for="pieces_{{ suffix }}">
+                    <i class="fas fa-pills me-2"></i>
+                    Loose {{ product.packaging_unit if product else 'pieces' }}
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total Display -->
+    <div class="total-display mb-3">
+        <div class="alert alert-info">
+            <i class="fas fa-calculator me-2"></i>
+            <strong>Total: </strong>
+            <span class="total-pieces">0</span> {{ product.packaging_unit if product else 'pieces' }}
+            <small class="text-muted ms-2">
+                (<span class="breakdown">0 boxes + 0 loose</span>)
+            </small>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Box/Piece Calculator
+    function updateTotal(container) {
+        const boxInput = container.querySelector('.box-input');
+        const piecesInput = container.querySelector('.pieces-input');
+        const totalSpan = container.querySelector('.total-pieces');
+        const breakdownSpan = container.querySelector('.breakdown');
+        
+        const boxes = parseInt(boxInput.value) || 0;
+        const loosePieces = parseInt(piecesInput.value) || 0;
+        const unitsPerBox = parseInt(boxInput.dataset.unitsPerBox) || 0;
+        
+        const totalPieces = (boxes * unitsPerBox) + loosePieces;
+        
+        totalSpan.textContent = totalPieces;
+        breakdownSpan.textContent = `${boxes} boxes + ${loosePieces} loose`;
+    }
+    
+    // Attach event listeners to all box/piece containers
+    document.querySelectorAll('.box-piece-container').forEach(container => {
+        const boxInput = container.querySelector('.box-input');
+        const piecesInput = container.querySelector('.pieces-input');
+        
+        if (boxInput) boxInput.addEventListener('input', () => updateTotal(container));
+        if (piecesInput) piecesInput.addEventListener('input', () => updateTotal(container));
+        
+        // Initial calculation
+        updateTotal(container);
+    });
+});
+</script>
