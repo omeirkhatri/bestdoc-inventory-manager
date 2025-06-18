@@ -159,23 +159,24 @@
                     <i class="fas fa-briefcase-medical me-2"></i>
                     Bags Need Restocking
                 </h5>
-                <div>
-                    <button type="button" class="btn btn-success btn-sm me-2" onclick="showQuickRestockModal()">
-                        <i class="fas fa-sync me-1"></i>Quick Restock
-                    </button>
-                    <a href="{{ url_for('bag_minimums') }}" class="btn btn-warning btn-sm">
-                        <i class="fas fa-cog me-1"></i>Manage Minimums
-                    </a>
-                </div>
+                <a href="{{ url_for('bag_minimums') }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-cog me-1"></i>Manage Minimums
+                </a>
             </div>
             <div class="row">
                 {% for bag_info in low_stock_bags %}
                 <div class="col-md-6 mb-2">
                     <div class="card border-warning">
                         <div class="card-body py-2">
-                            <h6 class="card-title text-warning mb-1">
-                                <i class="fas fa-briefcase me-1"></i>{{ bag_info.bag.name }}
-                            </h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-title text-warning mb-0">
+                                    <i class="fas fa-briefcase me-1"></i>{{ bag_info.bag.name }}
+                                </h6>
+                                <button type="button" class="btn btn-success btn-sm" 
+                                        onclick="showQuickRestockModal('{{ bag_info.bag.name }}', {{ bag_info.bag.id }})">
+                                    <i class="fas fa-sync me-1"></i>Restock
+                                </button>
+                            </div>
                             {% for item in bag_info.low_items %}
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <small>{{ item.product.name }}</small>
@@ -351,16 +352,17 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-sync me-2"></i>Quick Restock - Cabinet to DOC Bag 1
+                <h5 class="modal-title" id="restockModalTitle">
+                    <i class="fas fa-sync me-2"></i>Quick Restock - Cabinet to Bag
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('quick_restock') }}">
+                <input type="hidden" id="restockBagId" name="bag_id" value="">
                 <div class="modal-body">
-                    <div class="alert alert-info">
+                    <div class="alert alert-info" id="restockInfoText">
                         <i class="fas fa-info-circle me-2"></i>
-                        Transfer items from Cabinet to DOC Bag 1. Enter 0 to skip an item.
+                        Transfer items from Cabinet to selected bag. Enter 0 to skip an item.
                     </div>
                     
                     <div id="restockItems">
@@ -394,13 +396,21 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Dashboard loaded successfully');
 });
 
-// Show quick restock modal
-function showQuickRestockModal() {
+// Show quick restock modal for specific bag
+function showQuickRestockModal(bagName, bagId) {
     const modal = new bootstrap.Modal(document.getElementById('quickRestockModal'));
+    
+    // Update modal title and info text
+    document.getElementById('restockModalTitle').innerHTML = 
+        `<i class="fas fa-sync me-2"></i>Quick Restock - Cabinet to ${bagName}`;
+    document.getElementById('restockInfoText').innerHTML = 
+        `<i class="fas fa-info-circle me-2"></i>Transfer items from Cabinet to ${bagName}. Enter 0 to skip an item.`;
+    document.getElementById('restockBagId').value = bagId;
+    
     modal.show();
     
-    // Load restock data
-    fetch('/api/quick_restock_data')
+    // Load restock data for specific bag
+    fetch(`/api/quick_restock_data?bag_id=${bagId}`)
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('restockItems');
@@ -436,10 +446,11 @@ function showQuickRestockModal() {
                 
                 html += '</tbody></table></div>';
                 container.innerHTML = html;
+                document.getElementById('submitRestock').style.display = 'block';
             } else {
                 container.innerHTML = '<div class="text-center py-4">' +
                                     '<i class="fas fa-check-circle fa-3x text-success mb-3"></i>' +
-                                    '<p class="text-muted">DOC Bag 1 is fully stocked!</p></div>';
+                                    `<p class="text-muted">${bagName} is fully stocked!</p></div>`;
                 document.getElementById('submitRestock').style.display = 'none';
             }
         })

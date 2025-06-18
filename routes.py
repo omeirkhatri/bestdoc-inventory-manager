@@ -1245,18 +1245,22 @@ def undo_last_action():
 @app.route('/api/quick_restock_data')
 @login_required
 def quick_restock_data():
-    """Get items that need restocking in DOC Bag 1"""
+    """Get items that need restocking in specified bag"""
     try:
-        # Find DOC Bag 1 and Cabinet
-        doc_bag = Bag.query.filter_by(name='DOC Bag 1').first()
-        cabinet = Bag.query.filter_by(name='Cabinet').first()
-        
-        if not doc_bag or not cabinet:
+        bag_id = request.args.get('bag_id', type=int)
+        if not bag_id:
             return jsonify({'items': []})
         
-        # Get items that are below minimum in DOC Bag 1
+        # Find specified bag and Cabinet
+        target_bag = Bag.query.get(bag_id)
+        cabinet = Bag.query.filter_by(name='Cabinet').first()
+        
+        if not target_bag or not cabinet:
+            return jsonify({'items': []})
+        
+        # Get items that are below minimum in specified bag
         restock_items = []
-        for minimum in doc_bag.minimums:
+        for minimum in target_bag.minimums:
             current_qty = minimum.current_quantity()
             if current_qty < minimum.minimum_quantity:
                 # Get available quantity in Cabinet for this product
@@ -1295,17 +1299,22 @@ def quick_restock_data():
 @app.route('/quick_restock', methods=['POST'])
 @login_required
 def quick_restock():
-    """Process quick restock from Cabinet to DOC Bag 1"""
+    """Process quick restock from Cabinet to specified bag"""
     try:
         product_ids = request.form.getlist('product_ids')
         quantities = request.form.getlist('quantities')
+        bag_id = request.form.get('bag_id', type=int)
         
-        # Find DOC Bag 1 and Cabinet
-        doc_bag = Bag.query.filter_by(name='DOC Bag 1').first()
+        if not bag_id:
+            flash("Invalid bag selection", "danger")
+            return redirect(url_for('dashboard'))
+        
+        # Find target bag and Cabinet
+        target_bag = Bag.query.get(bag_id)
         cabinet = Bag.query.filter_by(name='Cabinet').first()
         
-        if not doc_bag or not cabinet:
-            flash("DOC Bag 1 or Cabinet not found", "danger")
+        if not target_bag or not cabinet:
+            flash("Target bag or Cabinet not found", "danger")
             return redirect(url_for('dashboard'))
         
         transfers_made = []
@@ -1334,14 +1343,14 @@ def quick_restock():
                         
                         transfer_qty = min(remaining_to_transfer, cabinet_item.quantity)
                         
-                        # Check if same item exists in DOC Bag 1
+                        # Check if same item exists in target bag
                         existing_item = Item.query.filter_by(
                             name=cabinet_item.name,
                             type=cabinet_item.type,
                             size=cabinet_item.size,
                             expiry_date=cabinet_item.expiry_date,
                             brand=cabinet_item.brand,
-                            bag_id=doc_bag.id,
+                            bag_id=target_bag.id,
                             product_id=product_id
                         ).first()
                         
@@ -1350,7 +1359,7 @@ def quick_restock():
                             existing_item.quantity += transfer_qty
                             existing_item.updated_at = datetime.utcnow()
                         else:
-                            # Create new item in DOC Bag 1
+                            # Create new item in target bag
                             new_item = Item(
                                 name=cabinet_item.name,
                                 type=cabinet_item.type,
@@ -1358,7 +1367,7 @@ def quick_restock():
                                 size=cabinet_item.size,
                                 quantity=transfer_qty,
                                 expiry_date=cabinet_item.expiry_date,
-                                bag_id=doc_bag.id,
+                                bag_id=target_bag.id,
                                 product_id=product_id
                             )
                             db.session.add(new_item)
@@ -1375,7 +1384,7 @@ def quick_restock():
                             quantity=transfer_qty,
                             movement_type='transfer',
                             from_bag=cabinet.name,
-                            to_bag=doc_bag.name,
+                            to_bag=target_bag.name,
                             notes=f"Quick restock transfer"
                         )
                         db.session.add(movement)
