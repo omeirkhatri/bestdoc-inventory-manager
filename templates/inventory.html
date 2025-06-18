@@ -106,7 +106,7 @@
                 <tbody id="inventoryTableBody">
                     {% for product_data in products %}
                     {% set product = product_data.product %}
-                    {% set items = product_data.items %}
+                    {% set grouped_items = product_data.grouped_items %}
                     {% set total_quantity = product_data.total_quantity %}
                     {% set is_low_stock = product_data.is_low_stock %}
                     
@@ -186,35 +186,35 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for group in product_data['grouped_items'] %}
+                                        {% for group in grouped_items %}
                                         <tr>
-                                            <td>{{ group.brand or '-' }}</td>
-                                            <td>{{ group.size or '-' }}</td>
+                                            <td>{{ group['brand'] or '-' }}</td>
+                                            <td>{{ group['size'] or '-' }}</td>
                                             <td>
-                                                <span class="badge bg-{% if group.total_quantity <= 5 %}warning{% else %}primary{% endif %}">
-                                                    {{ group.total_quantity }}
+                                                <span class="badge bg-{% if group['total_quantity'] <= 5 %}warning{% else %}primary{% endif %}">
+                                                    {{ group['total_quantity'] }}
                                                 </span>
                                             </td>
                                             <td>
-                                                {% for bag in group.bags %}
+                                                {% for bag in group['bags'] %}
                                                     <span class="badge bg-secondary me-1">{{ bag.name }}</span>
                                                 {% endfor %}
                                             </td>
                                             <td>
-                                                {% if group.expiry_date %}
-                                                    {{ group.expiry_date|date_gmt4 }}
+                                                {% if group['expiry_date'] %}
+                                                    {{ group['expiry_date']|date_gmt4 }}
                                                 {% else %}
                                                     <span class="text-muted">No expiry</span>
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% if group.expiry_date %}
-                                                    {% if group.expiry_date < today %}
+                                                {% if group['expiry_date'] %}
+                                                    {% if group['expiry_date'] < today %}
                                                         <span class="status-indicator expired">
                                                             <i class="fas fa-times-circle"></i>
                                                             Expired
                                                         </span>
-                                                    {% elif (group.expiry_date - today).days <= 30 %}
+                                                    {% elif (group['expiry_date'] - today).days <= 30 %}
                                                         <span class="status-indicator expiring">
                                                             <i class="fas fa-clock"></i>
                                                             Expiring Soon
@@ -234,15 +234,15 @@
                                             </td>
                                             <td>
                                                 <div class="compact-actions">
-                                                    {% if group.items and group.items|length > 0 %}
-                                                        {% set first_item = group.items[0] %}
+                                                    {% if group['items'] and group['items']|length > 0 %}
+                                                        {% set first_item = group['items'][0] %}
                                                         <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                                onclick="showTransferModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }}, '{{ first_item.bag.name }}')"
+                                                                onclick="showTransferModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group['total_quantity'] }}, '{{ first_item.bag.name }}')"
                                                                 title="Transfer items">
                                                             <i class="fas fa-exchange-alt"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-outline-warning btn-sm" 
-                                                                onclick="showUsageModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }})"
+                                                                onclick="showUsageModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group['total_quantity'] }})"
                                                                 title="Record usage">
                                                             <i class="fas fa-minus"></i>
                                                         </button>
