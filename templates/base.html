@@ -154,6 +154,16 @@
         </main>
     </div>
 
+    <!-- Floating Undo Button -->
+    <div id="undoButton" class="undo-button d-none">
+        <button type="button" class="btn btn-warning btn-lg rounded-circle shadow" onclick="performUndo()" title="Undo Last Action">
+            <i class="fas fa-undo"></i>
+        </button>
+        <div class="undo-text mt-1">
+            <small id="undoDescription" class="text-muted"></small>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -249,7 +259,110 @@
                 }
             });
         });
+        
+        // Undo functionality
+        function checkForUndoActions() {
+            fetch('/api/get_last_action')
+                .then(response => response.json())
+                .then(data => {
+                    const undoButton = document.getElementById('undoButton');
+                    const undoDescription = document.getElementById('undoDescription');
+                    
+                    if (data.has_action) {
+                        undoButton.classList.remove('d-none');
+                        undoDescription.textContent = data.description;
+                    } else {
+                        undoButton.classList.add('d-none');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking undo actions:', error);
+                });
+        }
+
+        function performUndo() {
+            if (confirm('Are you sure you want to undo the last action?')) {
+                fetch('/api/undo_last_action', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showAlert('success', data.message);
+                        
+                        // Hide undo button
+                        document.getElementById('undoButton').classList.add('d-none');
+                        
+                        // Refresh page to show updated data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        showAlert('danger', data.error || 'Failed to undo action');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error performing undo:', error);
+                    showAlert('danger', 'An error occurred while undoing the action');
+                });
+            }
+        }
+
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 100px; right: 20px; z-index: 1060; max-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto dismiss after 4 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 4000);
+        }
+
+        // Check for undo actions on page load
+        checkForUndoActions();
     </script>
+    
+    <style>
+        /* Floating Undo Button Styles */
+        .undo-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            text-align: center;
+        }
+
+        .undo-button button {
+            width: 60px;
+            height: 60px;
+            font-size: 1.2em;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .undo-button button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+        }
+
+        .undo-text {
+            max-width: 200px;
+            font-size: 0.8em;
+            line-height: 1.2;
+            color: #6c757d;
+        }
+    </style>
     
     {% block extra_scripts %}{% endblock %}
 </body>

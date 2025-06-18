@@ -205,12 +205,10 @@
                                                 onclick="event.stopPropagation(); editBag({{ bag.id }}, '{{ bag.name }}', '{{ bag.description or '' }}')">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        {% if bag.get_total_items() == 0 %}
                                         <button type="button" class="btn btn-outline-danger" 
-                                                onclick="event.stopPropagation(); deleteBag({{ bag.id }}, '{{ bag.name }}')">
+                                                onclick="event.stopPropagation(); deleteBag({{ bag.id }}, '{{ bag.name }}', {{ bag.get_total_items() }})">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
