@@ -81,7 +81,7 @@
     </div>
     
     <div class="col-md-2-4 col-sm-6 mb-3">
-        <a href="{{ url_for('inventory') }}?expiry=low_stock" class="text-decoration-none">
+        <a href="{{ url_for('inventory') }}?status=low_stock" class="text-decoration-none">
             <div class="stat-card stat-card-warning">
                 <div class="stat-content">
                     <div class="stat-icon">
@@ -103,7 +103,7 @@
     </div>
     
     <div class="col-md-2-4 col-sm-6 mb-3">
-        <a href="{{ url_for('expiry') }}" class="text-decoration-none">
+        <a href="{{ url_for('inventory') }}?status=expiring" class="text-decoration-none">
             <div class="stat-card stat-card-orange">
                 <div class="stat-content">
                     <div class="stat-icon">
@@ -125,7 +125,7 @@
     </div>
     
     <div class="col-md-2-4 col-sm-6 mb-3">
-        <a href="{{ url_for('expiry') }}" class="text-decoration-none">
+        <a href="{{ url_for('inventory') }}?status=expired" class="text-decoration-none">
             <div class="stat-card stat-card-red">
                 <div class="stat-content">
                     <div class="stat-icon">
