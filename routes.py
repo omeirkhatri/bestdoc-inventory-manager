@@ -152,7 +152,6 @@ def dashboard():
 
 @app.route('/add_items', methods=['GET', 'POST'])
 @login_required
-@login_required
 def add_items():
     if request.method == 'POST':
         if 'csv_file' in request.files and request.files['csv_file'].filename:
@@ -164,7 +163,38 @@ def add_items():
     
     bags = Bag.query.all()
     item_types = ItemType.query.all()
-    return render_template('add_items.html', bags=bags, item_types=item_types)
+    
+    # Get existing item names for autocomplete
+    existing_items = db.session.query(Item.name, Item.type, Item.brand, Item.size).distinct().all()
+    history_items = db.session.query(MovementHistory.item_name, MovementHistory.item_type, MovementHistory.item_size).distinct().all()
+    
+    # Combine and format items for autocomplete
+    autocomplete_items = []
+    seen = set()
+    
+    for item in existing_items:
+        key = (item.name, item.type, item.brand, item.size)
+        if key not in seen:
+            autocomplete_items.append({
+                'name': item.name,
+                'type': item.type,
+                'brand': item.brand or '',
+                'size': item.size or ''
+            })
+            seen.add(key)
+    
+    for item in history_items:
+        key = (item.item_name, item.item_type, '', item.item_size)
+        if key not in seen:
+            autocomplete_items.append({
+                'name': item.item_name,
+                'type': item.item_type,
+                'brand': '',
+                'size': item.item_size or ''
+            })
+            seen.add(key)
+    
+    return render_template('add_items.html', bags=bags, item_types=item_types, autocomplete_items=autocomplete_items)
 
 def handle_csv_upload(file):
     if file and file.filename.endswith('.csv'):

@@ -181,7 +181,7 @@
 
 {% block extra_scripts %}
 <script>
-let itemSuggestions = [];
+let itemSuggestions = {{ autocomplete_items|tojson }};
 
 // Initialize autocomplete for item names
 function initializeAutocomplete() {
@@ -238,26 +238,13 @@ function handleItemNameInput(input) {
 }
 
 function searchItems(query, suggestionsDiv, input) {
-    fetch(`/api/items/search?q=${encodeURIComponent(query)}`, {
-        method: 'GET',
-        credentials: 'same-origin',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(items => {
-            showSuggestions(items, suggestionsDiv, input);
-        })
-        .catch(error => {
-            console.error('Error searching items:', error);
-            hideSuggestions(suggestionsDiv);
-        });
+    // Filter items locally using the data passed from server
+    const filteredItems = itemSuggestions.filter(item => 
+        item.name.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 10); // Limit to 10 results
+    
+    console.log('Search results:', filteredItems);
+    showSuggestions(filteredItems, suggestionsDiv, input);
 }
 
 function showSuggestions(items, suggestionsDiv, input) {
