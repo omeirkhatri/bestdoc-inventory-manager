@@ -191,18 +191,20 @@ function initializeAutocomplete() {
         }
     });
     
+    // Only hide suggestions when clicking outside both input and suggestions
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.item-name-input') && !e.target.closest('.item-suggestions')) {
             hideAllSuggestions();
         }
     });
     
-    document.addEventListener('blur', function(e) {
+    // Handle focus events to show suggestions again if there's content
+    document.addEventListener('focus', function(e) {
         if (e.target.classList.contains('item-name-input')) {
-            setTimeout(() => {
-                const suggestionsDiv = e.target.nextElementSibling;
-                hideSuggestions(suggestionsDiv);
-            }, 200);
+            const query = e.target.value.trim();
+            if (query.length >= 2) {
+                handleItemNameInput(e.target);
+            }
         }
     });
     
@@ -278,8 +280,14 @@ function showSuggestions(items, suggestionsDiv, input) {
         
         suggestionItem.addEventListener('mousedown', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             selectItem(item, input);
             hideSuggestions(suggestionsDiv);
+        });
+        
+        suggestionItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
         });
         
         suggestionsDiv.appendChild(suggestionItem);
