@@ -384,6 +384,8 @@ function toggleEditMode() {
     isEditMode = !isEditMode;
     
     console.log('Toggle edit mode to:', isEditMode);
+    console.log('Found view-mode elements:', document.querySelectorAll('.view-mode').length);
+    console.log('Found edit-mode elements:', document.querySelectorAll('.edit-mode').length);
     
     if (isEditMode) {
         // Enter edit mode
@@ -392,19 +394,14 @@ function toggleEditMode() {
         document.getElementById('saveChangesBtn').style.display = 'inline-block';
         document.getElementById('cancelEditBtn').style.display = 'inline-block';
         
-        // Show all input fields and hide badges
-        document.querySelectorAll('.view-mode').forEach(el => {
+        // Show all input fields and hide badges in minimum cells only
+        document.querySelectorAll('td.minimum-cell .view-mode').forEach(el => {
             console.log('Hiding view element:', el);
             el.classList.add('d-none');
         });
-        document.querySelectorAll('.edit-mode').forEach(el => {
+        document.querySelectorAll('td.minimum-cell .edit-mode').forEach(el => {
             console.log('Showing edit element:', el);
             el.classList.remove('d-none');
-        });
-        
-        // Disable individual edit clicks on badges
-        document.querySelectorAll('.minimum-cell .view-mode').forEach(el => {
-            el.style.pointerEvents = 'none';
         });
         
     } else {
@@ -415,16 +412,11 @@ function toggleEditMode() {
         document.getElementById('cancelEditBtn').style.display = 'none';
         
         // Show badges and hide input fields
-        document.querySelectorAll('.view-mode').forEach(el => {
+        document.querySelectorAll('td.minimum-cell .view-mode').forEach(el => {
             el.classList.remove('d-none');
         });
-        document.querySelectorAll('.edit-mode').forEach(el => {
+        document.querySelectorAll('td.minimum-cell .edit-mode').forEach(el => {
             el.classList.add('d-none');
-        });
-        
-        // Re-enable individual edit clicks
-        document.querySelectorAll('.minimum-cell .view-mode').forEach(el => {
-            el.style.pointerEvents = 'auto';
         });
         
         // Clear changed cells
