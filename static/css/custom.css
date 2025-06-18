@@ -22,6 +22,12 @@
     --status-danger: #dc3545;
     --status-expired: #6f42c1;
     
+    /* Text contrast fixes */
+    --text-contrast-light: #212529;
+    --text-contrast-dark: #ffffff;
+    --muted-text-light: #495057;
+    --muted-text-dark: #adb5bd;
+    
     /* Spacing */
     --inventory-spacing-sm: 0.5rem;
     --inventory-spacing-md: 1rem;
@@ -38,6 +44,82 @@ body {
     line-height: 1.6;
     margin: 0;
     padding: 0;
+}
+
+/* Text contrast fixes for light and dark modes */
+[data-bs-theme="light"] .form-control,
+[data-bs-theme="light"] .form-select,
+[data-bs-theme="light"] input[type="text"],
+[data-bs-theme="light"] input[type="number"],
+[data-bs-theme="light"] input[type="date"],
+[data-bs-theme="light"] textarea {
+    color: var(--text-contrast-light) !important;
+    background-color: #ffffff !important;
+    border-color: #ced4da !important;
+}
+
+[data-bs-theme="light"] .form-control::placeholder,
+[data-bs-theme="light"] .form-select::placeholder {
+    color: var(--muted-text-light) !important;
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select,
+[data-bs-theme="dark"] input[type="text"],
+[data-bs-theme="dark"] input[type="number"],
+[data-bs-theme="dark"] input[type="date"],
+[data-bs-theme="dark"] textarea {
+    color: var(--text-contrast-dark) !important;
+    background-color: #2b3035 !important;
+    border-color: #495057 !important;
+}
+
+[data-bs-theme="dark"] .form-control::placeholder,
+[data-bs-theme="dark"] .form-select::placeholder {
+    color: var(--muted-text-dark) !important;
+}
+
+/* Ensure text-muted is visible in both modes */
+[data-bs-theme="light"] .text-muted {
+    color: var(--muted-text-light) !important;
+}
+
+[data-bs-theme="dark"] .text-muted {
+    color: var(--muted-text-dark) !important;
+}
+
+/* Card text contrast */
+[data-bs-theme="light"] .card {
+    background-color: #ffffff !important;
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="dark"] .card {
+    background-color: #2b3035 !important;
+    color: var(--text-contrast-dark) !important;
+}
+
+/* Table text contrast */
+[data-bs-theme="light"] .table {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="dark"] .table {
+    color: var(--text-contrast-dark) !important;
+}
+
+/* Action button styling */
+.action-buttons {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.action-buttons .btn {
+    min-width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Sidebar Layout */

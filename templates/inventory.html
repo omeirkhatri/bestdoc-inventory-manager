@@ -110,11 +110,23 @@
                                     Total: {{ total_quantity }}
                                 </span>
                                 <span class="text-muted small me-2">Min: {{ product.minimum_stock }}</span>
-                                <a href="{{ url_for('item_history', product_id=product.id) }}" 
-                                   class="btn btn-outline-info btn-sm me-2" 
-                                   onclick="event.stopPropagation();">
-                                    <i class="fas fa-history"></i> History
-                                </a>
+                                <div class="action-buttons" onclick="event.stopPropagation();">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                                            onclick="showProductTransferModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
+                                            title="Transfer items">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning btn-sm" 
+                                            onclick="showProductUsageModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
+                                            title="Record usage">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <a href="{{ url_for('item_history', product_id=product.id) }}" 
+                                       class="btn btn-outline-info btn-sm" 
+                                       title="View history">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </button>
@@ -169,18 +181,22 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                {% if item.bag.name == 'Cabinet' %}
-                                                <button type="button" class="btn btn-outline-primary" 
-                                                        onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
+                                            <div class="action-buttons">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                        onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})"
+                                                        title="Transfer items">
                                                     <i class="fas fa-exchange-alt"></i>
                                                 </button>
-                                                {% else %}
-                                                <button type="button" class="btn btn-outline-warning" 
-                                                        onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
+                                                <button type="button" class="btn btn-outline-warning btn-sm" 
+                                                        onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})"
+                                                        title="Record usage">
                                                     <i class="fas fa-minus"></i>
                                                 </button>
-                                                {% endif %}
+                                                <a href="{{ url_for('item_history', product_id=product.id) }}" 
+                                                   class="btn btn-outline-info btn-sm" 
+                                                   title="View history">
+                                                    <i class="fas fa-history"></i>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -293,7 +309,7 @@ $(document).ready(function() {
     });
 });
 
-// Show transfer modal
+// Show transfer modal for individual items
 function showTransferModal(itemId, itemName, maxQuantity) {
     document.getElementById('transferItemId').value = itemId;
     document.getElementById('transferItemName').value = itemName;
@@ -306,7 +322,13 @@ function showTransferModal(itemId, itemName, maxQuantity) {
     modal.show();
 }
 
-// Show usage modal
+// Show transfer modal for entire product
+function showProductTransferModal(productId, productName, totalQuantity) {
+    // For now, redirect to transfer page with product filter
+    window.location.href = `/transfer?product=${encodeURIComponent(productName)}`;
+}
+
+// Show usage modal for individual items
 function showUsageModal(itemId, itemName, maxQuantity) {
     document.getElementById('usageItemId').value = itemId;
     document.getElementById('usageItemName').value = itemName;
@@ -317,6 +339,12 @@ function showUsageModal(itemId, itemName, maxQuantity) {
     
     const modal = new bootstrap.Modal(document.getElementById('usageModal'));
     modal.show();
+}
+
+// Show usage modal for entire product
+function showProductUsageModal(productId, productName, totalQuantity) {
+    // For now, redirect to usage page with product filter
+    window.location.href = `/usage?product=${encodeURIComponent(productName)}`;
 }
 
 // Auto-submit filters on change (optional)
