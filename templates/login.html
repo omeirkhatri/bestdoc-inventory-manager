@@ -38,12 +38,17 @@
         
         .logo-container {
             margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
         .logo-container img {
             max-height: 60px;
             width: auto;
             object-fit: contain;
+            display: block;
+            margin: 0 auto;
         }
         
         .login-body {
@@ -101,7 +106,6 @@
                 <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="BestDoc Logo" class="logo-dark">
                 <img src="{{ url_for('static', filename='images/logo-color.png') }}" alt="BestDoc Logo" class="logo-light">
             </div>
-            <h4 class="mb-0">Inventory Management</h4>
             <p class="mb-0 opacity-75">Please sign in to continue</p>
         </div>
         
