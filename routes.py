@@ -795,13 +795,21 @@ def handle_bag_management():
             
             # Transfer all items to cabinet and track for undo
             items_transferred = 0
-            for item in bag.items:
+            bag_items = Item.query.filter_by(bag_id=bag.id).all()
+            
+            for item in bag_items:
                 if item.quantity > 0:
                     undo_data['transferred_items'].append({
                         'item_id': item.id,
                         'original_bag_id': bag.id
                     })
-                    item.bag_id = cabinet.id
+                    
+                    # Update the item's bag_id using SQLAlchemy update
+                    Item.query.filter_by(id=item.id).update({
+                        'bag_id': cabinet.id,
+                        'updated_at': datetime.utcnow()
+                    })
+                    
                     items_transferred += item.quantity
                     
                     # Record movement
@@ -818,7 +826,8 @@ def handle_bag_management():
                     db.session.add(movement)
             
             # Remove bag minimums and track for undo
-            for minimum in bag.minimums:
+            bag_minimums = BagMinimum.query.filter_by(bag_id=bag.id).all()
+            for minimum in bag_minimums:
                 undo_data['deleted_minimums'].append({
                     'bag_id': minimum.bag_id,
                     'product_id': minimum.product_id,
