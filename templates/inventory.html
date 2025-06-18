@@ -234,18 +234,19 @@
                                             </td>
                                             <td>
                                                 <div class="compact-actions">
-                                                    {% if group.items and group.items|length > 0 %}
+                                                    {% if group.items %}
+                                                        {% set first_item = group.items[0] %}
                                                         <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                                onclick="showTransferModal('{{ group.items[0].id }}', '{{ group.items[0].name }}', {{ group.total_quantity }}, '{{ group.bags[0].name }}')"
+                                                                onclick="showTransferModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }}, '{{ first_item.bag.name }}')"
                                                                 title="Transfer items">
                                                             <i class="fas fa-exchange-alt"></i>
                                                         </button>
                                                         <button type="button" class="btn btn-outline-warning btn-sm" 
-                                                                onclick="showUsageModal('{{ group.items[0].id }}', '{{ group.items[0].name }}', {{ group.total_quantity }})"
+                                                                onclick="showUsageModal('{{ first_item.id }}', '{{ first_item.name }}', {{ group.total_quantity }})"
                                                                 title="Record usage">
                                                             <i class="fas fa-minus"></i>
                                                         </button>
-                                                        <a href="{{ url_for('individual_item_history', item_id=group.items[0].id) }}" 
+                                                        <a href="{{ url_for('individual_item_history', item_id=first_item.id) }}" 
                                                            class="btn btn-outline-info btn-sm" 
                                                            title="View item history">
                                                             <i class="fas fa-history"></i>
