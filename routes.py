@@ -102,7 +102,7 @@ def dashboard():
     # Recent movements
     recent_movements = MovementHistory.query.order_by(
         MovementHistory.timestamp.desc()
-    ).limit(10).all()
+    ).limit(20).all()
     
     # Bag statistics
     bags_with_counts = []

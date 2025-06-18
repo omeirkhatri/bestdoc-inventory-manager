@@ -210,26 +210,91 @@
                 </h5>
                 <a href="{{ url_for('history') }}" class="btn btn-outline-secondary btn-sm">View All</a>
             </div>
-            <div class="card-body p-2 recent-activity-compact">
+            <div class="card-body p-3">
                 {% if recent_movements %}
-                <div class="row">
-                    {% for movement in recent_movements[:6] %}
-                    <div class="col-md-6 mb-2">
-                        <div class="d-flex align-items-center p-2 border rounded">
-                            <span class="badge bg-{% if movement.movement_type == 'addition' %}success{% elif movement.movement_type == 'usage' %}danger{% else %}info{% endif %} me-2">
-                                {{ movement.movement_type[:3].upper() }}
-                            </span>
-                            <div class="flex-grow-1">
-                                <small class="fw-bold">{{ movement.item_name }}</small>
-                                <br>
-                                <small class="text-muted">{{ movement.quantity }} items - {{ movement.timestamp.strftime('%H:%M') }}</small>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">Type</th>
+                                <th>Item</th>
+                                <th style="width: 80px;">Qty</th>
+                                <th>Details</th>
+                                <th style="width: 140px;">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movement in recent_movements[:15] %}
+                            <tr>
+                                <td>
+                                    <span class="badge 
+                                        {% if movement.movement_type == 'addition' %}bg-success
+                                        {% elif movement.movement_type == 'usage' %}bg-danger
+                                        {% elif movement.movement_type == 'transfer' %}bg-info
+                                        {% elif movement.movement_type == 'wastage' %}bg-warning
+                                        {% else %}bg-secondary{% endif %}">
+                                        {% if movement.movement_type == 'addition' %}Added
+                                        {% elif movement.movement_type == 'usage' %}Used
+                                        {% elif movement.movement_type == 'transfer' %}Moved
+                                        {% elif movement.movement_type == 'wastage' %}Wasted
+                                        {% else %}{{ movement.movement_type.title() }}{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ movement.item_name }}</strong>
+                                    {% if movement.item_size %}
+                                    <br><small class="text-muted">{{ movement.item_size }}</small>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ movement.quantity }}</strong></td>
+                                <td>
+                                    {% if movement.movement_type == 'transfer' %}
+                                        {% if movement.from_bag and movement.to_bag %}
+                                            From <strong>{{ movement.from_bag }}</strong> to <strong>{{ movement.to_bag }}</strong>
+                                        {% elif movement.to_bag %}
+                                            Moved to <strong>{{ movement.to_bag }}</strong>
+                                        {% elif movement.from_bag %}
+                                            Moved from <strong>{{ movement.from_bag }}</strong>
+                                        {% endif %}
+                                    {% elif movement.movement_type == 'usage' %}
+                                        {% if movement.patient_name %}
+                                            Used for patient: <strong>{{ movement.patient_name }}</strong>
+                                        {% else %}
+                                            Used for treatment
+                                        {% endif %}
+                                    {% elif movement.movement_type == 'wastage' %}
+                                        {% if movement.expiry_date %}
+                                            Expired on {{ movement.expiry_date.strftime('%d/%m/%y') }}
+                                        {% else %}
+                                            Moved to wastage
+                                        {% endif %}
+                                    {% elif movement.movement_type == 'addition' %}
+                                        {% if movement.to_bag %}
+                                            Added to <strong>{{ movement.to_bag }}</strong>
+                                        {% else %}
+                                            Added to inventory
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if movement.notes %}
+                                        <br><small class="text-muted">{{ movement.notes }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>
+                                        {{ movement.timestamp.strftime('%d/%m/%y') }}<br>
+                                        <span class="text-muted">{{ movement.timestamp.strftime('%H:%M') }}</span>
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
                 {% else %}
-                <p class="text-muted text-center mb-0">No recent activity</p>
+                <div class="text-center py-4">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No recent activity</p>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -291,23 +356,23 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .stat-card-blue {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4fd1c7 0%, #3bb3a9 100%);
 }
 
 .stat-card-green {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(135deg, #5cb85c 0%, #198754 100%);
 }
 
 .stat-card-warning {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
 }
 
 .stat-card-orange {
-    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    background: linear-gradient(135deg, #fd7e14 0%, #dc3545 100%);
 }
 
 .stat-card-red {
-    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    background: linear-gradient(135deg, #dc3545 0%, #6f42c1 100%);
 }
 
 .stat-content {
