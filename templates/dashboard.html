@@ -35,7 +35,7 @@
 </div>
 
 <!-- Summary Cards -->
-<div class="row mb-4">
+<div class="row mb-3 dashboard-section">
     <div class="col-md-3 col-sm-6 mb-3">
         <a href="{{ url_for('inventory') }}" class="text-decoration-none">
             <div class="card stat-card stat-card-teal stat-card-compact">
@@ -110,14 +110,16 @@
 </div>
 
 <!-- Charts Row -->
-<div class="row mb-4">
+<div class="row mb-3 dashboard-section">
     <div class="col-md-6 mb-3">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">Items by Bag</h5>
             </div>
             <div class="card-body">
-                <canvas id="bagChart" height="200"></canvas>
+                <div class="dashboard-charts">
+                    <canvas id="bagChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -128,24 +130,8 @@
                 <h5 class="card-title mb-0">Stock Status</h5>
             </div>
             <div class="card-body">
-                <canvas id="statusChart" height="200"></canvas>
-                <div class="row mt-3 text-center">
-                    <div class="col-3">
-                        <div class="text-success"><strong>{{ (total_items - expired_items|length - expiring_items|length - low_stock_items|length) }}</strong></div>
-                        <small class="text-muted">Good</small>
-                    </div>
-                    <div class="col-3">
-                        <div class="text-warning"><strong>{{ expiring_items|length }}</strong></div>
-                        <small class="text-muted">Expiring</small>
-                    </div>
-                    <div class="col-3">
-                        <div class="text-danger"><strong>{{ expired_items|length }}</strong></div>
-                        <small class="text-muted">Expired</small>
-                    </div>
-                    <div class="col-3">
-                        <div class="text-info"><strong>{{ low_stock_items|length }}</strong></div>
-                        <small class="text-muted">Low Stock</small>
-                    </div>
+                <div class="dashboard-charts">
+                    <canvas id="statusChart"></canvas>
                 </div>
             </div>
         </div>
@@ -154,93 +140,48 @@
 
 <!-- Alerts Section -->
 {% if expired_items or expiring_items or low_stock_items %}
-<div class="row mb-4">
+<div class="row mb-3 dashboard-section">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    Alerts
+                    Alerts Summary
                 </h5>
             </div>
-            <div class="card-body p-0">
-                {% if expired_items %}
-                <div class="alert alert-danger mb-2 mx-3 mt-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0"><i class="fas fa-times-circle me-2"></i>Expired Items ({{ expired_items|length }})</h6>
-                        <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#expiredItems">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                    </div>
-                    <div class="collapse" id="expiredItems">
-                        <hr class="my-2">
-                        <div class="alert-items-list">
-                            {% for item in expired_items %}
-                            <div class="alert-item-row">
-                                <small><strong>{{ item.name }}</strong> in {{ item.bag.name }} - Expired {{ item.expiry_date.strftime('%d/%m/%Y') if item.expiry_date else 'No date' }}</small>
+            <div class="card-body p-2">
+                <div class="row text-center">
+                    {% if expired_items %}
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('expiry') }}" class="text-decoration-none">
+                            <div class="alert alert-danger mb-0 py-2 alert-compact">
+                                <h6 class="mb-1"><i class="fas fa-times-circle me-1"></i>{{ expired_items|length }}</h6>
+                                <small>Expired Items</small>
                             </div>
-                            {% endfor %}
-                        </div>
-                        <div class="mt-2">
-                            <a href="{{ url_for('expiry') }}" class="btn btn-sm btn-outline-light">
-                                <i class="fas fa-external-link-alt me-1"></i>View All in Expiry Page
-                            </a>
-                        </div>
+                        </a>
                     </div>
-                </div>
-                {% endif %}
-                
-                {% if expiring_items %}
-                <div class="alert alert-warning mb-2 mx-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Expiring Soon ({{ expiring_items|length }})</h6>
-                        <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#expiringItems">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                    </div>
-                    <div class="collapse" id="expiringItems">
-                        <hr class="my-2">
-                        <div class="alert-items-list">
-                            {% for item in expiring_items %}
-                            <div class="alert-item-row">
-                                <small><strong>{{ item.name }}</strong> in {{ item.bag.name }} - Expires {{ item.expiry_date.strftime('%d/%m/%Y') if item.expiry_date else 'No date' }}</small>
+                    {% endif %}
+                    {% if expiring_items %}
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('expiry') }}" class="text-decoration-none">
+                            <div class="alert alert-warning mb-0 py-2 alert-compact">
+                                <h6 class="mb-1"><i class="fas fa-clock me-1"></i>{{ expiring_items|length }}</h6>
+                                <small>Expiring Soon</small>
                             </div>
-                            {% endfor %}
-                        </div>
-                        <div class="mt-2">
-                            <a href="{{ url_for('expiry') }}" class="btn btn-sm btn-outline-dark">
-                                <i class="fas fa-external-link-alt me-1"></i>View All in Expiry Page
-                            </a>
-                        </div>
+                        </a>
                     </div>
-                </div>
-                {% endif %}
-                
-                {% if low_stock_items %}
-                <div class="alert alert-info mb-3 mx-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0"><i class="fas fa-arrow-down me-2"></i>Low Stock ({{ low_stock_items|length }})</h6>
-                        <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#lowStockItems">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                    </div>
-                    <div class="collapse" id="lowStockItems">
-                        <hr class="my-2">
-                        <div class="alert-items-list">
-                            {% for item in low_stock_items %}
-                            <div class="alert-item-row">
-                                <small><strong>{{ item.name }}</strong> in {{ item.bag.name }} - Only {{ item.quantity }} left</small>
+                    {% endif %}
+                    {% if low_stock_items %}
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('inventory') }}" class="text-decoration-none">
+                            <div class="alert alert-info mb-0 py-2 alert-compact">
+                                <h6 class="mb-1"><i class="fas fa-arrow-down me-1"></i>{{ low_stock_items|length }}</h6>
+                                <small>Low Stock Items</small>
                             </div>
-                            {% endfor %}
-                        </div>
-                        <div class="mt-2">
-                            <a href="{{ url_for('inventory') }}" class="btn btn-sm btn-outline-info">
-                                <i class="fas fa-external-link-alt me-1"></i>View All in Inventory
-                            </a>
-                        </div>
+                        </a>
                     </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -248,60 +189,36 @@
 {% endif %}
 
 <!-- Recent Activity -->
-<div class="row">
+<div class="row dashboard-section">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-history me-2"></i>
                     Recent Activity
                 </h5>
+                <a href="{{ url_for('history') }}" class="btn btn-outline-secondary btn-sm">View All</a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-2 recent-activity-compact">
                 {% if recent_movements %}
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>Item</th>
-                                <th>Action</th>
-                                <th>Quantity</th>
-                                <th>Location</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for movement in recent_movements %}
-                            <tr>
-                                <td>
-                                    <small>{{ movement.timestamp|datetime_gmt4 }}</small>
-                                </td>
-                                <td>{{ movement.item_name }}</td>
-                                <td>
-                                    <span class="badge bg-{% if movement.movement_type == 'addition' %}success{% elif movement.movement_type == 'usage' %}danger{% else %}info{% endif %}">
-                                        {{ movement.movement_type.title() }}
-                                    </span>
-                                </td>
-                                <td>{{ movement.quantity }}</td>
-                                <td>
-                                    {% if movement.movement_type == 'transfer' %}
-                                        {{ movement.from_bag }} → {{ movement.to_bag }}
-                                    {% elif movement.movement_type == 'usage' %}
-                                        {{ movement.from_bag }}
-                                    {% else %}
-                                        {{ movement.to_bag }}
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="text-center">
-                    <a href="{{ url_for('history') }}" class="btn btn-outline-secondary btn-sm">View Full History</a>
+                <div class="row">
+                    {% for movement in recent_movements[:6] %}
+                    <div class="col-md-6 mb-2">
+                        <div class="d-flex align-items-center p-2 border rounded">
+                            <span class="badge bg-{% if movement.movement_type == 'addition' %}success{% elif movement.movement_type == 'usage' %}danger{% else %}info{% endif %} me-2">
+                                {{ movement.movement_type[:3].upper() }}
+                            </span>
+                            <div class="flex-grow-1">
+                                <small class="fw-bold">{{ movement.item_name }}</small>
+                                <br>
+                                <small class="text-muted">{{ movement.quantity }} items - {{ movement.timestamp.strftime('%H:%M') }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted">No recent activity</p>
+                <p class="text-muted text-center mb-0">No recent activity</p>
                 {% endif %}
             </div>
         </div>
@@ -363,29 +280,14 @@ const statusData = {
 };
 
 new Chart(statusCtx, {
-    type: 'pie',
+    type: 'doughnut',
     data: statusData,
     options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                position: 'bottom',
-                labels: {
-                    padding: 15,
-                    usePointStyle: true
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        const label = context.label || '';
-                        const value = context.parsed;
-                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                        return `${label}: ${value} items (${percentage}%)`;
-                    }
-                }
+                position: 'bottom'
             }
         }
     }

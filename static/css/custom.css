@@ -1099,6 +1099,41 @@ body {
     }
 }
 
+/* Dashboard specific improvements */
+.dashboard-container {
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+.dashboard-charts {
+    height: 300px;
+}
+
+.dashboard-section {
+    margin-bottom: 1.5rem;
+}
+
+.dashboard-section:last-child {
+    margin-bottom: 1rem;
+}
+
+.stat-card-compact {
+    min-height: 120px;
+}
+
+.stat-card-compact .card-body {
+    padding: 1rem;
+}
+
+.alert-compact {
+    padding: 0.5rem 1rem;
+}
+
+.recent-activity-compact {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
 /* Mobile-specific improvements */
 @media (max-width: 576px) {
     .container {
@@ -1136,6 +1171,14 @@ body {
     
     h2 {
         font-size: 1.5rem;
+    }
+    
+    .dashboard-charts {
+        height: 250px;
+    }
+    
+    .stat-card-compact {
+        min-height: 100px;
     }
 }
 
