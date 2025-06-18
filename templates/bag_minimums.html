@@ -205,8 +205,140 @@
 <script>
 let currentBagId, currentProductId, currentBagName, currentProductName;
 
+// Edit mode functions - define these first
+let isEditMode = false;
+let changedCells = new Set();
+
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    
+    console.log('Toggle edit mode to:', isEditMode);
+    console.log('Found view-mode elements:', document.querySelectorAll('.view-mode').length);
+    console.log('Found edit-mode elements:', document.querySelectorAll('.edit-mode').length);
+    
+    if (isEditMode) {
+        // Enter edit mode
+        document.getElementById('editModeBtn').innerHTML = '<i class="fas fa-eye me-1"></i>View Mode';
+        document.getElementById('editModeBtn').className = 'btn btn-secondary me-2';
+        document.getElementById('saveChangesBtn').style.display = 'inline-block';
+        document.getElementById('cancelEditBtn').style.display = 'inline-block';
+        
+        // Show all input fields and hide badges in minimum cells only
+        document.querySelectorAll('td.minimum-cell .view-mode').forEach(el => {
+            console.log('Hiding view element:', el);
+            el.classList.add('d-none');
+        });
+        document.querySelectorAll('td.minimum-cell .edit-mode').forEach(el => {
+            console.log('Showing edit element:', el);
+            el.classList.remove('d-none');
+        });
+        
+    } else {
+        // Exit edit mode
+        document.getElementById('editModeBtn').innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode';
+        document.getElementById('editModeBtn').className = 'btn btn-primary me-2';
+        document.getElementById('saveChangesBtn').style.display = 'none';
+        document.getElementById('cancelEditBtn').style.display = 'none';
+        
+        // Show badges and hide input fields
+        document.querySelectorAll('td.minimum-cell .view-mode').forEach(el => {
+            el.classList.remove('d-none');
+        });
+        document.querySelectorAll('td.minimum-cell .edit-mode').forEach(el => {
+            el.classList.add('d-none');
+        });
+        
+        // Clear changed cells
+        changedCells.clear();
+        document.querySelectorAll('.minimum-cell').forEach(cell => {
+            cell.classList.remove('table-warning');
+        });
+    }
+}
+
+function markAsChanged(input) {
+    const cell = input.closest('.minimum-cell');
+    const originalValue = cell.dataset.currentValue;
+    const newValue = input.value;
+    
+    if (originalValue !== newValue) {
+        changedCells.add(cell);
+        cell.classList.add('table-warning');
+    } else {
+        changedCells.delete(cell);
+        cell.classList.remove('table-warning');
+    }
+}
+
+function saveAllChanges() {
+    if (changedCells.size === 0) {
+        showAlert('info', 'No changes to save');
+        return;
+    }
+    
+    const changes = [];
+    changedCells.forEach(cell => {
+        const input = cell.querySelector('.edit-mode');
+        changes.push({
+            bag_id: parseInt(cell.dataset.bagId),
+            product_id: parseInt(cell.dataset.productId),
+            minimum_quantity: parseInt(input.value) || 0
+        });
+    });
+    
+    fetch('/api/bulk_update_bag_minimums', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({changes: changes})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', `Updated ${changedCells.size} minimum quantities successfully`);
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showAlert('danger', data.error || 'Failed to update minimums');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'An error occurred while updating minimums');
+    });
+}
+
+function cancelEdit() {
+    // Reset all input values to original
+    changedCells.forEach(cell => {
+        const input = cell.querySelector('.edit-mode');
+        input.value = cell.dataset.currentValue;
+        cell.classList.remove('table-warning');
+    });
+    
+    changedCells.clear();
+    toggleEditMode();
+}
+
+// Test function first
+window.testEditMode = function() {
+    console.log('Test function called');
+    alert('JavaScript is working!');
+};
+
 // Initialize DataTable
 $(document).ready(function() {
+    console.log('Document ready - initializing');
+    
+    // Test if toggleEditMode function exists
+    if (typeof toggleEditMode === 'function') {
+        console.log('toggleEditMode function exists');
+    } else {
+        console.log('toggleEditMode function NOT found');
+    }
+    
     // Check if DataTable is available, if not initialize without it
     if (typeof $.fn.DataTable !== 'undefined') {
         $('#bagMinimumsTable').DataTable({
@@ -222,6 +354,19 @@ $(document).ready(function() {
     // Debug: Log edit mode elements
     console.log('Edit mode elements found:', document.querySelectorAll('.edit-mode').length);
     console.log('View mode elements found:', document.querySelectorAll('.view-mode').length);
+    
+    // Add click handler manually if needed
+    const editBtn = document.getElementById('editModeBtn');
+    if (editBtn) {
+        console.log('Edit button found, adding click handler');
+        editBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Edit button clicked');
+            toggleEditMode();
+        });
+    } else {
+        console.log('Edit button NOT found');
+    }
 });
 
 // Edit minimum function
@@ -376,121 +521,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(style);
 });
 
-// Edit mode functions
-let isEditMode = false;
-let changedCells = new Set();
 
-function toggleEditMode() {
-    isEditMode = !isEditMode;
-    
-    console.log('Toggle edit mode to:', isEditMode);
-    console.log('Found view-mode elements:', document.querySelectorAll('.view-mode').length);
-    console.log('Found edit-mode elements:', document.querySelectorAll('.edit-mode').length);
-    
-    if (isEditMode) {
-        // Enter edit mode
-        document.getElementById('editModeBtn').innerHTML = '<i class="fas fa-eye me-1"></i>View Mode';
-        document.getElementById('editModeBtn').className = 'btn btn-secondary me-2';
-        document.getElementById('saveChangesBtn').style.display = 'inline-block';
-        document.getElementById('cancelEditBtn').style.display = 'inline-block';
-        
-        // Show all input fields and hide badges in minimum cells only
-        document.querySelectorAll('td.minimum-cell .view-mode').forEach(el => {
-            console.log('Hiding view element:', el);
-            el.classList.add('d-none');
-        });
-        document.querySelectorAll('td.minimum-cell .edit-mode').forEach(el => {
-            console.log('Showing edit element:', el);
-            el.classList.remove('d-none');
-        });
-        
-    } else {
-        // Exit edit mode
-        document.getElementById('editModeBtn').innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode';
-        document.getElementById('editModeBtn').className = 'btn btn-primary me-2';
-        document.getElementById('saveChangesBtn').style.display = 'none';
-        document.getElementById('cancelEditBtn').style.display = 'none';
-        
-        // Show badges and hide input fields
-        document.querySelectorAll('td.minimum-cell .view-mode').forEach(el => {
-            el.classList.remove('d-none');
-        });
-        document.querySelectorAll('td.minimum-cell .edit-mode').forEach(el => {
-            el.classList.add('d-none');
-        });
-        
-        // Clear changed cells
-        changedCells.clear();
-        document.querySelectorAll('.minimum-cell').forEach(cell => {
-            cell.classList.remove('table-warning');
-        });
-    }
-}
-
-function markAsChanged(input) {
-    const cell = input.closest('.minimum-cell');
-    const originalValue = cell.dataset.currentValue;
-    const newValue = input.value;
-    
-    if (originalValue !== newValue) {
-        changedCells.add(cell);
-        cell.classList.add('table-warning');
-    } else {
-        changedCells.delete(cell);
-        cell.classList.remove('table-warning');
-    }
-}
-
-function saveAllChanges() {
-    if (changedCells.size === 0) {
-        showAlert('info', 'No changes to save');
-        return;
-    }
-    
-    const changes = [];
-    changedCells.forEach(cell => {
-        const input = cell.querySelector('.edit-mode');
-        changes.push({
-            bag_id: parseInt(cell.dataset.bagId),
-            product_id: parseInt(cell.dataset.productId),
-            minimum_quantity: parseInt(input.value) || 0
-        });
-    });
-    
-    fetch('/api/bulk_update_bag_minimums', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({changes: changes})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', `Updated ${changedCells.size} minimum quantities successfully`);
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            showAlert('danger', data.error || 'Failed to update minimums');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('danger', 'An error occurred while updating minimums');
-    });
-}
-
-function cancelEdit() {
-    // Reset all input values to original
-    changedCells.forEach(cell => {
-        const input = cell.querySelector('.edit-mode');
-        input.value = cell.dataset.currentValue;
-        cell.classList.remove('table-warning');
-    });
-    
-    changedCells.clear();
-    toggleEditMode();
-}
 </script>
 {% endblock %}
