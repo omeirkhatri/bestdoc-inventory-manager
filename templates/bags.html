@@ -97,7 +97,7 @@
                                 <td>
                                     <span class="badge bg-info">{{ bag.get_total_items() }} items</span>
                                 </td>
-                                <td>{{ bag.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ bag.created_at.strftime('%Y-%m-%d') if bag.created_at else 'N/A' }}</td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
                                         <button type="button" class="btn btn-outline-primary" 
@@ -195,7 +195,7 @@
                                 <td>
                                     <span class="badge bg-info">{{ bag.get_total_items() }} items</span>
                                 </td>
-                                <td>{{ bag.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ bag.created_at.strftime('%Y-%m-%d') if bag.created_at else 'N/A' }}</td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
                                         <a href="{{ url_for('inventory') }}?bag={{ bag.id }}" class="btn btn-outline-info" onclick="event.stopPropagation();">
