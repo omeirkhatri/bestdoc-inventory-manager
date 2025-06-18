@@ -122,10 +122,11 @@
                                                 Not Set
                                             </span>
                                             {% endif %}
-                                            <input type="number" class="form-control edit-mode d-none" 
+                                            <input type="number" class="form-control form-control-sm edit-mode d-none" 
                                                    min="0" max="999" 
                                                    value="{{ minimum.minimum_quantity if minimum else 0 }}"
-                                                   onchange="markAsChanged(this)">
+                                                   onchange="markAsChanged(this)"
+                                                   style="width: 80px; text-align: center;">
                                         </div>
                                     </td>
                                     {% endif %}
@@ -206,14 +207,21 @@ let currentBagId, currentProductId, currentBagName, currentProductName;
 
 // Initialize DataTable
 $(document).ready(function() {
-    $('#bagMinimumsTable').DataTable({
-        responsive: true,
-        pageLength: 25,
-        order: [[0, 'asc']],
-        columnDefs: [
-            { orderable: false, targets: [2, 3, 4, 5, 6] } // Make minimum columns non-sortable
-        ]
-    });
+    // Check if DataTable is available, if not initialize without it
+    if (typeof $.fn.DataTable !== 'undefined') {
+        $('#bagMinimumsTable').DataTable({
+            responsive: true,
+            pageLength: 25,
+            order: [[0, 'asc']],
+            columnDefs: [
+                { orderable: false, targets: [2, 3, 4, 5, 6] } // Make minimum columns non-sortable
+            ]
+        });
+    }
+    
+    // Debug: Log edit mode elements
+    console.log('Edit mode elements found:', document.querySelectorAll('.edit-mode').length);
+    console.log('View mode elements found:', document.querySelectorAll('.view-mode').length);
 });
 
 // Edit minimum function
@@ -375,6 +383,8 @@ let changedCells = new Set();
 function toggleEditMode() {
     isEditMode = !isEditMode;
     
+    console.log('Toggle edit mode to:', isEditMode);
+    
     if (isEditMode) {
         // Enter edit mode
         document.getElementById('editModeBtn').innerHTML = '<i class="fas fa-eye me-1"></i>View Mode';
@@ -383,12 +393,18 @@ function toggleEditMode() {
         document.getElementById('cancelEditBtn').style.display = 'inline-block';
         
         // Show all input fields and hide badges
-        document.querySelectorAll('.view-mode').forEach(el => el.classList.add('d-none'));
-        document.querySelectorAll('.edit-mode').forEach(el => el.classList.remove('d-none'));
+        document.querySelectorAll('.view-mode').forEach(el => {
+            console.log('Hiding view element:', el);
+            el.classList.add('d-none');
+        });
+        document.querySelectorAll('.edit-mode').forEach(el => {
+            console.log('Showing edit element:', el);
+            el.classList.remove('d-none');
+        });
         
-        // Disable individual edit clicks
-        document.querySelectorAll('.minimum-cell').forEach(cell => {
-            cell.style.pointerEvents = 'none';
+        // Disable individual edit clicks on badges
+        document.querySelectorAll('.minimum-cell .view-mode').forEach(el => {
+            el.style.pointerEvents = 'none';
         });
         
     } else {
@@ -399,12 +415,16 @@ function toggleEditMode() {
         document.getElementById('cancelEditBtn').style.display = 'none';
         
         // Show badges and hide input fields
-        document.querySelectorAll('.view-mode').forEach(el => el.classList.remove('d-none'));
-        document.querySelectorAll('.edit-mode').forEach(el => el.classList.add('d-none'));
+        document.querySelectorAll('.view-mode').forEach(el => {
+            el.classList.remove('d-none');
+        });
+        document.querySelectorAll('.edit-mode').forEach(el => {
+            el.classList.add('d-none');
+        });
         
         // Re-enable individual edit clicks
-        document.querySelectorAll('.minimum-cell').forEach(cell => {
-            cell.style.pointerEvents = 'auto';
+        document.querySelectorAll('.minimum-cell .view-mode').forEach(el => {
+            el.style.pointerEvents = 'auto';
         });
         
         // Clear changed cells
