@@ -880,6 +880,34 @@ def api_search_items():
     
     return jsonify(results[:10])
 
+@app.route('/api/update_minimum_stock', methods=['POST'])
+@login_required
+def update_minimum_stock():
+    """API endpoint to update minimum stock for a product"""
+    try:
+        data = request.get_json()
+        product_id = data.get('product_id')
+        minimum_stock = data.get('minimum_stock')
+        
+        if not product_id or minimum_stock is None:
+            return jsonify({'success': False, 'error': 'Missing product_id or minimum_stock'})
+        
+        if minimum_stock < 0:
+            return jsonify({'success': False, 'error': 'Minimum stock cannot be negative'})
+        
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'success': False, 'error': 'Product not found'})
+        
+        product.minimum_stock = minimum_stock
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/weekly_check')
 @login_required
 def weekly_check():

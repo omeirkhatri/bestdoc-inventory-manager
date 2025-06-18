@@ -106,7 +106,7 @@
                 <tbody id="inventoryTableBody">
                     {% for product_data in products %}
                     {% set product = product_data.product %}
-                    {% set batches = product_data.batches %}
+                    {% set items = product_data.items %}
                     {% set total_quantity = product_data.total_quantity %}
                     {% set is_low_stock = product_data.is_low_stock %}
                     

@@ -308,3 +308,36 @@
 }
 </style>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+function editMinimumStock(productId, currentValue) {
+    const newValue = prompt('Enter new minimum stock quantity:', currentValue);
+    if (newValue !== null && newValue !== '' && !isNaN(newValue) && parseInt(newValue) >= 0) {
+        fetch('/api/update_minimum_stock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                minimum_stock: parseInt(newValue)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('currentMinStock').textContent = newValue;
+                alert('Minimum stock updated successfully!');
+            } else {
+                alert('Error updating minimum stock: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating minimum stock');
+        });
+    }
+}
+</script>
+{% endblock %}

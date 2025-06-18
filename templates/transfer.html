@@ -51,9 +51,7 @@
                                     {% else %}
                                         No expiry date
                                     {% endif %}
-                                    {% if item.batch_number %}
-                                        | Batch: {{ item.batch_number }}
-                                    {% endif %}
+
                                 </small>
                             </div>
                             <button type="button" class="btn btn-primary btn-sm" 
@@ -173,7 +171,7 @@
             <h6><i class="fas fa-info-circle me-2"></i>Transfer Rules</h6>
             <ul class="mb-0">
                 <li><strong>FIFO (First In, First Out):</strong> Items are automatically sorted by expiry date - oldest items are shown first for transfer</li>
-                <li><strong>Batch Management:</strong> Items with the same name but different expiry dates or batches are treated separately</li>
+                <li><strong>Item Management:</strong> Items with the same name but different expiry dates are treated separately</li>
                 <li><strong>Cabinet to Bags:</strong> Only items from the Cabinet can be transferred to medical bags</li>
                 <li><strong>Quantity Control:</strong> You cannot transfer more items than are available in stock</li>
             </ul>
