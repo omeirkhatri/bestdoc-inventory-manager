@@ -971,23 +971,23 @@ def individual_item_history(item_id):
         item.product_id = product.id
         db.session.commit()
     
-    # Get all items for this product across all locations
-    items = Item.query.filter_by(product_id=product.id).order_by(Item.bag_id, Item.quantity.desc()).all()
-    
-    # Get movement history for this product
+    # Get movement history specifically for this individual item
+    # We'll match by name, type, size, and expiry date to track this specific item
     movements = MovementHistory.query.filter(
         db.and_(
-            MovementHistory.item_name == product.name,
-            MovementHistory.item_type == product.type
+            MovementHistory.item_name == item.name,
+            MovementHistory.item_type == item.type,
+            MovementHistory.item_size == item.size,
+            MovementHistory.expiry_date == item.expiry_date
         )
-    ).order_by(MovementHistory.timestamp.desc()).limit(50).all()
+    ).order_by(MovementHistory.timestamp.desc()).all()
     
     # Get all bags for transfer functionality
     bags = Bag.query.order_by(Bag.name).all()
     
     return render_template('individual_item_history.html', 
+                         item=item,
                          product=product,
-                         items=items, 
                          movements=movements,
                          bags=bags)
 

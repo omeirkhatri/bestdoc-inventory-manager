@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ product.name }} - Item Details{% endblock %}
+{% block title %}{{ item.name }} - Individual Item History{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,46 +8,65 @@
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2>{{ product.name }} - Item Details</h2>
-                    <p class="text-muted">View all instances across different locations</p>
+                    <h2>
+                        <i class="fas fa-box me-2"></i>
+                        {{ item.name }} - Individual Item History
+                    </h2>
+                    <p class="text-muted">History for Item ID: {{ item.id }}</p>
                 </div>
-                <a href="{{ url_for('inventory') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Inventory
-                </a>
+                <div>
+                    <a href="{{ url_for('item_history', product_id=product.id) }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-list"></i> Product History
+                    </a>
+                    <a href="{{ url_for('inventory') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Inventory
+                    </a>
+                </div>
             </div>
 
-            <!-- Product Summary Card -->
+            <!-- Individual Item Details Card -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Product Summary</h5>
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Item Details
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-3">
-                            <strong>Product Name:</strong><br>
-                            <span class="text-primary">{{ product.name }}</span>
+                        <div class="col-md-2">
+                            <strong>Item Name:</strong><br>
+                            <span class="text-primary">{{ item.name }}</span>
                         </div>
                         <div class="col-md-2">
                             <strong>Type:</strong><br>
-                            <span class="badge bg-secondary">{{ product.type }}</span>
+                            <span class="badge bg-secondary">{{ item.type }}</span>
                         </div>
                         <div class="col-md-2">
-                            <strong>Total Quantity:</strong><br>
-                            <span class="badge bg-{% if product.total_quantity <= product.minimum_stock %}danger{% elif product.total_quantity <= 10 %}warning{% else %}success{% endif %}">{{ product.total_quantity }}</span>
+                            <strong>Size:</strong><br>
+                            <span class="badge bg-info">{{ item.size or 'N/A' }}</span>
                         </div>
                         <div class="col-md-2">
-                            <strong>Minimum Stock:</strong><br>
-                            <span class="badge bg-info">{{ product.minimum_stock }}</span>
+                            <strong>Current Quantity:</strong><br>
+                            <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">{{ item.quantity }}</span>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <strong>Current Location:</strong><br>
+                            <span class="badge bg-success">{{ item.bag.name }}</span>
+                        </div>
+                        <div class="col-md-2">
                             <strong>Status:</strong><br>
-                            {% if product.is_low_stock %}
+                            {% if item.expiry_status == 'expired' %}
                                 <span class="badge bg-danger">
-                                    <i class="fas fa-exclamation-triangle"></i> Low Stock
+                                    <i class="fas fa-times-circle"></i> Expired
+                                </span>
+                            {% elif item.expiry_status == 'expiring' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock"></i> Expiring Soon
                                 </span>
                             {% else %}
                                 <span class="badge bg-success">
-                                    <i class="fas fa-check-circle"></i> Good Stock
+                                    <i class="fas fa-check-circle"></i> Good
                                 </span>
                             {% endif %}
                         </div>
@@ -55,101 +74,168 @@
                 </div>
             </div>
 
-            <!-- Items by Location -->
+            <!-- Additional Details -->
             <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Items by Location</h5>
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Additional Information
+                    </h5>
                 </div>
                 <div class="card-body">
-                    {% if items %}
-                        <div class="table-responsive">
-                            <table class="table table-hover individual-items-table">
-                                <thead>
-                                    <tr>
-                                        <th>Size</th>
-                                        <th>Quantity</th>
-                                        <th>Current Bag</th>
-                                        <th>Expiry Date</th>
-                                        <th>Status</th>
-                                        <th>Date Added</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in items %}
-                                    <tr>
-                                        <td>
-                                            <span class="badge bg-info">{{ item.size or 'N/A' }}</span>
-                                        </td>
-                                        <td>
-                                            <strong class="text-primary">{{ item.quantity }}</strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary">{{ item.bag.name }}</span>
-                                        </td>
-                                        <td>
-                                            {% if item.expiry_date %}
-                                                {{ item.expiry_date|format_date_gmt4 }}
-                                            {% else %}
-                                                <span class="text-muted">No expiry</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% set expiry_status = item.expiry_status %}
-                                            {% if expiry_status == 'expired' %}
-                                                <span class="badge bg-danger">Expired</span>
-                                            {% elif expiry_status == 'expiring' %}
-                                                <span class="badge bg-warning">Expiring Soon</span>
-                                            {% else %}
-                                                <span class="badge bg-success">Good</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="date-added-cell">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <span>{{ item.date_added|format_datetime_gmt4 }}</span>
-                                                <a href="{{ url_for('individual_item_history', item_id=item.id) }}" 
-                                                   class="btn btn-outline-info btn-sm ms-2" 
-                                                   title="View item history">
-                                                    <i class="fas fa-history"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                        onclick="showItemTransferModal({{ item.id }}, '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
-                                                        title="Transfer this item">
-                                                    <i class="fas fa-exchange-alt"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-warning btn-sm" 
-                                                        onclick="showItemUsageModal({{ item.id }}, '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
-                                                        title="Record usage">
-                                                    <i class="fas fa-minus"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Date Added:</strong><br>
+                            <span class="text-info">{{ item.date_added|format_datetime_gmt4 if item.date_added else 'Unknown' }}</span>
                         </div>
-                    {% else %}
-                        <div class="text-center py-4">
-                            <p class="text-muted">No items found for this product.</p>
+                        <div class="col-md-3">
+                            <strong>Expiry Date:</strong><br>
+                            {% if item.expiry_date %}
+                                <span class="text-{% if item.expiry_status == 'expired' %}danger{% elif item.expiry_status == 'expiring' %}warning{% else %}success{% endif %}">
+                                    {{ item.expiry_date|format_date_gmt4 }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">No expiry date</span>
+                            {% endif %}
                         </div>
-                    {% endif %}
+                        <div class="col-md-3">
+                            <strong>Brand:</strong><br>
+                            <span class="text-secondary">{{ item.brand or 'Not specified' }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Last Updated:</strong><br>
+                            <span class="text-info">{{ item.updated_at|format_datetime_gmt4 if item.updated_at else 'Unknown' }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Movement History -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Recent Movement History</h5>
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Movement History for This Item
+                    </h5>
                 </div>
                 <div class="card-body">
                     {% if movements %}
-                    <div class="table-responsive">
-                        <table class="table table-striped">
+                        <div class="timeline">
+                            {% for movement in movements %}
+                            <div class="timeline-item mb-3">
+                                <div class="timeline-marker">
+                                    {% if movement.movement_type == 'addition' %}
+                                        <i class="fas fa-plus text-success"></i>
+                                    {% elif movement.movement_type == 'transfer' %}
+                                        <i class="fas fa-exchange-alt text-primary"></i>
+                                    {% elif movement.movement_type == 'usage' %}
+                                        <i class="fas fa-minus text-warning"></i>
+                                    {% elif movement.movement_type == 'wastage' %}
+                                        <i class="fas fa-trash text-danger"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-secondary"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        {% if movement.movement_type == 'addition' %}
+                                                            <span class="badge bg-success me-2">Added</span>
+                                                        {% elif movement.movement_type == 'transfer' %}
+                                                            <span class="badge bg-primary me-2">Transferred</span>
+                                                        {% elif movement.movement_type == 'usage' %}
+                                                            <span class="badge bg-warning me-2">Used</span>
+                                                        {% elif movement.movement_type == 'wastage' %}
+                                                            <span class="badge bg-danger me-2">Wasted</span>
+                                                        {% endif %}
+                                                        {{ movement.quantity }} units
+                                                        {% if movement.item_size %}
+                                                            ({{ movement.item_size }})
+                                                        {% endif %}
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        {{ movement.timestamp.strftime('%m/%d/%Y at %I:%M %p') }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                {% if movement.from_bag or movement.to_bag %}
+                                                <div class="col-md-6">
+                                                    <strong>Location:</strong>
+                                                    {% if movement.from_bag and movement.to_bag %}
+                                                        {{ movement.from_bag }} → {{ movement.to_bag }}
+                                                    {% elif movement.to_bag %}
+                                                        Added to {{ movement.to_bag }}
+                                                    {% elif movement.from_bag %}
+                                                        From {{ movement.from_bag }}
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if movement.patient_name %}
+                                                <div class="col-md-6">
+                                                    <strong>Patient:</strong> {{ movement.patient_name }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if movement.expiry_date %}
+                                            <div class="row mt-2">
+                                                <div class="col-md-6">
+                                                    <strong>Expiry Date:</strong> {{ movement.expiry_date.strftime('%m/%d/%Y') }}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if movement.notes %}
+                                            <div class="mt-2">
+                                                <strong>Notes:</strong>
+                                                <p class="mb-0 small">{{ movement.notes }}</p>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Movement History Found</h5>
+                            <p class="text-muted">No recorded movements for this specific item yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions for This Item -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary" 
+                                onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
+                                title="Transfer this item">
+                            <i class="fas fa-exchange-alt me-2"></i>Transfer Item
+                        </button>
+                        <button type="button" class="btn btn-outline-warning" 
+                                onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})"
+                                title="Record usage">
+                            <i class="fas fa-minus me-2"></i>Record Usage
+                        </button>
+                    </div>
+                </div>
+            </div>
                             <thead>
                                 <tr>
                                     <th>Date</th>
