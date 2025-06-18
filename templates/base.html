@@ -331,6 +331,153 @@
 
         // Check for undo actions on page load
         checkForUndoActions();
+        
+        // Global editing functions
+        window.editProductField = function(field, currentValue, productId) {
+            let inputType = 'text';
+            let placeholder = `Enter ${field.replace('_', ' ')}`;
+            
+            if (field === 'minimum_stock') {
+                inputType = 'number';
+                placeholder = 'Enter minimum stock number';
+            }
+            
+            const value = prompt(`Edit ${field.replace('_', ' ')}:`, currentValue);
+            if (value !== null && value.trim() !== '' && value !== currentValue) {
+                updateProductField(field, value.trim(), productId);
+            }
+        };
+
+        window.updateProductField = function(field, value, productId) {
+            fetch('/api/update-product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    field: field,
+                    value: value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the display
+                    if (field === 'name') {
+                        const nameEl = document.getElementById('productName');
+                        if (nameEl) nameEl.textContent = value;
+                        const titleEl = document.querySelector('h1');
+                        if (titleEl) titleEl.innerHTML = `<i class="fas fa-history me-2"></i>${value} History`;
+                        document.title = `${value} History - Healthcare Inventory`;
+                    } else if (field === 'type') {
+                        const typeEl = document.getElementById('productType');
+                        if (typeEl) typeEl.textContent = value;
+                    } else if (field === 'minimum_stock') {
+                        const stockEl = document.getElementById('productMinStock');
+                        if (stockEl) stockEl.textContent = value;
+                    }
+                    
+                    // Show success message
+                    showToast('Product updated successfully', 'success');
+                } else {
+                    showToast(data.message || 'Failed to update product', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error updating product', 'error');
+            });
+        };
+
+        window.editItemField = function(field, currentValue, itemId) {
+            const value = prompt(`Edit ${field}:`, currentValue);
+            if (value !== null && value.trim() !== currentValue) {
+                updateItemField(field, value.trim(), itemId);
+            }
+        };
+
+        window.updateItemField = function(field, value, itemId) {
+            fetch('/api/update-item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    item_id: itemId,
+                    field: field,
+                    value: value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the display
+                    if (field === 'name') {
+                        const nameEl = document.getElementById('itemName');
+                        if (nameEl) nameEl.textContent = value;
+                        const titleEl = document.querySelector('h2');
+                        if (titleEl) titleEl.innerHTML = `<i class="fas fa-box me-2"></i>${value} - Individual Item History`;
+                    } else if (field === 'type') {
+                        const typeEl = document.getElementById('itemType');
+                        if (typeEl) typeEl.textContent = value;
+                    } else if (field === 'size') {
+                        const sizeEl = document.getElementById('itemSize');
+                        if (sizeEl) sizeEl.textContent = value || 'N/A';
+                    }
+                    
+                    // Show success message
+                    showToast('Item updated successfully', 'success');
+                } else {
+                    showToast(data.message || 'Failed to update item', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error updating item', 'error');
+            });
+        };
+
+        window.showToast = function(message, type) {
+            // Create toast container if it doesn't exist
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                toastContainer.style.zIndex = '1055';
+                document.body.appendChild(toastContainer);
+            }
+            
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+                <div id="${toastId}" class="toast" role="alert">
+                    <div class="toast-header">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        <strong class="me-auto">${type === 'success' ? 'Success' : 'Error'}</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+            
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        };
+
+        // Legacy function for backward compatibility
+        window.editMinimumStock = function(productId, currentValue) {
+            editProductField('minimum_stock', currentValue, productId);
+        };
     </script>
     
     <style>
@@ -365,5 +512,6 @@
     </style>
     
     {% block extra_scripts %}{% endblock %}
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
