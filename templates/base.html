@@ -334,17 +334,21 @@
         
         // Global editing functions
         window.editProductField = function(field, currentValue, productId) {
-            let inputType = 'text';
-            let placeholder = `Enter ${field.replace('_', ' ')}`;
-            
-            if (field === 'minimum_stock') {
-                inputType = 'number';
-                placeholder = 'Enter minimum stock number';
-            }
-            
-            const value = prompt(`Edit ${field.replace('_', ' ')}:`, currentValue);
-            if (value !== null && value.trim() !== '' && value !== currentValue) {
-                updateProductField(field, value.trim(), productId);
+            if (field === 'type') {
+                showTypeSelectionModal(currentValue, productId, 'product');
+            } else {
+                let inputType = 'text';
+                let placeholder = `Enter ${field.replace('_', ' ')}`;
+                
+                if (field === 'minimum_stock') {
+                    inputType = 'number';
+                    placeholder = 'Enter minimum stock number';
+                }
+                
+                const value = prompt(`Edit ${field.replace('_', ' ')}:`, currentValue);
+                if (value !== null && value.trim() !== '' && value !== currentValue) {
+                    updateProductField(field, value.trim(), productId);
+                }
             }
         };
 
@@ -391,9 +395,13 @@
         };
 
         window.editItemField = function(field, currentValue, itemId) {
-            const value = prompt(`Edit ${field}:`, currentValue);
-            if (value !== null && value.trim() !== currentValue) {
-                updateItemField(field, value.trim(), itemId);
+            if (field === 'type') {
+                showTypeSelectionModal(currentValue, itemId, 'item');
+            } else {
+                const value = prompt(`Edit ${field}:`, currentValue);
+                if (value !== null && value.trim() !== currentValue) {
+                    updateItemField(field, value.trim(), itemId);
+                }
             }
         };
 
@@ -472,6 +480,81 @@
             toastElement.addEventListener('hidden.bs.toast', () => {
                 toastElement.remove();
             });
+        };
+
+        // Type selection modal function
+        window.showTypeSelectionModal = function(currentValue, itemId, itemType) {
+            const availableTypes = [
+                'Catheters & Containers',
+                'Consumable Dressings/Swabs',
+                'Equipment/Waste',
+                'IV Fluids/Solutions',
+                'Medications/Vials',
+                'Needles & Syringes'
+            ];
+            
+            // Create modal HTML
+            const modalHtml = `
+                <div class="modal fade" id="typeSelectionModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Select Item Type</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="typeSelect" class="form-label">Choose a type:</label>
+                                    <select class="form-select" id="typeSelect">
+                                        ${availableTypes.map(type => 
+                                            `<option value="${type}" ${type === currentValue ? 'selected' : ''}>${type}</option>`
+                                        ).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="confirmTypeSelection(${itemId}, '${itemType}')">Update Type</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('typeSelectionModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('typeSelectionModal'));
+            modal.show();
+        };
+        
+        window.confirmTypeSelection = function(itemId, itemType) {
+            const selectedType = document.getElementById('typeSelect').value;
+            
+            if (itemType === 'product') {
+                updateProductField('type', selectedType, itemId);
+            } else if (itemType === 'item') {
+                updateItemField('type', selectedType, itemId);
+            }
+            
+            // Hide modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('typeSelectionModal'));
+            modal.hide();
+            
+            // Remove modal from DOM after hiding
+            setTimeout(() => {
+                const modalElement = document.getElementById('typeSelectionModal');
+                if (modalElement) {
+                    modalElement.remove();
+                }
+            }, 300);
         };
 
         // Legacy function for backward compatibility
