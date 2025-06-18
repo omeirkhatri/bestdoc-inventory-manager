@@ -1242,6 +1242,160 @@ def undo_last_action():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/api/quick_restock_data')
+@login_required
+def quick_restock_data():
+    """Get items that need restocking in DOC Bag 1"""
+    try:
+        # Find DOC Bag 1 and Cabinet
+        doc_bag = Bag.query.filter_by(name='DOC Bag 1').first()
+        cabinet = Bag.query.filter_by(name='Cabinet').first()
+        
+        if not doc_bag or not cabinet:
+            return jsonify({'items': []})
+        
+        # Get items that are below minimum in DOC Bag 1
+        restock_items = []
+        for minimum in doc_bag.minimums:
+            current_qty = minimum.current_quantity()
+            if current_qty < minimum.minimum_quantity:
+                # Get available quantity in Cabinet for this product
+                cabinet_qty = 0
+                cabinet_items = Item.query.filter_by(
+                    bag_id=cabinet.id, 
+                    product_id=minimum.product_id
+                ).all()
+                
+                for item in cabinet_items:
+                    cabinet_qty += item.quantity
+                
+                needed = minimum.minimum_quantity - current_qty
+                
+                # Get product details for display
+                product = minimum.product
+                size = None
+                if cabinet_items:
+                    size = cabinet_items[0].size
+                
+                restock_items.append({
+                    'product_id': product.id,
+                    'product_name': product.name,
+                    'size': size,
+                    'cabinet_qty': cabinet_qty,
+                    'current_qty': current_qty,
+                    'minimum_qty': minimum.minimum_quantity,
+                    'needed': needed
+                })
+        
+        return jsonify({'items': restock_items})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/quick_restock', methods=['POST'])
+@login_required
+def quick_restock():
+    """Process quick restock from Cabinet to DOC Bag 1"""
+    try:
+        product_ids = request.form.getlist('product_ids')
+        quantities = request.form.getlist('quantities')
+        
+        # Find DOC Bag 1 and Cabinet
+        doc_bag = Bag.query.filter_by(name='DOC Bag 1').first()
+        cabinet = Bag.query.filter_by(name='Cabinet').first()
+        
+        if not doc_bag or not cabinet:
+            flash("DOC Bag 1 or Cabinet not found", "danger")
+            return redirect(url_for('dashboard'))
+        
+        transfers_made = []
+        
+        for i, product_id in enumerate(product_ids):
+            if i < len(quantities):
+                quantity = int(quantities[i]) if quantities[i].strip() else 0
+                
+                if quantity > 0:
+                    product = Product.query.get(product_id)
+                    if not product:
+                        continue
+                    
+                    # Find items in Cabinet for this product
+                    cabinet_items = Item.query.filter_by(
+                        bag_id=cabinet.id,
+                        product_id=product_id,
+                    ).filter(Item.quantity > 0).all()
+                    
+                    # Transfer items from Cabinet to DOC Bag 1
+                    remaining_to_transfer = quantity
+                    
+                    for cabinet_item in cabinet_items:
+                        if remaining_to_transfer <= 0:
+                            break
+                        
+                        transfer_qty = min(remaining_to_transfer, cabinet_item.quantity)
+                        
+                        # Check if same item exists in DOC Bag 1
+                        existing_item = Item.query.filter_by(
+                            name=cabinet_item.name,
+                            type=cabinet_item.type,
+                            size=cabinet_item.size,
+                            expiry_date=cabinet_item.expiry_date,
+                            brand=cabinet_item.brand,
+                            bag_id=doc_bag.id,
+                            product_id=product_id
+                        ).first()
+                        
+                        if existing_item:
+                            # Add to existing item
+                            existing_item.quantity += transfer_qty
+                            existing_item.updated_at = datetime.utcnow()
+                        else:
+                            # Create new item in DOC Bag 1
+                            new_item = Item(
+                                name=cabinet_item.name,
+                                type=cabinet_item.type,
+                                brand=cabinet_item.brand,
+                                size=cabinet_item.size,
+                                quantity=transfer_qty,
+                                expiry_date=cabinet_item.expiry_date,
+                                bag_id=doc_bag.id,
+                                product_id=product_id
+                            )
+                            db.session.add(new_item)
+                        
+                        # Reduce quantity from Cabinet
+                        cabinet_item.quantity -= transfer_qty
+                        cabinet_item.updated_at = datetime.utcnow()
+                        
+                        # Log the transfer
+                        movement = MovementHistory(
+                            item_name=cabinet_item.name,
+                            item_type=cabinet_item.type,
+                            item_size=cabinet_item.size,
+                            quantity=transfer_qty,
+                            movement_type='transfer',
+                            from_bag=cabinet.name,
+                            to_bag=doc_bag.name,
+                            notes=f"Quick restock transfer"
+                        )
+                        db.session.add(movement)
+                        
+                        remaining_to_transfer -= transfer_qty
+                        transfers_made.append(f"{transfer_qty} {cabinet_item.name}")
+        
+        db.session.commit()
+        
+        if transfers_made:
+            flash(f"Successfully restocked: {', '.join(transfers_made)}", "success")
+        else:
+            flash("No items were transferred", "info")
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error during restock: {str(e)}", "danger")
+    
+    return redirect(url_for('dashboard'))
+
 @app.route('/api/get_last_action')
 @login_required
 def get_last_action():

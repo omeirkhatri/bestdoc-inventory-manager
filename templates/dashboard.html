@@ -159,9 +159,14 @@
                     <i class="fas fa-briefcase-medical me-2"></i>
                     Bags Need Restocking
                 </h5>
-                <a href="{{ url_for('bag_minimums') }}" class="btn btn-warning btn-sm">
-                    <i class="fas fa-cog me-1"></i>Manage Minimums
-                </a>
+                <div>
+                    <button type="button" class="btn btn-success btn-sm me-2" onclick="showQuickRestockModal()">
+                        <i class="fas fa-sync me-1"></i>Quick Restock
+                    </button>
+                    <a href="{{ url_for('bag_minimums') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-cog me-1"></i>Manage Minimums
+                    </a>
+                </div>
             </div>
             <div class="row">
                 {% for bag_info in low_stock_bags %}
@@ -340,6 +345,45 @@
         </div>
     </div>
 </div>
+
+<!-- Quick Restock Modal -->
+<div class="modal fade" id="quickRestockModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-sync me-2"></i>Quick Restock - Cabinet to DOC Bag 1
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('quick_restock') }}">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Transfer items from Cabinet to DOC Bag 1. Enter 0 to skip an item.
+                    </div>
+                    
+                    <div id="restockItems">
+                        <!-- Items will be loaded dynamically -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading items...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="submitRestock">
+                        <i class="fas fa-sync me-2"></i>Transfer Items
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}
@@ -349,6 +393,62 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add any dashboard-specific interactions here
     console.log('Dashboard loaded successfully');
 });
+
+// Show quick restock modal
+function showQuickRestockModal() {
+    const modal = new bootstrap.Modal(document.getElementById('quickRestockModal'));
+    modal.show();
+    
+    // Load restock data
+    fetch('/api/quick_restock_data')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('restockItems');
+            
+            if (data.items && data.items.length > 0) {
+                let html = '<div class="table-responsive"><table class="table table-hover"><thead><tr>' +
+                          '<th>Item</th><th>In Cabinet</th><th>Need</th><th>Transfer Amount</th></tr></thead><tbody>';
+                
+                data.items.forEach((item, index) => {
+                    html += `<tr>
+                        <td>
+                            <strong>${item.product_name}</strong>
+                            ${item.size ? `<br><small class="text-muted">${item.size}</small>` : ''}
+                            <input type="hidden" name="product_ids" value="${item.product_id}">
+                        </td>
+                        <td>
+                            <span class="badge bg-info">${item.cabinet_qty}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">${item.needed}</span>
+                        </td>
+                        <td>
+                            <input type="number" 
+                                   name="quantities" 
+                                   class="form-control" 
+                                   min="0" 
+                                   max="${item.cabinet_qty}" 
+                                   value="${Math.min(item.needed, item.cabinet_qty)}"
+                                   style="width: 80px;">
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div class="text-center py-4">' +
+                                    '<i class="fas fa-check-circle fa-3x text-success mb-3"></i>' +
+                                    '<p class="text-muted">DOC Bag 1 is fully stocked!</p></div>';
+                document.getElementById('submitRestock').style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading restock data:', error);
+            document.getElementById('restockItems').innerHTML = 
+                '<div class="alert alert-danger">Error loading data. Please try again.</div>';
+        });
+}
 
 // Show Friday banner only on Fridays
 document.addEventListener('DOMContentLoaded', function() {
