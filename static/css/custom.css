@@ -532,6 +532,8 @@ body {
 /* Individual item history page table styling */
 .individual-items-table {
     margin-bottom: 0;
+    table-layout: fixed;
+    width: 100%;
 }
 
 .individual-items-table th {
@@ -541,31 +543,66 @@ body {
     white-space: nowrap;
     vertical-align: middle;
     padding: 1rem 0.75rem;
+    text-align: center;
 }
 
 .individual-items-table td {
     vertical-align: middle;
     padding: 0.75rem;
+    text-align: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Column width specifications */
+.individual-items-table th:nth-child(1), /* Size */
+.individual-items-table td:nth-child(1) {
+    width: 10%;
+}
+
+.individual-items-table th:nth-child(2), /* Quantity */
+.individual-items-table td:nth-child(2) {
+    width: 12%;
+}
+
+.individual-items-table th:nth-child(3), /* Current Bag */
+.individual-items-table td:nth-child(3) {
+    width: 15%;
+}
+
+.individual-items-table th:nth-child(4), /* Expiry Date */
+.individual-items-table td:nth-child(4) {
+    width: 15%;
+}
+
+.individual-items-table th:nth-child(5), /* Status */
+.individual-items-table td:nth-child(5) {
+    width: 12%;
+}
+
+.individual-items-table th:nth-child(6), /* Date Added */
+.individual-items-table td:nth-child(6) {
+    width: 25%;
+}
+
+.individual-items-table th:nth-child(7), /* Actions */
+.individual-items-table td:nth-child(7) {
+    width: 15%;
 }
 
 .individual-items-table .date-added-cell {
-    min-width: 200px;
+    text-align: left;
 }
 
 .individual-items-table .date-added-cell .d-flex {
     gap: 0.5rem;
-}
-
-.individual-items-table .actions-cell {
-    min-width: 120px;
-    white-space: nowrap;
+    align-items: center;
 }
 
 .individual-items-table tbody tr:hover {
     background-color: rgba(79, 209, 199, 0.05);
 }
 
-/* Improved spacing for location and size badges */
+/* Improved spacing for badges */
 .individual-items-table .badge {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
@@ -575,6 +612,18 @@ body {
 .individual-items-table .text-primary {
     font-size: 1.1rem;
     font-weight: 600;
+}
+
+/* Actions column styling */
+.individual-items-table .btn-group {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+}
+
+.individual-items-table .btn-group .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
 }
 
 /* Inventory details table improvements */

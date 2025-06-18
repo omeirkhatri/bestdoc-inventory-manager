@@ -66,9 +66,9 @@
                             <table class="table table-hover individual-items-table">
                                 <thead>
                                     <tr>
-                                        <th>Location</th>
                                         <th>Size</th>
                                         <th>Quantity</th>
+                                        <th>Current Bag</th>
                                         <th>Expiry Date</th>
                                         <th>Status</th>
                                         <th>Date Added</th>
@@ -79,13 +79,13 @@
                                     {% for item in items %}
                                     <tr>
                                         <td>
-                                            <span class="badge bg-primary">{{ item.bag.name }}</span>
-                                        </td>
-                                        <td>
                                             <span class="badge bg-info">{{ item.size or 'N/A' }}</span>
                                         </td>
                                         <td>
                                             <strong class="text-primary">{{ item.quantity }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ item.bag.name }}</span>
                                         </td>
                                         <td>
                                             {% if item.expiry_date %}
@@ -95,9 +95,10 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {% if item.expiry_status() == 'expired' %}
+                                            {% set expiry_status = item.expiry_status %}
+                                            {% if expiry_status == 'expired' %}
                                                 <span class="badge bg-danger">Expired</span>
-                                            {% elif item.expiry_status() == 'expiring' %}
+                                            {% elif expiry_status == 'expiring' %}
                                                 <span class="badge bg-warning">Expiring Soon</span>
                                             {% else %}
                                                 <span class="badge bg-success">Good</span>
