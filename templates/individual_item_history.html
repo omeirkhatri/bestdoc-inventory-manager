@@ -51,7 +51,7 @@
                             <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">{{ item.quantity }}</span>
                         </div>
                         <div class="col-md-2">
-                            <strong>Current Location:</strong><br>
+                            <strong>Current Storage:</strong><br>
                             <span class="badge bg-success">{{ item.bag.name }}</span>
                         </div>
                         <div class="col-md-2">
@@ -260,9 +260,9 @@
                         <div id="transfer-item-details" class="form-control-plaintext"></div>
                     </div>
                     <div class="mb-3">
-                        <label for="transfer-to-bag" class="form-label">Transfer to Bag</label>
+                        <label for="transfer-to-bag" class="form-label">Transfer to Storage</label>
                         <select class="form-select" id="transfer-to-bag" name="to_bag_id" required>
-                            <option value="">Select destination bag...</option>
+                            <option value="">Select destination storage...</option>
                             {% for bag in bags %}
                                 <option value="{{ bag.id }}">{{ bag.name }}</option>
                             {% endfor %}

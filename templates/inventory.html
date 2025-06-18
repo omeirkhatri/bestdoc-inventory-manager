@@ -39,9 +39,9 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label for="bag" class="form-label">Bag</label>
+                <label for="bag" class="form-label">Storage</label>
                 <select class="form-select" id="bag" name="bag">
-                    <option value="">All Bags</option>
+                    <option value="">All Storage</option>
                     {% for bag in bags %}
                     <option value="{{ bag.name }}" {% if current_filters.bag == bag.name %}selected{% endif %}>
                         {{ bag.name }}
@@ -191,7 +191,7 @@
                                             <th>Brand</th>
                                             <th>Size</th>
                                             <th>Quantity</th>
-                                            <th>Bags</th>
+                                            <th>Storage</th>
                                             <th>Expiry Date</th>
                                             <th>Status</th>
                                             <th>Actions</th>
