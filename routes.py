@@ -522,7 +522,8 @@ def handle_transfer():
                 size=item.size,
                 quantity=quantity,
                 expiry_date=item.expiry_date,
-                bag_id=to_bag_id
+                bag_id=to_bag_id,
+                product_id=item.product_id
             )
             db.session.add(new_item)
         
