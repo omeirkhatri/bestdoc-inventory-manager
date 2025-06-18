@@ -946,16 +946,32 @@ def update_minimum_stock():
 @app.route('/weekly_check')
 @login_required
 def weekly_check():
-    """Display weekly check page for consumable items"""
+    """Display weekly check page for consumable items separated by storage location"""
+    # Get selected bag/storage from query parameter
+    selected_bag_id = request.args.get('bag_id', type=int)
+    
+    # Get all bags for selection dropdown
+    all_bags = Bag.query.order_by(Bag.location.desc(), Bag.name).all()
+    
     # Get all items that require weekly check (types 4 and 5)
     weekly_check_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
     
-    consumable_items = Item.query.filter(
+    # Base query for consumable items
+    query = Item.query.join(Bag).filter(
         and_(
             Item.type.in_(weekly_check_types),
             Item.quantity > 0
         )
-    ).order_by(Item.name, Item.size).all()
+    )
+    
+    # Filter by selected bag if specified
+    if selected_bag_id:
+        query = query.filter(Item.bag_id == selected_bag_id)
+        selected_bag = Bag.query.get(selected_bag_id)
+    else:
+        selected_bag = None
+    
+    consumable_items = query.order_by(Item.name, Item.size).all()
     
     # Group items by name and size for easier display
     grouped_items = {}
@@ -967,12 +983,17 @@ def weekly_check():
                 'size': item.size,
                 'current_qty': 0,
                 'type': item.type,
+                'bag_name': item.bag.name,
+                'bag_location': item.bag.location,
                 'items': []
             }
         grouped_items[key]['current_qty'] += item.quantity
         grouped_items[key]['items'].append(item)
     
-    return render_template('weekly_check.html', grouped_items=grouped_items)
+    return render_template('weekly_check.html', 
+                         grouped_items=grouped_items,
+                         all_bags=all_bags,
+                         selected_bag=selected_bag)
 
 @app.route('/weekly_check', methods=['POST'])
 @login_required

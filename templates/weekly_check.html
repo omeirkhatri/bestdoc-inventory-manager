@@ -8,10 +8,54 @@
         <h1 class="mb-4">
             <i class="fas fa-calendar-check me-2"></i>
             Weekly Check
+            {% if selected_bag %}
+                - {{ selected_bag.name }} ({{ selected_bag.location.title() }})
+            {% endif %}
         </h1>
+        
+        <!-- Storage Selection -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    Select Storage Location
+                </h5>
+                <p class="text-muted mb-3">Choose which storage location you want to check. This allows you to focus on one area at a time.</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <select class="form-select" id="bagSelect" onchange="changeBag()">
+                            <option value="">-- Select Storage Location --</option>
+                            {% for bag in all_bags %}
+                                <option value="{{ bag.id }}" 
+                                        {% if selected_bag and bag.id == selected_bag.id %}selected{% endif %}>
+                                    {{ bag.name }} ({{ bag.location.title() }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary" onclick="viewAllLocations()">
+                            <i class="fas fa-list me-2"></i>
+                            View All Locations
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if selected_bag %}
         <p class="text-muted mb-4">
-            Update counts for consumable items. Enter the actual count you observe, and the system will automatically calculate usage or adjustments.
+            <i class="fas fa-info-circle me-2"></i>
+            Checking items in <strong>{{ selected_bag.name }}</strong> ({{ selected_bag.location.title() }}). 
+            Enter the actual count you observe, and the system will automatically calculate usage or adjustments.
         </p>
+        {% elif not selected_bag and grouped_items %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Showing items from all locations. Select a specific storage location above to focus your check.
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -32,6 +76,7 @@
                             <thead>
                                 <tr>
                                     <th>Item</th>
+                                    {% if not selected_bag %}<th>Storage Location</th>{% endif %}
                                     <th>Current Qty</th>
                                     <th>New Count</th>
                                     <th>Notes</th>
@@ -47,6 +92,14 @@
                                         {% endif %}
                                         <br><small class="text-muted">Type: {{ item_data.type }}</small>
                                     </td>
+                                    {% if not selected_bag %}
+                                    <td>
+                                        <span class="badge bg-{% if item_data.bag_location == 'cabinet' %}primary{% else %}secondary{% endif %}">
+                                            {{ item_data.bag_name }}
+                                        </span>
+                                        <br><small class="text-muted">{{ item_data.bag_location.title() }}</small>
+                                    </td>
+                                    {% endif %}
                                     <td>
                                         <span class="badge bg-info">{{ item_data.current_qty }}</span>
                                         <!-- Hidden fields to store current data -->
@@ -137,6 +190,22 @@
 </style>
 
 <script>
+// Bag selection functions
+function changeBag() {
+    const bagSelect = document.getElementById('bagSelect');
+    const selectedBagId = bagSelect.value;
+    
+    if (selectedBagId) {
+        window.location.href = `{{ url_for('weekly_check') }}?bag_id=${selectedBagId}`;
+    } else {
+        window.location.href = `{{ url_for('weekly_check') }}`;
+    }
+}
+
+function viewAllLocations() {
+    window.location.href = `{{ url_for('weekly_check') }}`;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners to all weekly check inputs
     const inputs = document.querySelectorAll('.weekly-check-input');
