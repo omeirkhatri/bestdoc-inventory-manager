@@ -342,6 +342,29 @@ def handle_manual_addition():
                     )
                     db.session.add(movement)
                     
+                    # Create undo action for manual addition
+                    undo_data = {
+                        'action_type': 'add_item',
+                        'item_name': item.name,
+                        'item_type': item.type,
+                        'brand': item.brand,
+                        'size': item.size,
+                        'quantity': item.quantity,
+                        'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
+                        'bag_id': bag.id,
+                        'bag_name': bag.name,
+                        'product_id': product.id if product else None,
+                        'product_created': not Product.query.filter_by(name=product_name).first() if product_name else False
+                    }
+                    
+                    undo_action = UndoAction(
+                        action_type='add_item',
+                        action_data=json.dumps(undo_data),
+                        description=f"Added {item.quantity} {item.name} to {bag.name}",
+                        user_id=current_user.id
+                    )
+                    db.session.add(undo_action)
+                    
                     items_added += 1
         
         db.session.commit()
@@ -632,6 +655,26 @@ def handle_usage():
             expiry_date=item.expiry_date
         )
         db.session.add(movement)
+        
+        # Create undo action for usage
+        undo_data = {
+            'action_type': 'usage',
+            'item_id': item.id,
+            'quantity': quantity_used,
+            'item_name': item.name,
+            'bag_name': item.bag.name,
+            'patient_name': patient_name,
+            'notes': notes,
+            'original_quantity': item.quantity + quantity_used
+        }
+        
+        undo_action = UndoAction(
+            action_type='usage',
+            action_data=json.dumps(undo_data),
+            description=f"Used {quantity_used} {item.name} for patient {patient_name}",
+            user_id=current_user.id
+        )
+        db.session.add(undo_action)
         
         db.session.commit()
         flash(f"Successfully recorded usage of {quantity_used} units of {item.name}", "success")
@@ -1227,6 +1270,16 @@ def undo_last_action():
                 )
                 db.session.add(new_minimum)
             
+            # Mark the permanent deletion as restored
+            permanent_deletion = PermanentDeletion.query.filter_by(
+                entity_type='bag',
+                entity_name=action_data['bag_name'],
+                user_id=current_user.id,
+                is_restored=False
+            ).first()
+            if permanent_deletion:
+                permanent_deletion.is_restored = True
+            
             # Remove the auto-transfer movement history entries
             MovementHistory.query.filter_by(
                 from_bag=action_data['bag_name'],
@@ -1275,6 +1328,68 @@ def undo_last_action():
             ).delete()
             
             success_message = f"Reversed transfer of {action_data['quantity']} {action_data['item_name']} from {to_bag.name} back to {from_bag.name}"
+        
+        elif last_action.action_type == 'usage':
+            # Reverse the usage
+            item = Item.query.get(action_data['item_id'])
+            if item:
+                # Restore the used quantity
+                item.quantity += action_data['quantity']
+                item.updated_at = datetime.utcnow()
+                
+                # Remove the usage movement history
+                MovementHistory.query.filter(
+                    and_(
+                        MovementHistory.item_name == action_data['item_name'],
+                        MovementHistory.from_bag == action_data['bag_name'],
+                        MovementHistory.quantity == action_data['quantity'],
+                        MovementHistory.movement_type == 'usage',
+                        MovementHistory.patient_name == action_data['patient_name']
+                    )
+                ).delete()
+                
+                success_message = f"Reversed usage of {action_data['quantity']} {action_data['item_name']} for patient {action_data['patient_name']}"
+            else:
+                return jsonify({'success': False, 'error': 'Item not found for usage reversal'})
+        
+        elif last_action.action_type == 'add_item':
+            # Reverse the item addition
+            # Find and remove the added item
+            item = Item.query.filter_by(
+                name=action_data['item_name'],
+                type=action_data['item_type'],
+                brand=action_data.get('brand'),
+                size=action_data.get('size'),
+                bag_id=action_data['bag_id'],
+                quantity=action_data['quantity']
+            ).first()
+            
+            if item:
+                # Remove the item
+                db.session.delete(item)
+                
+                # Remove the addition movement history
+                MovementHistory.query.filter(
+                    and_(
+                        MovementHistory.item_name == action_data['item_name'],
+                        MovementHistory.to_bag == action_data['bag_name'],
+                        MovementHistory.quantity == action_data['quantity'],
+                        MovementHistory.movement_type == 'addition',
+                        MovementHistory.notes == 'Added manually'
+                    )
+                ).delete()
+                
+                # If a product was created for this item and no other items use it, remove it
+                if action_data.get('product_created') and action_data.get('product_id'):
+                    other_items = Item.query.filter_by(product_id=action_data['product_id']).count()
+                    if other_items == 0:  # No other items use this product
+                        product = Product.query.get(action_data['product_id'])
+                        if product:
+                            db.session.delete(product)
+                
+                success_message = f"Removed added item: {action_data['quantity']} {action_data['item_name']} from {action_data['bag_name']}"
+            else:
+                return jsonify({'success': False, 'error': 'Added item not found for reversal'})
         
         else:
             return jsonify({'success': False, 'error': 'Unknown action type'})
