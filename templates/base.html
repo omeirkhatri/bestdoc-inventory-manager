@@ -23,100 +23,119 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
-                <i class="fas fa-hospital-o me-2"></i>
-                Healthcare Inventory
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-dashboard me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'add_items' %}active{% endif %}" href="{{ url_for('add_items') }}">
-                            <i class="fas fa-plus me-1"></i>Add Items
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'inventory' %}active{% endif %}" href="{{ url_for('inventory') }}">
-                            <i class="fas fa-list me-1"></i>Inventory
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'transfer' %}active{% endif %}" href="{{ url_for('transfer') }}">
-                            <i class="fas fa-exchange-alt me-1"></i>Transfer
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'usage' %}active{% endif %}" href="{{ url_for('usage') }}">
-                            <i class="fas fa-minus me-1"></i>Usage
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'expiry' %}active{% endif %}" href="{{ url_for('expiry') }}">
-                            <i class="fas fa-exclamation-triangle me-1"></i>Expiry
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'wastage' %}active{% endif %}" href="{{ url_for('wastage') }}">
-                            <i class="fas fa-trash-alt me-1"></i>Wastage
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'bags' %}active{% endif %}" href="{{ url_for('bags') }}">
-                            <i class="fas fa-briefcase me-1"></i>Bags
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'history' %}active{% endif %}" href="{{ url_for('history') }}">
-                            <i class="fas fa-history me-1"></i>History
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <button class="btn btn-outline-light ms-2" id="themeToggle" type="button" title="Toggle dark/light mode">
-                            <i class="fas fa-sun" id="themeIcon"></i>
-                        </button>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Flash Messages -->
-    <div class="container mt-3">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- Mobile Navigation Toggle -->
+    <button class="mobile-nav-toggle d-lg-none" id="mobileNavToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
+    <div class="sidebar-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Brand -->
+            <div class="sidebar-brand">
+                <h4>
+                    <div class="brand-icon">
+                        <i class="fas fa-hospital-o"></i>
                     </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+                    Healthcare Inventory
+                </h4>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-dashboard"></i>
+                        Dashboard
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'add_items' %}active{% endif %}" href="{{ url_for('add_items') }}">
+                        <i class="fas fa-plus"></i>
+                        Add Items
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'inventory' %}active{% endif %}" href="{{ url_for('inventory') }}">
+                        <i class="fas fa-list"></i>
+                        Inventory
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'transfer' %}active{% endif %}" href="{{ url_for('transfer') }}">
+                        <i class="fas fa-exchange-alt"></i>
+                        Transfer
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'usage' %}active{% endif %}" href="{{ url_for('usage') }}">
+                        <i class="fas fa-minus"></i>
+                        Usage
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'expiry' %}active{% endif %}" href="{{ url_for('expiry') }}">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Expiry
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'wastage' %}active{% endif %}" href="{{ url_for('wastage') }}">
+                        <i class="fas fa-trash-alt"></i>
+                        Wastage
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'bags' %}active{% endif %}" href="{{ url_for('bags') }}">
+                        <i class="fas fa-warehouse"></i>
+                        Storage
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'history' %}active{% endif %}" href="{{ url_for('history') }}">
+                        <i class="fas fa-history"></i>
+                        History
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Theme Toggle -->
+            <div class="sidebar-footer">
+                <button class="theme-toggle-sidebar" id="themeToggle" type="button" title="Toggle dark/light mode">
+                    <i class="fas fa-sun me-2" id="themeIcon"></i>
+                    <span id="themeText">Light Mode</span>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="main-content-inner">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Page Content -->
+                {% block content %}{% endblock %}
+                
+                <!-- Footer -->
+                <footer class="mt-5 py-3 text-center text-muted">
+                    <small>&copy; 2025 Healthcare Inventory Management System</small>
+                </footer>
+            </div>
+        </main>
     </div>
-
-    <!-- Main Content -->
-    <main class="container mt-4">
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="mt-5 py-4 text-center text-muted">
-        <div class="container">
-            <small>&copy; 2025 Healthcare Inventory Management System</small>
-        </div>
-    </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -131,19 +150,32 @@
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
-    <!-- Theme Toggle Script -->
+    <!-- Theme Toggle and Sidebar Script -->
     <script>
-        // Initialize theme immediately to prevent flickering
+        // Set theme immediately on page load to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('healthcareTheme') || 'dark';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        })();
+
+        // Initialize theme and sidebar functionality
         document.addEventListener('DOMContentLoaded', function() {
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
             const html = document.documentElement;
+            
+            // Mobile navigation elements
+            const mobileNavToggle = document.getElementById('mobileNavToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
             
             // Load saved theme or default to dark
             const savedTheme = localStorage.getItem('healthcareTheme') || 'dark';
             html.setAttribute('data-bs-theme', savedTheme);
             updateThemeIcon(savedTheme);
             
+            // Theme toggle functionality
             themeToggle.addEventListener('click', function() {
                 const currentTheme = html.getAttribute('data-bs-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -155,22 +187,49 @@
             
             function updateThemeIcon(theme) {
                 if (theme === 'dark') {
-                    themeIcon.className = 'fas fa-sun';
-                    themeToggle.className = 'btn btn-outline-light ms-2';
+                    themeIcon.className = 'fas fa-sun me-2';
+                    themeText.textContent = 'Light Mode';
                     themeToggle.title = 'Switch to light mode';
                 } else {
-                    themeIcon.className = 'fas fa-moon';
-                    themeToggle.className = 'btn btn-outline-dark ms-2';
+                    themeIcon.className = 'fas fa-moon me-2';
+                    themeText.textContent = 'Dark Mode';
                     themeToggle.title = 'Switch to dark mode';
                 }
             }
+            
+            // Mobile navigation functionality
+            if (mobileNavToggle) {
+                mobileNavToggle.addEventListener('click', function() {
+                    sidebar.classList.add('show');
+                    mobileOverlay.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                });
+            }
+            
+            // Close mobile navigation
+            function closeMobileNav() {
+                sidebar.classList.remove('show');
+                mobileOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+            
+            // Close on overlay click
+            mobileOverlay.addEventListener('click', closeMobileNav);
+            
+            // Close on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+                    closeMobileNav();
+                }
+            });
+            
+            // Close on window resize if mobile nav is open
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 992 && sidebar.classList.contains('show')) {
+                    closeMobileNav();
+                }
+            });
         });
-
-        // Set theme immediately on page load to prevent flash
-        (function() {
-            const savedTheme = localStorage.getItem('healthcareTheme') || 'dark';
-            document.documentElement.setAttribute('data-bs-theme', savedTheme);
-        })();
     </script>
     
     {% block extra_scripts %}{% endblock %}
