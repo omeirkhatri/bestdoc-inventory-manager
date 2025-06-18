@@ -323,7 +323,8 @@ function showSuggestions(items, suggestionsDiv, input) {
             e.preventDefault();
             e.stopPropagation();
             selectItem(item, input);
-            hideSuggestions(suggestionsDiv);
+            // MANUALLY hide suggestions only when user selects an item
+            suggestionsDiv.style.display = 'none';
         });
         
         suggestionItem.addEventListener('click', function(e) {
@@ -398,7 +399,9 @@ function selectItem(item, input) {
 }
 
 function hideSuggestions(suggestionsDiv) {
-    suggestionsDiv.style.display = 'none';
+    console.log('hideSuggestions called - BLOCKING THIS ACTION');
+    // NEVER hide suggestions automatically - this is the source of the problem
+    // suggestionsDiv.style.display = 'none';
 }
 
 function hideAllSuggestions() {
@@ -435,18 +438,11 @@ function checkIfProductExists(itemName, row) {
         return;
     }
     
-    fetch(`/api/check-existing-product?name=${encodeURIComponent(itemName)}`, {
-        method: 'GET',
-        credentials: 'same-origin',
-    })
-        .then(response => response.json())
-        .then(data => {
-            toggleMinimumStockField(row, !data.exists);
-        })
-        .catch(error => {
-            console.error('Error checking product:', error);
-            toggleMinimumStockField(row, true); // Show by default on error
-        });
+    // Check locally instead of making API calls that can fail
+    const exists = itemSuggestions.some(item => 
+        item.name.toLowerCase() === itemName.toLowerCase()
+    );
+    toggleMinimumStockField(row, !exists);
 }
 
 // Add new row functionality
@@ -618,5 +614,22 @@ document.getElementById('manualForm').addEventListener('submit', function(e) {
 
 // Initialize autocomplete when page loads
 initializeAutocomplete();
+
+// OVERRIDE ANY CONFLICTING AUTOCOMPLETE SYSTEMS
+// Disable any existing autocomplete handlers that might be interfering
+document.addEventListener('DOMContentLoaded', function() {
+    // Remove any existing event listeners that might be hiding suggestions
+    const itemInputs = document.querySelectorAll('.item-name-input');
+    itemInputs.forEach(input => {
+        // Clone element to remove all existing event listeners
+        const newInput = input.cloneNode(true);
+        input.parentNode.replaceChild(newInput, input);
+    });
+    
+    // Re-initialize our autocomplete after clearing conflicting handlers
+    setTimeout(() => {
+        initializeAutocomplete();
+    }, 100);
+});
 </script>
 {% endblock %}
