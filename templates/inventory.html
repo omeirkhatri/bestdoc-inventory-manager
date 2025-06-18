@@ -76,10 +76,10 @@
     </div>
 </div>
 
-<!-- Inventory Cards -->
+<!-- Inventory Table -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">
+        <h5 class="card-title mb-0" id="inventoryCount">
             Products ({{ products|length }} found)
         </h5>
         <div>
@@ -88,144 +88,174 @@
             </a>
         </div>
     </div>
-    <div class="card-body">
+    <div class="card-body p-0">
         {% if products %}
-        <div class="inventory-grid" id="inventoryGrid">
-            {% for product_data in products %}
-            {% set product = product_data.product %}
-            {% set batches = product_data.batches %}
-            {% set total_quantity = product_data.total_quantity %}
-            {% set is_low_stock = product_data.is_low_stock %}
-            
-            <div class="inventory-card" data-product-name="{{ product.name.lower() }}" data-product-type="{{ product.type.lower() }}">
-                <div class="inventory-card-header">
-                    <div>
-                        <h6 class="inventory-card-title" title="{{ product.name }}">{{ product.name }}</h6>
-                        <div class="inventory-card-badges">
-                            <span class="badge bg-secondary">{{ product.type }}</span>
+        <div class="inventory-table-container">
+            <table class="inventory-table table" id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th>Product</th>
+                        <th>Type</th>
+                        <th class="text-center">Total Qty</th>
+                        <th class="text-center">Min Stock</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    {% for product_data in products %}
+                    {% set product = product_data.product %}
+                    {% set batches = product_data.batches %}
+                    {% set total_quantity = product_data.total_quantity %}
+                    {% set is_low_stock = product_data.is_low_stock %}
+                    
+                    <tr class="expandable-row" 
+                        data-product-name="{{ product.name.lower() }}" 
+                        data-product-type="{{ product.type.lower() }}"
+                        onclick="toggleProductDetails({{ product.id }})">
+                        <td class="text-center">
+                            <i class="fas fa-chevron-right expand-icon" id="icon-{{ product.id }}"></i>
+                        </td>
+                        <td>
+                            <div class="product-name" title="{{ product.name }}">{{ product.name }}</div>
+                        </td>
+                        <td>
+                            <span class="product-type">{{ product.type }}</span>
+                        </td>
+                        <td class="quantity-cell">
+                            <span class="status-indicator {% if is_low_stock %}low-stock{% elif total_quantity <= 10 %}medium-stock{% else %}good-stock{% endif %}">
+                                {{ total_quantity }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="text-muted">{{ product.minimum_stock }}</span>
+                        </td>
+                        <td class="text-center">
                             {% if is_low_stock %}
-                            <span class="status-badge low-stock">
-                                <i class="fas fa-exclamation-triangle me-1"></i>Low Stock
+                            <span class="status-indicator low-stock">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Low Stock
+                            </span>
+                            {% else %}
+                            <span class="status-indicator good-stock">
+                                <i class="fas fa-check-circle"></i>
+                                In Stock
                             </span>
                             {% endif %}
-                        </div>
-                    </div>
-                    <div class="inventory-card-quantity {% if is_low_stock %}low-stock{% elif total_quantity <= 10 %}medium-stock{% else %}good-stock{% endif %}">
-                        {{ total_quantity }}
-                    </div>
-                </div>
-                
-                <div class="inventory-card-body">
-                    <div class="inventory-summary">
-                        <div class="inventory-stat">
-                            <span class="inventory-stat-label">Total Stock</span>
-                            <span class="inventory-stat-value">{{ total_quantity }}</span>
-                        </div>
-                        <div class="inventory-stat">
-                            <span class="inventory-stat-label">Min Required</span>
-                            <span class="inventory-stat-value">{{ product.minimum_stock }}</span>
-                        </div>
-                    </div>
+                        </td>
+                        <td class="actions-cell" onclick="event.stopPropagation();">
+                            <div class="compact-actions">
+                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                        onclick="showProductTransferModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
+                                        title="Transfer items">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-warning btn-sm" 
+                                        onclick="showProductUsageModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
+                                        title="Record usage">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <a href="{{ url_for('item_history', product_id=product.id) }}" 
+                                   class="btn btn-outline-info btn-sm" 
+                                   title="View history">
+                                    <i class="fas fa-history"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
                     
-                    <div class="inventory-actions">
-                        <button type="button" class="btn btn-outline-primary btn-sm" 
-                                onclick="showProductTransferModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
-                                title="Transfer items">
-                            <i class="fas fa-exchange-alt"></i> Transfer
-                        </button>
-                        <button type="button" class="btn btn-outline-warning btn-sm" 
-                                onclick="showProductUsageModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
-                                title="Record usage">
-                            <i class="fas fa-minus"></i> Use
-                        </button>
-                        <a href="{{ url_for('item_history', product_id=product.id) }}" 
-                           class="btn btn-outline-info btn-sm" 
-                           title="View history">
-                            <i class="fas fa-history"></i> History
-                        </a>
-                    </div>
-                    
-                    <button class="details-toggle" onclick="toggleDetails({{ product.id }})">
-                        <i class="fas fa-chevron-down"></i> Show Details
-                    </button>
-                    
-                    <div class="inventory-details" id="details-{{ product.id }}">
-                        <table class="inventory-details-table">
-                            <thead>
-                                <tr>
-                                    <th>Size</th>
-                                    <th>Qty</th>
-                                    <th>Bag</th>
-                                    <th>Expiry</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in batches %}
-                                <tr>
-                                    <td>{{ item.size or '-' }}</td>
-                                    <td>
-                                        <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">
-                                            {{ item.quantity }}
-                                        </span>
-                                    </td>
-                                    <td>{{ item.bag.name }}</td>
-                                    <td>
-                                        {% if item.expiry_date %}
-                                            {{ item.expiry_date|date_gmt4 }}
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if item.expiry_status == 'expired' %}
-                                            <span class="status-badge expired">
-                                                <i class="fas fa-times-circle"></i>
-                                            </span>
-                                        {% elif item.expiry_status == 'expiring' %}
-                                            <span class="status-badge expiring">
-                                                <i class="fas fa-clock"></i>
-                                            </span>
-                                        {% else %}
-                                            <span class="status-badge good">
-                                                <i class="fas fa-check-circle"></i>
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                    onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
-                                                    title="Transfer">
-                                                <i class="fas fa-exchange-alt"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-warning btn-sm" 
-                                                    onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})"
-                                                    title="Use">
-                                                <i class="fas fa-minus"></i>
-                                            </button>
-                                            <a href="{{ url_for('individual_item_history', item_id=item.id) }}" 
-                                               class="btn btn-outline-info btn-sm" 
-                                               title="History">
-                                                <i class="fas fa-history"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+                    <!-- Details Row -->
+                    <tr class="details-row" id="details-{{ product.id }}">
+                        <td colspan="7">
+                            <div class="details-content">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-boxes me-2"></i>
+                                    Individual Items for {{ product.name }}
+                                </h6>
+                                <table class="details-table table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Size</th>
+                                            <th>Quantity</th>
+                                            <th>Bag</th>
+                                            <th>Expiry Date</th>
+                                            <th>Batch</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in batches %}
+                                        <tr>
+                                            <td>{{ item.size or '-' }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">
+                                                    {{ item.quantity }}
+                                                </span>
+                                            </td>
+                                            <td>{{ item.bag.name }}</td>
+                                            <td>
+                                                {% if item.expiry_date %}
+                                                    {{ item.expiry_date|date_gmt4 }}
+                                                {% else %}
+                                                    <span class="text-muted">No expiry</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ item.batch_number or '-' }}</td>
+                                            <td>
+                                                {% if item.expiry_status == 'expired' %}
+                                                    <span class="status-indicator expired">
+                                                        <i class="fas fa-times-circle"></i>
+                                                        Expired
+                                                    </span>
+                                                {% elif item.expiry_status == 'expiring' %}
+                                                    <span class="status-indicator expiring">
+                                                        <i class="fas fa-clock"></i>
+                                                        Expiring Soon
+                                                    </span>
+                                                {% else %}
+                                                    <span class="status-indicator good">
+                                                        <i class="fas fa-check-circle"></i>
+                                                        Good
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="compact-actions">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                            onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
+                                                            title="Transfer items">
+                                                        <i class="fas fa-exchange-alt"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-warning btn-sm" 
+                                                            onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})"
+                                                            title="Record usage">
+                                                        <i class="fas fa-minus"></i>
+                                                    </button>
+                                                    <a href="{{ url_for('individual_item_history', item_id=item.id) }}" 
+                                                       class="btn btn-outline-info btn-sm" 
+                                                       title="View item history">
+                                                        <i class="fas fa-history"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         {% else %}
-        <div class="inventory-empty">
-            <i class="fas fa-search"></i>
-            <h5>No products found</h5>
-            <p>Try adjusting your filters or <a href="{{ url_for('add_items') }}">add some items</a>.</p>
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No products found</h5>
+            <p class="text-muted">Try adjusting your filters or <a href="{{ url_for('add_items') }}">add some items</a>.</p>
         </div>
         {% endif %}
     </div>
@@ -307,50 +337,67 @@
 
 {% block extra_scripts %}
 <script>
-// Toggle inventory card details
-function toggleDetails(productId) {
-    const details = document.getElementById(`details-${productId}`);
-    const toggle = details.previousElementSibling;
-    const icon = toggle.querySelector('i');
+// Toggle product details row
+function toggleProductDetails(productId) {
+    const detailsRow = document.getElementById(`details-${productId}`);
+    const icon = document.getElementById(`icon-${productId}`);
     
-    if (details.classList.contains('show')) {
-        details.classList.remove('show');
-        toggle.classList.remove('expanded');
-        toggle.innerHTML = '<i class="fas fa-chevron-down"></i> Show Details';
+    if (detailsRow.classList.contains('show')) {
+        detailsRow.classList.remove('show');
+        icon.classList.remove('expanded');
     } else {
-        details.classList.add('show');
-        toggle.classList.add('expanded');
-        toggle.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Details';
+        // Close all other expanded rows first
+        document.querySelectorAll('.details-row.show').forEach(row => {
+            row.classList.remove('show');
+        });
+        document.querySelectorAll('.expand-icon.expanded').forEach(expandIcon => {
+            expandIcon.classList.remove('expanded');
+        });
+        
+        // Open the clicked row
+        detailsRow.classList.add('show');
+        icon.classList.add('expanded');
     }
 }
 
-// Quick search functionality
+// Quick search functionality for table rows
 function filterInventoryCards(query) {
-    const cards = document.querySelectorAll('.inventory-card');
+    const rows = document.querySelectorAll('.expandable-row');
     const lowerQuery = query.toLowerCase().trim();
+    let visibleCount = 0;
     
-    cards.forEach(card => {
-        const productName = card.dataset.productName;
-        const productType = card.dataset.productType;
+    rows.forEach(row => {
+        const productName = row.dataset.productName;
+        const productType = row.dataset.productType;
+        const detailsRow = row.nextElementSibling;
         
         const matches = !lowerQuery || 
                        productName.includes(lowerQuery) || 
                        productType.includes(lowerQuery);
         
         if (matches) {
-            card.style.display = 'block';
-            card.classList.add('fade-in');
+            row.style.display = '';
+            if (detailsRow && detailsRow.classList.contains('details-row')) {
+                detailsRow.style.display = '';
+            }
+            visibleCount++;
         } else {
-            card.style.display = 'none';
-            card.classList.remove('fade-in');
+            row.style.display = 'none';
+            if (detailsRow && detailsRow.classList.contains('details-row')) {
+                detailsRow.style.display = 'none';
+                detailsRow.classList.remove('show');
+            }
         }
     });
     
     // Update results count
-    const visibleCards = document.querySelectorAll('.inventory-card[style*="block"], .inventory-card:not([style*="none"])');
-    const countElement = document.querySelector('.card-title');
-    if (countElement && lowerQuery) {
-        countElement.textContent = `Products (${visibleCards.length} found)`;
+    const countElement = document.getElementById('inventoryCount');
+    if (countElement) {
+        if (lowerQuery) {
+            countElement.textContent = `Products (${visibleCount} found)`;
+        } else {
+            countElement.textContent = `Products (${rows.length} found)`;
+        }
     }
 }
 
@@ -417,12 +464,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize all inventory cards with fade-in animation
-    const cards = document.querySelectorAll('.inventory-card');
-    cards.forEach((card, index) => {
+    // Add smooth row animation
+    const rows = document.querySelectorAll('.expandable-row');
+    rows.forEach((row, index) => {
         setTimeout(() => {
-            card.classList.add('fade-in');
-        }, index * 50);
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 20);
     });
     
     console.log('Healthcare Inventory Management System loaded successfully');
