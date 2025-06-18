@@ -88,7 +88,7 @@
                         </thead>
                         <tbody>
                             {% for bag in cabinets %}
-                            <tr>
+                            <tr class="bag-row-clickable" onclick="window.location.href='{{ url_for('inventory') }}?bag={{ bag.id }}'">
                                 <td>
                                     <strong>{{ bag.name }}</strong>
                                     <i class="fas fa-archive text-primary ms-2"></i>
@@ -101,12 +101,12 @@
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
                                         <button type="button" class="btn btn-outline-primary" 
-                                                onclick="editCabinet({{ bag.id }}, '{{ bag.name }}', '{{ bag.description or '' }}')">
+                                                onclick="event.stopPropagation(); editCabinet({{ bag.id }}, '{{ bag.name }}', '{{ bag.description or '' }}')">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         {% if bag.get_total_items() == 0 and bag.name != 'Cabinet' %}
                                         <button type="button" class="btn btn-outline-danger" 
-                                                onclick="deleteCabinet({{ bag.id }}, '{{ bag.name }}')">
+                                                onclick="event.stopPropagation(); deleteCabinet({{ bag.id }}, '{{ bag.name }}')">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                         {% endif %}
@@ -186,7 +186,7 @@
                         </thead>
                         <tbody>
                             {% for bag in medical_bags %}
-                            <tr>
+                            <tr class="bag-row-clickable" onclick="window.location.href='{{ url_for('inventory') }}?bag={{ bag.id }}'">
                                 <td>
                                     <strong>{{ bag.name }}</strong>
                                     <i class="fas fa-briefcase text-success ms-2"></i>
@@ -198,16 +198,16 @@
                                 <td>{{ bag.created_at.strftime('%Y-%m-%d') }}</td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ url_for('inventory') }}?bag={{ bag.name }}" class="btn btn-outline-info">
+                                        <a href="{{ url_for('inventory') }}?bag={{ bag.id }}" class="btn btn-outline-info" onclick="event.stopPropagation();">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         <button type="button" class="btn btn-outline-primary" 
-                                                onclick="editBag({{ bag.id }}, '{{ bag.name }}', '{{ bag.description or '' }}')">
+                                                onclick="event.stopPropagation(); editBag({{ bag.id }}, '{{ bag.name }}', '{{ bag.description or '' }}')">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         {% if bag.get_total_items() == 0 %}
                                         <button type="button" class="btn btn-outline-danger" 
-                                                onclick="deleteBag({{ bag.id }}, '{{ bag.name }}')">
+                                                onclick="event.stopPropagation(); deleteBag({{ bag.id }}, '{{ bag.name }}')">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                         {% endif %}

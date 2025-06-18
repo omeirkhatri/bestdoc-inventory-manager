@@ -231,7 +231,7 @@ def handle_manual_addition():
         sizes = request.form.getlist('size')
         quantities = request.form.getlist('quantity')
         expiry_dates = request.form.getlist('expiry_date')
-        batch_numbers = request.form.getlist('batch_number')
+
         minimum_stocks = request.form.getlist('minimum_stock')
 
         bag_id = request.form.get('bag_id')
@@ -257,7 +257,6 @@ def handle_manual_addition():
                     
                     # Get additional fields safely
                     size = sizes[i].strip() if i < len(sizes) and sizes[i].strip() else None
-                    batch_number = batch_numbers[i].strip() if i < len(batch_numbers) and batch_numbers[i].strip() else None
                     
                     # Handle product creation/lookup
                     product_name = names[i].strip()

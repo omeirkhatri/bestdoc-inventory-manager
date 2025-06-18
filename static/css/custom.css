@@ -416,6 +416,26 @@ body {
     background: rgba(255, 255, 255, 0.5);
 }
 
+/* Clickable bag elements */
+.bag-card-clickable {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.bag-card-clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.bag-row-clickable {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.bag-row-clickable:hover {
+    background-color: var(--bs-table-hover-bg);
+}
+
 /* Badge styling */
 .inventory-item-left .badge,
 .inventory-item-right .badge {
