@@ -16,10 +16,39 @@ class Bag(db.Model):
         return f'<Bag {self.name}>'
     
     def get_total_items(self):
-        return sum(item.quantity for item in self.items if item.quantity > 0)
+        return sum(item.quantity for item in self.items.all() if item.quantity > 0)
     
     def is_cabinet(self):
         return self.location == 'cabinet'
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    type = db.Column(db.String(100), nullable=False)
+    minimum_stock = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship to items (batches)
+    items = db.relationship('Item', backref='product', lazy=True)
+    
+    def __repr__(self):
+        return f'<Product {self.name}>'
+    
+    @property
+    def total_quantity(self):
+        return sum(item.quantity for item in self.items if item.quantity > 0)
+    
+    @property
+    def is_low_stock(self):
+        return self.total_quantity <= self.minimum_stock
+    
+    @property
+    def unique_sizes(self):
+        return list(set(item.size for item in self.items if item.size))
+    
+    @property
+    def active_batches(self):
+        return [item for item in self.items if item.quantity > 0]
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -29,9 +58,11 @@ class Item(db.Model):
     quantity = db.Column(db.Integer, nullable=False, default=0)
     expiry_date = db.Column(db.Date)  # Optional
     date_added = db.Column(db.DateTime, default=datetime.utcnow)  # When item was added
+    batch_number = db.Column(db.String(100))  # For tracking different batches
     
-    # Foreign key to bag
+    # Foreign keys
     bag_id = db.Column(db.Integer, db.ForeignKey('bag.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=True)  # Link to product
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

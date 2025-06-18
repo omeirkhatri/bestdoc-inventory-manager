@@ -6,7 +6,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, init_default_types
+from models import Item, Bag, MovementHistory, ItemType, Product, init_default_types
 
 @app.route('/')
 def dashboard():
@@ -196,6 +196,8 @@ def handle_manual_addition():
         sizes = request.form.getlist('size')
         quantities = request.form.getlist('quantity')
         expiry_dates = request.form.getlist('expiry_date')
+        batch_numbers = request.form.getlist('batch_number')
+        minimum_stocks = request.form.getlist('minimum_stock')
 
         bag_id = request.form.get('bag_id')
         
@@ -218,17 +220,42 @@ def handle_manual_addition():
                             flash(f"Invalid expiry date format for item {i+1}", "warning")
                             continue
                     
-                    # Get size safely
+                    # Get additional fields safely
                     size = sizes[i].strip() if i < len(sizes) and sizes[i].strip() else None
+                    batch_number = batch_numbers[i].strip() if i < len(batch_numbers) and batch_numbers[i].strip() else None
+                    
+                    # Handle product creation/lookup
+                    product_name = names[i].strip()
+                    product_type = types[i].strip()
+                    product = Product.query.filter_by(name=product_name).first()
+                    
+                    if not product:
+                        # New product - get minimum stock if provided
+                        min_stock = 0
+                        if i < len(minimum_stocks) and minimum_stocks[i].strip():
+                            try:
+                                min_stock = int(minimum_stocks[i])
+                            except ValueError:
+                                min_stock = 0
+                        
+                        product = Product(
+                            name=product_name,
+                            type=product_type,
+                            minimum_stock=min_stock
+                        )
+                        db.session.add(product)
+                        db.session.flush()  # Get the product ID
                     
                     # Create item
                     item = Item(
-                        name=names[i].strip(),
-                        type=types[i].strip(),
+                        name=product_name,
+                        type=product_type,
                         size=size,
                         quantity=int(quantities[i]),
                         expiry_date=expiry_date,
-                        bag_id=bag.id
+                        batch_number=batch_number,
+                        bag_id=bag.id,
+                        product_id=product.id
                     )
                     
                     db.session.add(item)
@@ -264,45 +291,55 @@ def inventory():
     bag_filter = request.args.get('bag', '')
     expiry_filter = request.args.get('expiry', '')
     
-    # Base query
-    query = Item.query.join(Bag)
+    # Base query - get products with their items
+    product_query = Product.query
     
-    # Apply filters
+    # Apply product-level filters
     if search:
-        query = query.filter(
-            or_(
-                Item.name.ilike(f'%{search}%'),
-                Item.size.ilike(f'%{search}%'),
-                Item.type.ilike(f'%{search}%')
-            )
-        )
+        product_query = product_query.filter(Product.name.ilike(f'%{search}%'))
     
     if type_filter:
-        query = query.filter(Item.type == type_filter)
+        product_query = product_query.filter(Product.type == type_filter)
     
-    if bag_filter:
-        query = query.filter(Bag.name == bag_filter)
+    products = product_query.order_by(Product.name).all()
     
-    if expiry_filter:
-        today = date.today()
-        if expiry_filter == 'expired':
-            query = query.filter(and_(Item.expiry_date.isnot(None), Item.expiry_date < today))
-        elif expiry_filter == 'expiring':
-            thirty_days = today + timedelta(days=30)
-            query = query.filter(and_(Item.expiry_date.isnot(None), 
-                                    Item.expiry_date >= today, 
-                                    Item.expiry_date <= thirty_days))
-    
-    # Get items with positive quantity
-    items = query.filter(Item.quantity > 0).order_by(Item.name, Item.expiry_date).all()
+    # Filter products based on item-level criteria and group items
+    filtered_products = []
+    for product in products:
+        # Get active items for this product
+        item_query = Item.query.filter(Item.product_id == product.id, Item.quantity > 0).join(Bag)
+        
+        # Apply item-level filters
+        if bag_filter:
+            item_query = item_query.filter(Bag.name == bag_filter)
+        
+        if expiry_filter:
+            today = date.today()
+            if expiry_filter == 'expired':
+                item_query = item_query.filter(and_(Item.expiry_date.isnot(None), Item.expiry_date < today))
+            elif expiry_filter == 'expiring':
+                thirty_days = today + timedelta(days=30)
+                item_query = item_query.filter(and_(Item.expiry_date.isnot(None), 
+                                                Item.expiry_date >= today, 
+                                                Item.expiry_date <= thirty_days))
+        
+        items = item_query.order_by(Item.size, Item.expiry_date).all()
+        
+        if items:  # Only include products that have matching items
+            filtered_products.append({
+                'product': product,
+                'items': items,
+                'total_quantity': sum(item.quantity for item in items),
+                'is_low_stock': product.is_low_stock
+            })
     
     # Get filter options
     bags = Bag.query.all()
-    item_types = db.session.query(Item.type).distinct().all()
+    item_types = db.session.query(Product.type).distinct().all()
     item_types = [t[0] for t in item_types]
     
     return render_template('inventory.html',
-                         items=items,
+                         products=filtered_products,
                          bags=bags,
                          item_types=item_types,
                          current_filters={
@@ -690,6 +727,42 @@ def handle_wastage():
         flash(f"Error recording wastage: {str(e)}", "danger")
     
     return redirect(url_for('wastage'))
+
+@app.route('/item_history/<int:product_id>')
+def item_history(product_id):
+    """Show detailed history for a specific product"""
+    product = Product.query.get_or_404(product_id)
+    
+    # Get all current batches for this product
+    current_batches = Item.query.filter(
+        Item.product_id == product_id,
+        Item.quantity > 0
+    ).join(Bag).order_by(Item.expiry_date.asc().nullslast(), Item.size).all()
+    
+    # Get all movement history for this product
+    movement_history = MovementHistory.query.filter(
+        MovementHistory.item_name == product.name
+    ).order_by(MovementHistory.timestamp.desc()).all()
+    
+    return render_template('item_history.html',
+                         product=product,
+                         current_batches=current_batches,
+                         movement_history=movement_history)
+
+@app.route('/api/check_existing_product')
+def api_check_existing_product():
+    """API endpoint to check if a product already exists"""
+    name = request.args.get('name', '').strip()
+    if not name:
+        return jsonify({'exists': False})
+    
+    product = Product.query.filter_by(name=name).first()
+    return jsonify({
+        'exists': product is not None,
+        'product_id': product.id if product else None,
+        'type': product.type if product else None,
+        'minimum_stock': product.minimum_stock if product else None
+    })
 
 @app.route('/api/items/search')
 def api_search_items():
