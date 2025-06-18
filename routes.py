@@ -461,8 +461,8 @@ def inventory():
             current_group = None
             
             for item in items:
-                # Create a key for grouping (brand, size, expiry_date)
-                group_key = (item.brand or 'No Brand', item.size or 'No Size', item.expiry_date)
+                # Create a key for grouping (brand, size, expiry_date, bag_id)
+                group_key = (item.brand or 'No Brand', item.size or 'No Size', item.expiry_date, item.bag_id)
                 
                 if current_group is None or current_group['key'] != group_key:
                     # Start a new group
@@ -477,11 +477,9 @@ def inventory():
                     }
                     grouped_items.append(current_group)
                 else:
-                    # Add to existing group
+                    # Add to existing group (should not happen with bag_id in key)
                     current_group['items'].append(item)
                     current_group['total_quantity'] += item.quantity
-                    if item.bag not in current_group['bags']:
-                        current_group['bags'].append(item.bag)
             
             filtered_products.append({
                 'product': product,
