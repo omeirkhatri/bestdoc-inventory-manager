@@ -261,7 +261,8 @@ function showSuggestions(items, suggestionsDiv, input) {
         suggestionItem.innerHTML = `
             <div>
                 <strong>${item.name}</strong>
-                <br><small class="text-muted">${item.type}${item.size ? ' - ' + item.size : ''}</small>
+                ${item.brand ? '<span class="badge bg-secondary ms-2">' + item.brand + '</span>' : ''}
+                <br><small class="text-muted">${item.type}${item.size ? ' - ' + item.size : ''}${item.source === 'current' ? ' (In Stock)' : ' (From History)'}</small>
             </div>
         `;
         
@@ -292,29 +293,43 @@ function selectItem(item, input) {
     // Fill in the item details
     input.value = item.name;
     
+    // Auto-fill type
     const typeSelect = row.querySelector('select[name="type"]');
     if (typeSelect && item.type) {
         typeSelect.value = item.type;
     }
     
+    // Auto-fill brand
     const brandInput = row.querySelector('input[name="brand"]');
     if (brandInput && item.brand) {
         brandInput.value = item.brand;
     }
     
+    // Auto-fill size
     const sizeInput = row.querySelector('input[name="size"]');
     if (sizeInput && item.size) {
         sizeInput.value = item.size;
     }
     
-    // Hide minimum stock field since this is an existing item
-    toggleMinimumStockField(row, false);
+    // Auto-fill expiry date if available (but leave it editable for new batches)
+    const expiryInput = row.querySelector('input[name="expiry_date"]');
+    if (expiryInput && item.latest_expiry && item.source === 'current') {
+        // Don't auto-fill if it's an old date
+        const latestExpiry = new Date(item.latest_expiry);
+        const today = new Date();
+        if (latestExpiry > today) {
+            expiryInput.value = item.latest_expiry;
+        }
+    }
     
-    // Focus on quantity field
+    // Set focus to quantity field for quick entry
     const quantityInput = row.querySelector('input[name="quantity"]');
     if (quantityInput) {
-        quantityInput.focus();
+        setTimeout(() => quantityInput.focus(), 100);
     }
+    
+    // Hide minimum stock field since this is an existing item
+    toggleMinimumStockField(row, false);
 }
 
 function hideSuggestions(suggestionsDiv) {

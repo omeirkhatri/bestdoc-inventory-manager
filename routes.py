@@ -164,35 +164,61 @@ def add_items():
     bags = Bag.query.all()
     item_types = ItemType.query.all()
     
-    # Get existing item names for autocomplete
-    existing_items = db.session.query(Item.name, Item.type, Item.brand, Item.size).distinct().all()
-    history_items = db.session.query(MovementHistory.item_name, MovementHistory.item_type, MovementHistory.item_size).distinct().all()
+    # Get existing item names for autocomplete with more complete information
+    existing_items_query = db.session.query(
+        Item.name, 
+        Item.type, 
+        Item.brand, 
+        Item.size,
+        func.max(Item.expiry_date).label('latest_expiry'),
+        func.count(Item.id).label('frequency')
+    ).group_by(Item.name, Item.type, Item.brand, Item.size).all()
+    
+    history_items = db.session.query(
+        MovementHistory.item_name, 
+        MovementHistory.item_type,
+        MovementHistory.item_size,
+        func.count(MovementHistory.id).label('frequency')
+    ).group_by(
+        MovementHistory.item_name, 
+        MovementHistory.item_type, 
+        MovementHistory.item_size
+    ).all()
     
     # Combine and format items for autocomplete
     autocomplete_items = []
     seen = set()
     
-    for item in existing_items:
-        key = (item.name, item.type, item.brand, item.size)
+    for item in existing_items_query:
+        key = (item.name, item.type, item.brand or '', item.size or '')
         if key not in seen:
             autocomplete_items.append({
                 'name': item.name,
                 'type': item.type,
                 'brand': item.brand or '',
-                'size': item.size or ''
+                'size': item.size or '',
+                'latest_expiry': item.latest_expiry.isoformat() if item.latest_expiry else None,
+                'frequency': item.frequency,
+                'source': 'current'
             })
             seen.add(key)
     
     for item in history_items:
-        key = (item.item_name, item.item_type, '', item.item_size)
+        key = (item.item_name, item.item_type, '', item.item_size or '')
         if key not in seen:
             autocomplete_items.append({
                 'name': item.item_name,
                 'type': item.item_type,
                 'brand': '',
-                'size': item.item_size or ''
+                'size': item.item_size or '',
+                'latest_expiry': None,
+                'frequency': item.frequency,
+                'source': 'history'
             })
             seen.add(key)
+    
+    # Sort by frequency (most used first) then by name
+    autocomplete_items.sort(key=lambda x: (-x['frequency'], x['name']))
     
     return render_template('add_items.html', bags=bags, item_types=item_types, autocomplete_items=autocomplete_items)
 
