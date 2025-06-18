@@ -16,7 +16,7 @@ class Bag(db.Model):
         return f'<Bag {self.name}>'
     
     def get_total_items(self):
-        return sum(item.quantity for item in self.items.all() if item.quantity > 0)
+        return sum(item.quantity for item in self.items if item.quantity > 0)
     
     def is_cabinet(self):
         return self.location == 'cabinet'

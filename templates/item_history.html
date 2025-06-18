@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} History - Healthcare Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-history me-2"></i>
+                {{ product.name }} History
+            </h1>
+            <a href="{{ url_for('inventory') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Product Summary -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Product Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Name:</strong><br>
+                        {{ product.name }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Type:</strong><br>
+                        <span class="badge bg-secondary">{{ product.type }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Minimum Stock:</strong><br>
+                        {{ product.minimum_stock }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Total Current Stock:</strong><br>
+                        <span class="badge bg-{% if product.is_low_stock %}danger{% elif product.total_quantity <= 10 %}warning{% else %}primary{% endif %}">
+                            {{ product.total_quantity }}
+                        </span>
+                        {% if product.is_low_stock %}
+                        <span class="badge bg-danger ms-1">Low Stock</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Quick Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="stat-number text-primary">{{ current_batches|length }}</div>
+                        <div class="stat-label small">Active Batches</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-number text-info">{{ movement_history|length }}</div>
+                        <div class="stat-label small">Total Movements</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Batches -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-boxes me-2"></i>
+            Current Active Batches
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if current_batches %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Size</th>
+                        <th>Quantity</th>
+                        <th>Current Bag</th>
+                        <th>Expiry Date</th>
+                        <th>Batch Number</th>
+                        <th>Status</th>
+                        <th>Date Added</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in current_batches %}
+                    <tr>
+                        <td>{{ item.size or '-' }}</td>
+                        <td>
+                            <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">
+                                {{ item.quantity }}
+                            </span>
+                        </td>
+                        <td>{{ item.bag.name }}</td>
+                        <td>
+                            {% if item.expiry_date %}
+                                {{ item.expiry_date.strftime('%m/%d/%Y') }}
+                            {% else %}
+                                <span class="text-muted">No expiry</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.batch_number or '-' }}</td>
+                        <td>
+                            {% if item.expiry_status == 'expired' %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>Expired
+                                </span>
+                            {% elif item.expiry_status == 'expiring' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>Expiring Soon
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Good
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.date_added.strftime('%m/%d/%Y') if item.date_added else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-3">
+            <i class="fas fa-box-open fa-2x text-muted mb-2"></i>
+            <p class="text-muted">No active batches found for this product.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Movement History -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list-alt me-2"></i>
+            Movement History
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if movement_history %}
+        <div class="timeline">
+            {% for movement in movement_history %}
+            <div class="timeline-item mb-3">
+                <div class="timeline-marker">
+                    {% if movement.movement_type == 'addition' %}
+                        <i class="fas fa-plus text-success"></i>
+                    {% elif movement.movement_type == 'transfer' %}
+                        <i class="fas fa-exchange-alt text-primary"></i>
+                    {% elif movement.movement_type == 'usage' %}
+                        <i class="fas fa-minus text-warning"></i>
+                    {% elif movement.movement_type == 'wastage' %}
+                        <i class="fas fa-trash text-danger"></i>
+                    {% else %}
+                        <i class="fas fa-circle text-secondary"></i>
+                    {% endif %}
+                </div>
+                <div class="timeline-content">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">
+                                        {% if movement.movement_type == 'addition' %}
+                                            <span class="badge bg-success me-2">Added</span>
+                                        {% elif movement.movement_type == 'transfer' %}
+                                            <span class="badge bg-primary me-2">Transferred</span>
+                                        {% elif movement.movement_type == 'usage' %}
+                                            <span class="badge bg-warning me-2">Used</span>
+                                        {% elif movement.movement_type == 'wastage' %}
+                                            <span class="badge bg-danger me-2">Wasted</span>
+                                        {% endif %}
+                                        {{ movement.quantity }} units
+                                        {% if movement.item_size %}
+                                            ({{ movement.item_size }})
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">
+                                        {{ movement.timestamp.strftime('%m/%d/%Y at %I:%M %p') }}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                {% if movement.from_bag or movement.to_bag %}
+                                <div class="col-md-6">
+                                    <strong>Location:</strong>
+                                    {% if movement.from_bag and movement.to_bag %}
+                                        {{ movement.from_bag }} → {{ movement.to_bag }}
+                                    {% elif movement.to_bag %}
+                                        Added to {{ movement.to_bag }}
+                                    {% elif movement.from_bag %}
+                                        From {{ movement.from_bag }}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                {% if movement.patient_name %}
+                                <div class="col-md-6">
+                                    <strong>Patient:</strong> {{ movement.patient_name }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if movement.expiry_date %}
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <strong>Expiry Date:</strong> {{ movement.expiry_date.strftime('%m/%d/%Y') }}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if movement.notes %}
+                            <div class="mt-2">
+                                <strong>Notes:</strong>
+                                <p class="mb-0 small">{{ movement.notes }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No movement history found</h5>
+            <p class="text-muted">No recorded movements for this product yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-content {
+    margin-left: 10px;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    color: #6c757d;
+}
+</style>
+{% endblock %}

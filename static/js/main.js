@@ -491,6 +491,172 @@ const KeyboardShortcuts = {
     }
 };
 
+// Product Management for Add Items
+const ProductManager = {
+    init: function() {
+        // Add event listeners for item name inputs
+        document.querySelectorAll('.item-name-input').forEach(input => {
+            this.attachProductChecker(input);
+        });
+        
+        // Handle dynamic row addition
+        const addRowBtn = document.getElementById('addRowBtn');
+        if (addRowBtn) {
+            addRowBtn.addEventListener('click', () => {
+                this.addNewItemRow();
+            });
+        }
+        
+        // Handle row cloning
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.clone-item-btn')) {
+                this.cloneItemRow(e.target.closest('.item-row'));
+            }
+            if (e.target.closest('.remove-row')) {
+                this.removeItemRow(e.target.closest('.item-row'));
+            }
+        });
+    },
+    
+    attachProductChecker: function(input) {
+        let debounceTimer;
+        
+        input.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                this.checkExistingProduct(e.target);
+            }, 500);
+        });
+    },
+    
+    checkExistingProduct: function(input) {
+        const productName = input.value.trim();
+        const row = input.closest('.item-row');
+        const minimumStockInput = row.querySelector('.minimum-stock-input');
+        
+        if (!productName || productName.length < 2) {
+            this.toggleMinimumStockField(minimumStockInput, true);
+            return;
+        }
+        
+        fetch(`/api/check_existing_product?name=${encodeURIComponent(productName)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.exists) {
+                    // Product exists - hide minimum stock field and populate type
+                    this.toggleMinimumStockField(minimumStockInput, false);
+                    
+                    const typeSelect = row.querySelector('select[name="type"]');
+                    if (typeSelect && data.type) {
+                        typeSelect.value = data.type;
+                    }
+                } else {
+                    // New product - show minimum stock field
+                    this.toggleMinimumStockField(minimumStockInput, true);
+                }
+            })
+            .catch(error => {
+                console.warn('Error checking product existence:', error);
+                // Default to showing minimum stock field
+                this.toggleMinimumStockField(minimumStockInput, true);
+            });
+    },
+    
+    toggleMinimumStockField: function(input, show) {
+        const container = input.closest('.col-md-5');
+        if (show) {
+            container.style.display = 'block';
+            input.removeAttribute('disabled');
+        } else {
+            container.style.display = 'none';
+            input.setAttribute('disabled', 'disabled');
+            input.value = '';
+        }
+    },
+    
+    addNewItemRow: function() {
+        const itemRows = document.getElementById('itemRows');
+        const firstRow = itemRows.querySelector('.item-row');
+        const newRow = firstRow.cloneNode(true);
+        
+        // Clear all inputs
+        newRow.querySelectorAll('input, select').forEach(field => {
+            if (field.type === 'checkbox' || field.type === 'radio') {
+                field.checked = false;
+            } else {
+                field.value = '';
+            }
+        });
+        
+        // Show remove button
+        const removeBtn = newRow.querySelector('.remove-row');
+        if (removeBtn) {
+            removeBtn.style.display = 'block';
+        }
+        
+        // Attach product checker to new name input
+        const nameInput = newRow.querySelector('.item-name-input');
+        if (nameInput) {
+            this.attachProductChecker(nameInput);
+        }
+        
+        // Show minimum stock field by default for new rows
+        const minimumStockInput = newRow.querySelector('.minimum-stock-input');
+        this.toggleMinimumStockField(minimumStockInput, true);
+        
+        itemRows.appendChild(newRow);
+        this.updateRemoveButtons();
+    },
+    
+    cloneItemRow: function(sourceRow) {
+        const newRow = sourceRow.cloneNode(true);
+        
+        // Keep most values but clear quantity and batch
+        const quantityInput = newRow.querySelector('input[name="quantity"]');
+        const batchInput = newRow.querySelector('input[name="batch_number"]');
+        const expiryInput = newRow.querySelector('input[name="expiry_date"]');
+        
+        if (quantityInput) quantityInput.value = '';
+        if (batchInput) batchInput.value = '';
+        if (expiryInput) expiryInput.value = '';
+        
+        // Show remove button
+        const removeBtn = newRow.querySelector('.remove-row');
+        if (removeBtn) {
+            removeBtn.style.display = 'block';
+        }
+        
+        // Attach product checker to cloned name input
+        const nameInput = newRow.querySelector('.item-name-input');
+        if (nameInput) {
+            this.attachProductChecker(nameInput);
+        }
+        
+        sourceRow.parentNode.insertBefore(newRow, sourceRow.nextSibling);
+        this.updateRemoveButtons();
+    },
+    
+    removeItemRow: function(row) {
+        const itemRows = document.getElementById('itemRows');
+        if (itemRows.children.length > 1) {
+            row.remove();
+            this.updateRemoveButtons();
+        }
+    },
+    
+    updateRemoveButtons: function() {
+        const itemRows = document.getElementById('itemRows');
+        const rows = itemRows.querySelectorAll('.item-row');
+        
+        rows.forEach((row, index) => {
+            const removeBtn = row.querySelector('.remove-row');
+            if (removeBtn) {
+                removeBtn.style.display = rows.length > 1 ? 'block' : 'none';
+            }
+        });
+    }
+};
+
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize search and filters
@@ -498,6 +664,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize keyboard shortcuts
     KeyboardShortcuts.init();
+    
+    // Initialize product management for add items page
+    if (document.getElementById('manualForm')) {
+        ProductManager.init();
+    }
     
     // Start periodic notifications (commented out for now)
     // NotificationManager.startPeriodicChecks();

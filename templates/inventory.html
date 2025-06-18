@@ -25,7 +25,7 @@
             <div class="col-md-3">
                 <label for="search" class="form-label">Search</label>
                 <input type="text" class="form-control" id="search" name="search" 
-                       value="{{ current_filters.search }}" placeholder="Item name, size, batch...">
+                       value="{{ current_filters.search }}" placeholder="Product name...">
             </div>
             <div class="col-md-2">
                 <label for="type" class="form-label">Type</label>
@@ -73,7 +73,7 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">
-            Items ({{ items|length }} found)
+            Products ({{ products|length }} found)
         </h5>
         <div>
             <a href="{{ url_for('add_items') }}" class="btn btn-success btn-sm">
@@ -82,85 +82,121 @@
         </div>
     </div>
     <div class="card-body">
-        {% if items %}
-        <div class="table-responsive">
-            <table class="table table-striped" id="inventoryTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Size</th>
-                        <th>Quantity</th>
-                        <th>Bag</th>
-                        <th>Expiry Date</th>
-                        <th>Batch</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in items %}
-                    <tr>
-                        <td>
-                            <strong>{{ item.name }}</strong>
-                        </td>
-                        <td>
-                            <span class="badge bg-secondary">{{ item.type }}</span>
-                        </td>
-                        <td>{{ item.size or '-' }}</td>
-                        <td>
-                            <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">
-                                {{ item.quantity }}
-                            </span>
-                        </td>
-                        <td>{{ item.bag.name }}</td>
-                        <td>
-                            {% if item.expiry_date %}
-                                {{ item.expiry_date.strftime('%m/%d/%Y') }}
-                            {% else %}
-                                <span class="text-muted">No expiry</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ item.batch_number or '-' }}</td>
-                        <td>
-                            {% if item.expiry_status == 'expired' %}
-                                <span class="badge bg-danger">
-                                    <i class="fas fa-times-circle me-1"></i>Expired
+        {% if products %}
+        <div class="accordion" id="inventoryAccordion">
+            {% for product_data in products %}
+            {% set product = product_data.product %}
+            {% set items = product_data.items %}
+            {% set total_quantity = product_data.total_quantity %}
+            {% set is_low_stock = product_data.is_low_stock %}
+            
+            <div class="accordion-item mb-3">
+                <h2 class="accordion-header" id="heading{{ product.id }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#collapse{{ product.id }}" aria-expanded="false" 
+                            aria-controls="collapse{{ product.id }}">
+                        <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                            <div class="d-flex align-items-center">
+                                <strong class="me-3">{{ product.name }}</strong>
+                                <span class="badge bg-secondary me-2">{{ product.type }}</span>
+                                {% if is_low_stock %}
+                                <span class="badge bg-danger me-2">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Low Stock
                                 </span>
-                            {% elif item.expiry_status == 'expiring' %}
-                                <span class="badge bg-warning">
-                                    <i class="fas fa-clock me-1"></i>Expiring Soon
-                                </span>
-                            {% else %}
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check-circle me-1"></i>Good
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm" role="group">
-                                {% if item.bag.name == 'Cabinet' %}
-                                <button type="button" class="btn btn-outline-primary" 
-                                        onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
-                                    <i class="fas fa-exchange-alt"></i>
-                                </button>
-                                {% else %}
-                                <button type="button" class="btn btn-outline-warning" 
-                                        onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
-                                    <i class="fas fa-minus"></i>
-                                </button>
                                 {% endif %}
                             </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-{% if is_low_stock %}danger{% elif total_quantity <= 10 %}warning{% else %}primary{% endif %} me-2">
+                                    Total: {{ total_quantity }}
+                                </span>
+                                <span class="text-muted small me-2">Min: {{ product.minimum_stock }}</span>
+                                <a href="{{ url_for('item_history', product_id=product.id) }}" 
+                                   class="btn btn-outline-info btn-sm me-2" 
+                                   onclick="event.stopPropagation();">
+                                    <i class="fas fa-history"></i> History
+                                </a>
+                            </div>
+                        </div>
+                    </button>
+                </h2>
+                <div id="collapse{{ product.id }}" class="accordion-collapse collapse" 
+                     aria-labelledby="heading{{ product.id }}" data-bs-parent="#inventoryAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Size</th>
+                                        <th>Quantity</th>
+                                        <th>Bag</th>
+                                        <th>Expiry Date</th>
+                                        <th>Batch</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr>
+                                        <td>{{ item.size or '-' }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">
+                                                {{ item.quantity }}
+                                            </span>
+                                        </td>
+                                        <td>{{ item.bag.name }}</td>
+                                        <td>
+                                            {% if item.expiry_date %}
+                                                {{ item.expiry_date.strftime('%m/%d/%Y') }}
+                                            {% else %}
+                                                <span class="text-muted">No expiry</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.batch_number or '-' }}</td>
+                                        <td>
+                                            {% if item.expiry_status == 'expired' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times-circle me-1"></i>Expired
+                                                </span>
+                                            {% elif item.expiry_status == 'expiring' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>Expiring Soon
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Good
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                {% if item.bag.name == 'Cabinet' %}
+                                                <button type="button" class="btn btn-outline-primary" 
+                                                        onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
+                                                    <i class="fas fa-exchange-alt"></i>
+                                                </button>
+                                                {% else %}
+                                                <button type="button" class="btn btn-outline-warning" 
+                                                        onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
         {% else %}
         <div class="text-center py-5">
             <i class="fas fa-search fa-3x text-muted mb-3"></i>
-            <h5 class="text-muted">No items found</h5>
+            <h5 class="text-muted">No products found</h5>
             <p class="text-muted">Try adjusting your filters or <a href="{{ url_for('add_items') }}">add some items</a>.</p>
         </div>
         {% endif %}

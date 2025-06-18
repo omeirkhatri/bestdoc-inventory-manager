@@ -94,9 +94,14 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-11">
+                                <div class="col-md-6">
                                     <label class="form-label">Batch Number</label>
                                     <input type="text" class="form-control" name="batch_number" placeholder="Optional">
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label">Minimum Stock <span class="text-muted">(new products only)</span></label>
+                                    <input type="number" class="form-control minimum-stock-input" name="minimum_stock" 
+                                           min="0" placeholder="Alert when stock below this number">
                                 </div>
                             </div>
                         </div>
