@@ -324,5 +324,18 @@ new Chart(statusCtx, {
         }
     }
 });
+
+// Show Friday banner only on Fridays
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
+    
+    if (dayOfWeek === 5) { // Friday
+        const fridayBanner = document.getElementById('fridayBanner');
+        if (fridayBanner) {
+            fridayBanner.style.display = 'block';
+        }
+    }
+});
 </script>
 {% endblock %}
