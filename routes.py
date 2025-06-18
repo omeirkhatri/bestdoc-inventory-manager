@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, Product, User, init_default_types, format_datetime_gmt4, format_date_gmt4
+from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, init_default_types, format_datetime_gmt4, format_date_gmt4
 
 # Authentication routes
 @app.route('/login', methods=['GET', 'POST'])
@@ -99,6 +99,24 @@ def dashboard():
     # Empty bags
     empty_bags = [bag for bag in bags if bag.get_total_items() == 0]
     
+    # Bags below minimum quantities
+    low_stock_bags = []
+    for bag in bags:
+        bag_items = []
+        for minimum in bag.minimums:
+            if minimum.is_below_minimum():
+                bag_items.append({
+                    'product': minimum.product,
+                    'current': minimum.current_quantity(),
+                    'minimum': minimum.minimum_quantity,
+                    'shortage': minimum.shortage_amount()
+                })
+        if bag_items:
+            low_stock_bags.append({
+                'bag': bag,
+                'items': bag_items
+            })
+    
     # Recent movements
     recent_movements = MovementHistory.query.order_by(
         MovementHistory.timestamp.desc()
@@ -126,6 +144,7 @@ def dashboard():
                          expired_items=expired_items,
                          low_stock_items=low_stock_items,
                          low_stock_cabinet=low_stock_cabinet,
+                         low_stock_bags=low_stock_bags,
                          empty_bags=empty_bags,
                          recent_movements=recent_movements,
                          bags_with_counts=bags_with_counts)

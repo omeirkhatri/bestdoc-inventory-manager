@@ -100,6 +100,12 @@
                     </a>
                 </div>
                 <div class="sidebar-nav-item">
+                    <a class="sidebar-nav-link {% if request.endpoint == 'bag_minimums' %}active{% endif %}" href="{{ url_for('bag_minimums') }}">
+                        <i class="fas fa-briefcase-medical"></i>
+                        Bag Minimums
+                    </a>
+                </div>
+                <div class="sidebar-nav-item">
                     <a class="sidebar-nav-link {% if request.endpoint == 'history' %}active{% endif %}" href="{{ url_for('history') }}">
                         <i class="fas fa-history"></i>
                         History
