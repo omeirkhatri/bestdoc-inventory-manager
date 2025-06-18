@@ -193,6 +193,10 @@ with app.app_context():
     ]
     
     for item_data in items_data:
+        # Skip items for bags that were permanently deleted
+        if item_data['bag'] not in created_bags:
+            continue
+            
         bag = created_bags[item_data['bag']]
         product = created_products.get(item_data['name'])
         
@@ -240,6 +244,10 @@ with app.app_context():
     ]
     
     for minimum_data in bag_minimums_data:
+        # Skip minimums for bags that were permanently deleted
+        if minimum_data['bag'] not in created_bags:
+            continue
+            
         bag = created_bags[minimum_data['bag']]
         product = created_products[minimum_data['product']]
         

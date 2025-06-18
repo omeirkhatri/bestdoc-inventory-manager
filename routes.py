@@ -558,6 +558,10 @@ def handle_transfer():
         item.quantity -= quantity
         item.updated_at = datetime.utcnow()
         
+        # Remove source item if quantity reaches zero
+        if item.quantity <= 0:
+            db.session.delete(item)
+        
         # Log the transfer
         movement = MovementHistory(
             item_name=item.name,
@@ -579,8 +583,15 @@ def handle_transfer():
             'to_bag_id': to_bag.id,
             'quantity': quantity,
             'item_name': item.name,
+            'item_type': item.type,
+            'item_brand': item.brand,
+            'item_size': item.size,
+            'item_expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
+            'product_id': item.product_id,
             'existing_item_id': existing_item.id if existing_item else None,
-            'new_item_created': existing_item is None
+            'new_item_created': existing_item is None,
+            'source_item_deleted': item.quantity <= 0,
+            'original_source_quantity': item.quantity + quantity
         }
         
         undo_action = UndoAction(
@@ -1310,11 +1321,30 @@ def undo_last_action():
                     if dest_item.quantity <= 0:
                         db.session.delete(dest_item)
             
-            # Restore quantity to source item
-            source_item = Item.query.get(action_data['item_id'])
-            if source_item:
-                source_item.quantity += action_data['quantity']
-                source_item.updated_at = datetime.utcnow()
+            # Handle source item restoration
+            if action_data.get('source_item_deleted', False):
+                # Recreate the source item that was deleted
+                expiry_date = None
+                if action_data.get('item_expiry_date'):
+                    expiry_date = datetime.fromisoformat(action_data['item_expiry_date']).date()
+                
+                restored_item = Item(
+                    name=action_data['item_name'],
+                    type=action_data['item_type'],
+                    brand=action_data.get('item_brand'),
+                    size=action_data.get('item_size'),
+                    quantity=action_data['quantity'],
+                    expiry_date=expiry_date,
+                    bag_id=action_data['from_bag_id'],
+                    product_id=action_data.get('product_id')
+                )
+                db.session.add(restored_item)
+            else:
+                # Restore quantity to existing source item
+                source_item = Item.query.get(action_data['item_id'])
+                if source_item:
+                    source_item.quantity += action_data['quantity']
+                    source_item.updated_at = datetime.utcnow()
             
             # Remove the transfer movement history
             MovementHistory.query.filter(
