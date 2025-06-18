@@ -505,20 +505,7 @@ function addNewRow(templateRow = null) {
     }
 }
 
-// Clone item functionality
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.clone-item-btn')) {
-        const row = e.target.closest('.item-row');
-        const nameInput = row.querySelector('input[name="name"]');
-        const typeSelect = row.querySelector('select[name="type"]');
-        
-        if (nameInput.value.trim() && typeSelect.value) {
-            addNewRow(row);
-        } else {
-            alert('Please fill in the item name and type before duplicating');
-        }
-    }
-});
+// Clone functionality is handled by main.js ProductManager - no duplicate handlers needed
 
 // No expiry date functionality
 document.addEventListener('click', function(e) {

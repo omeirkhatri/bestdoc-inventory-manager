@@ -511,7 +511,15 @@ const ProductManager = {
         // Handle row cloning
         document.addEventListener('click', (e) => {
             if (e.target.closest('.clone-item-btn')) {
-                this.cloneItemRow(e.target.closest('.item-row'));
+                const row = e.target.closest('.item-row');
+                const nameInput = row.querySelector('input[name="name"]');
+                const typeSelect = row.querySelector('select[name="type"]');
+                
+                if (nameInput.value.trim() && typeSelect.value) {
+                    this.cloneItemRow(row);
+                } else {
+                    alert('Please fill in the item name and type before duplicating');
+                }
             }
             if (e.target.closest('.remove-row')) {
                 this.removeItemRow(e.target.closest('.item-row'));
@@ -749,17 +757,24 @@ const ProductManager = {
     cloneItemRow: function(sourceRow) {
         const newRow = sourceRow.cloneNode(true);
         
-        // Keep most values but clear quantity and expiry date
+        // Keep ALL values including type and expiry date - only clear quantity
         const quantityInput = newRow.querySelector('input[name="quantity"]');
-        const expiryInput = newRow.querySelector('input[name="expiry_date"]');
-        
         if (quantityInput) quantityInput.value = '';
-        if (expiryInput) expiryInput.value = '';
+        
+        // Clear minimum stock field for duplicated rows since it's only for new products
+        const minimumStockInput = newRow.querySelector('input[name="minimum_stock"]');
+        if (minimumStockInput) minimumStockInput.value = '';
         
         // Show remove button
         const removeBtn = newRow.querySelector('.remove-row');
         if (removeBtn) {
             removeBtn.style.display = 'block';
+        }
+        
+        // Hide suggestions for the new row
+        const suggestionsDiv = newRow.querySelector('.item-suggestions');
+        if (suggestionsDiv) {
+            suggestionsDiv.style.display = 'none';
         }
         
         // Attach product checker and item search to cloned name input
@@ -771,6 +786,11 @@ const ProductManager = {
         
         sourceRow.parentNode.insertBefore(newRow, sourceRow.nextSibling);
         this.updateRemoveButtons();
+        
+        // Focus on quantity input for quick entry
+        if (quantityInput) {
+            quantityInput.focus();
+        }
     },
     
     removeItemRow: function(row) {
