@@ -23,6 +23,9 @@ def dashboard():
     total_items = cabinet_items + bag_items
     total_bags = len(bags)
     
+    # Count unique products
+    total_unique_items = Product.query.count()
+    
     # Items expiring soon (within 30 days)
     thirty_days_from_now = date.today() + timedelta(days=30)
     expiring_items = Item.query.filter(
@@ -72,6 +75,7 @@ def dashboard():
     
     return render_template('dashboard.html',
                          total_items=total_items,
+                         total_unique_items=total_unique_items,
                          cabinet_items=cabinet_items,
                          bag_items=bag_items,
                          cabinet=cabinet,
