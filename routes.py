@@ -5,10 +5,39 @@ from datetime import datetime, date, timedelta
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
+from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, Product, init_default_types, format_datetime_gmt4, format_date_gmt4
+from models import Item, Bag, MovementHistory, ItemType, Product, User, init_default_types, format_datetime_gmt4, format_date_gmt4
+
+# Authentication routes
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('dashboard'))
+        else:
+            flash('Invalid username or password', 'danger')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
 
 @app.route('/')
+@login_required
 def dashboard():
     # Initialize default types if needed
     init_default_types()
@@ -89,6 +118,7 @@ def dashboard():
                          bags_with_counts=bags_with_counts)
 
 @app.route('/add_items', methods=['GET', 'POST'])
+@login_required
 def add_items():
     if request.method == 'POST':
         if 'csv_file' in request.files and request.files['csv_file'].filename:

@@ -37,12 +37,11 @@
         <aside class="sidebar" id="sidebar">
             <!-- Brand -->
             <div class="sidebar-brand">
-                <h4>
-                    <div class="brand-icon">
-                        <i class="fas fa-hospital-o"></i>
-                    </div>
-                    Healthcare Inventory
-                </h4>
+                <div class="brand-logo">
+                    <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="BestDoc Logo" class="logo-dark">
+                    <img src="{{ url_for('static', filename='images/logo-color.png') }}" alt="BestDoc Logo" class="logo-light">
+                </div>
+                <div class="brand-subtitle">Inventory Management</div>
             </div>
             
             <!-- Navigation -->
