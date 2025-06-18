@@ -956,6 +956,87 @@ def update_minimum_stock():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/bag_minimums')
+@login_required
+def bag_minimums():
+    """Display and manage minimum quantities for each bag"""
+    bags = Bag.query.all()
+    products = Product.query.order_by(Product.name).all()
+    
+    # Get all existing minimums
+    minimums = BagMinimum.query.all()
+    minimums_dict = {}
+    for minimum in minimums:
+        key = f"{minimum.bag_id}_{minimum.product_id}"
+        minimums_dict[key] = minimum
+    
+    # Get bags that need restocking
+    low_stock_bags = []
+    for bag in bags:
+        bag_items = []
+        for minimum in bag.minimums:
+            if minimum.is_below_minimum():
+                bag_items.append({
+                    'product': minimum.product,
+                    'current': minimum.current_quantity(),
+                    'minimum': minimum.minimum_quantity,
+                    'shortage': minimum.shortage_amount()
+                })
+        if bag_items:
+            low_stock_bags.append({
+                'bag': bag,
+                'items': bag_items
+            })
+    
+    return render_template('bag_minimums.html', 
+                         bags=bags, 
+                         products=products, 
+                         minimums_dict=minimums_dict,
+                         low_stock_bags=low_stock_bags)
+
+@app.route('/api/update_bag_minimum', methods=['POST'])
+@login_required
+def update_bag_minimum():
+    """API endpoint to update minimum quantity for a product in a specific bag"""
+    try:
+        data = request.get_json()
+        bag_id = data.get('bag_id')
+        product_id = data.get('product_id')
+        minimum_quantity = data.get('minimum_quantity')
+        
+        if not all([bag_id, product_id, minimum_quantity is not None]):
+            return jsonify({'success': False, 'error': 'Missing required data'})
+        
+        minimum_quantity = int(minimum_quantity)
+        
+        # Check if minimum already exists
+        existing = BagMinimum.query.filter_by(bag_id=bag_id, product_id=product_id).first()
+        
+        if minimum_quantity == 0:
+            # Remove minimum if set to 0
+            if existing:
+                db.session.delete(existing)
+                db.session.commit()
+            return jsonify({'success': True, 'message': 'Minimum removed'})
+        
+        if existing:
+            existing.minimum_quantity = minimum_quantity
+            existing.updated_at = datetime.utcnow()
+        else:
+            new_minimum = BagMinimum(
+                bag_id=bag_id,
+                product_id=product_id,
+                minimum_quantity=minimum_quantity
+            )
+            db.session.add(new_minimum)
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Minimum updated successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/weekly_check')
 @login_required
 def weekly_check():

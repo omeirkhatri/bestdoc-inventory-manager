@@ -169,6 +169,42 @@ class ItemType(db.Model):
     def __repr__(self):
         return f'<ItemType {self.name}>'
 
+class BagMinimum(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bag_id = db.Column(db.Integer, db.ForeignKey('bag.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    minimum_quantity = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    bag = db.relationship('Bag', backref='minimums')
+    product = db.relationship('Product', backref='bag_minimums')
+    
+    # Unique constraint to prevent duplicate entries
+    __table_args__ = (db.UniqueConstraint('bag_id', 'product_id', name='unique_bag_product_minimum'),)
+    
+    def __repr__(self):
+        return f'<BagMinimum {self.bag.name} - {self.product.name}: {self.minimum_quantity}>'
+    
+    def current_quantity(self):
+        """Get current quantity of this product in this bag"""
+        total = 0
+        for item in Item.query.filter_by(bag_id=self.bag_id, product_id=self.product_id).all():
+            total += item.quantity
+        return total
+    
+    def is_below_minimum(self):
+        """Check if current quantity is below minimum"""
+        return self.current_quantity() < self.minimum_quantity
+    
+    def shortage_amount(self):
+        """Calculate how many items are needed to reach minimum"""
+        current = self.current_quantity()
+        if current < self.minimum_quantity:
+            return self.minimum_quantity - current
+        return 0
+
 # Initialize default item types - Updated for simplified system
 def init_default_types():
     default_types = [
