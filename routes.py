@@ -1908,6 +1908,97 @@ def handle_weekly_check():
     
     return redirect(url_for('weekly_check'))
 
+@app.route('/api/update-product', methods=['POST'])
+@login_required
+def update_product():
+    """API endpoint to update product information"""
+    try:
+        data = request.get_json()
+        product_id = data.get('product_id')
+        field = data.get('field')
+        value = data.get('value')
+        
+        if not all([product_id, field, value is not None]):
+            return jsonify({'success': False, 'message': 'Missing required parameters'})
+        
+        product = Product.query.get_or_404(product_id)
+        
+        # Validate field
+        if field not in ['name', 'type', 'minimum_stock']:
+            return jsonify({'success': False, 'message': 'Invalid field'})
+        
+        # Special validation for minimum_stock
+        if field == 'minimum_stock':
+            try:
+                value = int(value)
+                if value < 0:
+                    return jsonify({'success': False, 'message': 'Minimum stock must be non-negative'})
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Minimum stock must be a number'})
+        
+        # Check if name already exists for another product
+        if field == 'name':
+            existing = Product.query.filter(Product.name == value, Product.id != product_id).first()
+            if existing:
+                return jsonify({'success': False, 'message': 'Product name already exists'})
+        
+        # Update the field
+        setattr(product, field, value)
+        
+        # Also update all related items if name or type changed
+        if field in ['name', 'type']:
+            items = Item.query.filter_by(product_id=product_id).all()
+            for item in items:
+                setattr(item, field, value)
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Product updated successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/update-item', methods=['POST'])
+@login_required
+def update_item():
+    """API endpoint to update individual item information"""
+    try:
+        data = request.get_json()
+        item_id = data.get('item_id')
+        field = data.get('field')
+        value = data.get('value')
+        
+        if not all([item_id, field]):
+            return jsonify({'success': False, 'message': 'Missing required parameters'})
+        
+        item = Item.query.get_or_404(item_id)
+        
+        # Validate field
+        if field not in ['name', 'type', 'size', 'brand']:
+            return jsonify({'success': False, 'message': 'Invalid field'})
+        
+        # Handle empty string for optional fields
+        if field in ['size', 'brand'] and not value:
+            value = None
+        
+        # Update the field
+        setattr(item, field, value)
+        
+        # Update the product if name or type changed
+        if field in ['name', 'type'] and item.product:
+            # Check if we should update the product too
+            # Only update if this is the primary representation
+            setattr(item.product, field, value)
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Item updated successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404

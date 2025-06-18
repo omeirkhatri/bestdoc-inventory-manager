@@ -36,15 +36,30 @@
                     <div class="row">
                         <div class="col-md-2">
                             <strong>Item Name:</strong><br>
-                            <span class="text-primary">{{ item.name }}</span>
+                            <div class="d-flex align-items-center">
+                                <span class="text-primary" id="itemName">{{ item.name }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('name', '{{ item.name }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-2">
                             <strong>Type:</strong><br>
-                            <span class="badge bg-secondary">{{ item.type }}</span>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary" id="itemType">{{ item.type }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('type', '{{ item.type }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-2">
                             <strong>Size:</strong><br>
-                            <span class="badge bg-info">{{ item.size or 'N/A' }}</span>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-info" id="itemSize">{{ item.size or 'N/A' }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('size', '{{ item.size or '' }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-2">
                             <strong>Current Quantity:</strong><br>
@@ -322,6 +337,90 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editItemField(field, currentValue, itemId) {
+    const value = prompt(`Edit ${field}:`, currentValue);
+    if (value !== null && value.trim() !== currentValue) {
+        updateItemField(field, value.trim(), itemId);
+    }
+}
+
+function updateItemField(field, value, itemId) {
+    fetch('/api/update-item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            item_id: itemId,
+            field: field,
+            value: value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the display
+            if (field === 'name') {
+                document.getElementById('itemName').textContent = value;
+                document.querySelector('h2').innerHTML = `<i class="fas fa-box me-2"></i>${value} - Individual Item History`;
+            } else if (field === 'type') {
+                document.getElementById('itemType').textContent = value;
+            } else if (field === 'size') {
+                document.getElementById('itemSize').textContent = value || 'N/A';
+            }
+            
+            // Show success message
+            showToast('Item updated successfully', 'success');
+        } else {
+            showToast(data.message || 'Failed to update item', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error updating item', 'error');
+    });
+}
+
+function showToast(message, type) {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1055';
+        document.body.appendChild(toastContainer);
+    }
+    
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast" role="alert">
+            <div class="toast-header">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                <strong class="me-auto">${type === 'success' ? 'Success' : 'Error'}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+    
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+</script>
 {% endblock %}
 
 {% block extra_head %}
