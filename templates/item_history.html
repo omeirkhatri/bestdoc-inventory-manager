@@ -70,8 +70,8 @@
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-6">
-                        <div class="stat-number text-primary">{{ current_batches|length }}</div>
-                        <div class="stat-label small">Active Batches</div>
+                        <div class="stat-number text-primary">{{ current_items|length }}</div>
+                        <div class="stat-label small">Active Items</div>
                     </div>
                     <div class="col-6">
                         <div class="stat-number text-info">{{ movement_history|length }}</div>
@@ -88,11 +88,11 @@
     <div class="card-header">
         <h5 class="card-title mb-0">
             <i class="fas fa-boxes me-2"></i>
-            Current Active Batches
+            Current Active Items
         </h5>
     </div>
     <div class="card-body">
-        {% if current_batches %}
+        {% if current_items %}
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
@@ -107,7 +107,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in current_batches %}
+                    {% for item in current_items %}
                     <tr>
                         <td>{{ item.size or '-' }}</td>
                         <td>
@@ -148,7 +148,7 @@
         {% else %}
         <div class="text-center py-3">
             <i class="fas fa-box-open fa-2x text-muted mb-2"></i>
-            <p class="text-muted">No active batches found for this product.</p>
+            <p class="text-muted">No active items found for this product.</p>
         </div>
         {% endif %}
     </div>

@@ -775,8 +775,8 @@ def item_history(product_id):
     """Show detailed history for a specific product"""
     product = Product.query.get_or_404(product_id)
     
-    # Get all current batches for this product
-    current_batches = Item.query.filter(
+    # Get all current items for this product
+    current_items = Item.query.filter(
         Item.product_id == product_id,
         Item.quantity > 0
     ).join(Bag).order_by(Item.expiry_date.asc().nullslast(), Item.size).all()
@@ -788,7 +788,7 @@ def item_history(product_id):
     
     return render_template('item_history.html',
                          product=product,
-                         current_batches=current_batches,
+                         current_items=current_items,
                          movement_history=movement_history)
 
 @app.route('/individual_item_history/<int:item_id>')
