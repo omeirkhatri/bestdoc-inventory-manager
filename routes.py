@@ -718,7 +718,11 @@ def bags():
         return handle_bag_management()
     
     bags = Bag.query.all()
-    return render_template('bags.html', bags=bags)
+    # Separate bags by location for the template
+    cabinets = [bag for bag in bags if bag.location == 'cabinet']
+    medical_bags = [bag for bag in bags if bag.location == 'bag']
+    
+    return render_template('bags.html', bags=bags, cabinets=cabinets, medical_bags=medical_bags)
 
 def handle_bag_management():
     action = request.form.get('action')
