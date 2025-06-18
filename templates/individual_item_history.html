@@ -236,63 +236,12 @@
                     </div>
                 </div>
             </div>
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                    <th>Quantity</th>
-                                    <th>From</th>
-                                    <th>To</th>
-                                    <th>Patient</th>
-                                    <th>Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for movement in movements %}
-                                <tr>
-                                    <td>{{ movement.timestamp|format_datetime_gmt4 }}</td>
-                                    <td>
-                                        {% if movement.movement_type == 'addition' %}
-                                            <span class="badge bg-success">Added</span>
-                                        {% elif movement.movement_type == 'transfer' %}
-                                            <span class="badge bg-primary">Transfer</span>
-                                        {% elif movement.movement_type == 'usage' %}
-                                            <span class="badge bg-warning">Used</span>
-                                        {% elif movement.movement_type == 'wastage' %}
-                                            <span class="badge bg-danger">Wasted</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ movement.movement_type.title() }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if movement.movement_type in ['usage', 'wastage'] %}
-                                            <span class="text-danger">-{{ movement.quantity }}</span>
-                                        {% else %}
-                                            <span class="text-success">+{{ movement.quantity }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ movement.from_bag or '-' }}</td>
-                                    <td>{{ movement.to_bag or '-' }}</td>
-                                    <td>{{ movement.patient_name or '-' }}</td>
-                                    <td>{{ movement.notes or '-' }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <p class="text-muted">No movement history found for this product.</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
-<!-- Individual Item Transfer Modal -->
-<div class="modal fade" id="itemTransferModal" tabindex="-1">
+<!-- Transfer Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -304,23 +253,20 @@
                     <input type="hidden" id="transfer-item-id" name="item_id">
                     <div class="mb-3">
                         <label class="form-label">Item Details</label>
-                        <div id="transfer-item-details" class="p-2 bg-light rounded">
-                            <!-- Item details will be populated by JavaScript -->
-                        </div>
+                        <div id="transfer-item-details" class="form-control-plaintext"></div>
                     </div>
                     <div class="mb-3">
-                        <label for="transfer-quantity" class="form-label">Quantity to Transfer</label>
-                        <input type="number" class="form-control" id="transfer-quantity" name="quantity" min="1" required>
-                        <div class="form-text">Available: <span id="transfer-available-qty"></span></div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="transfer-to-bag" class="form-label">Transfer To</label>
-                        <select class="form-select" id="transfer-to-bag" name="to_bag" required>
-                            <option value="">Select destination...</option>
+                        <label for="transfer-to-bag" class="form-label">Transfer to Bag</label>
+                        <select class="form-select" id="transfer-to-bag" name="to_bag_id" required>
+                            <option value="">Select destination bag...</option>
                             {% for bag in bags %}
                                 <option value="{{ bag.id }}">{{ bag.name }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transfer-quantity" class="form-label">Quantity to Transfer</label>
+                        <input type="number" class="form-control" id="transfer-quantity" name="quantity" min="1" required>
                     </div>
                     <div class="mb-3">
                         <label for="transfer-notes" class="form-label">Notes (Optional)</label>
@@ -336,8 +282,8 @@
     </div>
 </div>
 
-<!-- Individual Item Usage Modal -->
-<div class="modal fade" id="itemUsageModal" tabindex="-1">
+<!-- Usage Modal -->
+<div class="modal fade" id="usageModal" tabindex="-1" aria-labelledby="usageModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -349,18 +295,15 @@
                     <input type="hidden" id="usage-item-id" name="item_id">
                     <div class="mb-3">
                         <label class="form-label">Item Details</label>
-                        <div id="usage-item-details" class="p-2 bg-light rounded">
-                            <!-- Item details will be populated by JavaScript -->
-                        </div>
+                        <div id="usage-item-details" class="form-control-plaintext"></div>
                     </div>
                     <div class="mb-3">
                         <label for="usage-quantity" class="form-label">Quantity Used</label>
                         <input type="number" class="form-control" id="usage-quantity" name="quantity" min="1" required>
-                        <div class="form-text">Available: <span id="usage-available-qty"></span></div>
                     </div>
                     <div class="mb-3">
-                        <label for="usage-patient" class="form-label">Patient Name</label>
-                        <input type="text" class="form-control" id="usage-patient" name="patient_name" required>
+                        <label for="usage-patient" class="form-label">Patient Name (Optional)</label>
+                        <input type="text" class="form-control" id="usage-patient" name="patient_name">
                     </div>
                     <div class="mb-3">
                         <label for="usage-notes" class="form-label">Notes (Optional)</label>
@@ -375,30 +318,66 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<script>
-// JavaScript functions for individual item operations
-function showItemTransferModal(itemId, itemName, quantity, bagName) {
-    document.getElementById('transfer-item-id').value = itemId;
-    document.getElementById('transfer-quantity').max = quantity;
-    document.getElementById('transfer-available-qty').textContent = quantity;
-    document.getElementById('transfer-item-details').innerHTML = `
-        <strong>${itemName}</strong><br>
-        <small class="text-muted">Current location: ${bagName} | Available: ${quantity}</small>
-    `;
-    new bootstrap.Modal(document.getElementById('itemTransferModal')).show();
+{% block extra_head %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
 }
 
-function showItemUsageModal(itemId, itemName, quantity, bagName) {
+.timeline-item {
+    position: relative;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-content {
+    margin-left: 10px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTransferModal(itemId, itemName, quantity, bagName) {
+    document.getElementById('transfer-item-id').value = itemId;
+    document.getElementById('transfer-item-details').textContent = `${itemName} (${quantity} units from ${bagName})`;
+    document.getElementById('transfer-quantity').max = quantity;
+    document.getElementById('transfer-quantity').value = quantity;
+    new bootstrap.Modal(document.getElementById('transferModal')).show();
+}
+
+function showUsageModal(itemId, itemName, quantity) {
     document.getElementById('usage-item-id').value = itemId;
+    document.getElementById('usage-item-details').textContent = `${itemName} (${quantity} units available)`;
     document.getElementById('usage-quantity').max = quantity;
-    document.getElementById('usage-available-qty').textContent = quantity;
-    document.getElementById('usage-item-details').innerHTML = `
-        <strong>${itemName}</strong><br>
-        <small class="text-muted">Current location: ${bagName} | Available: ${quantity}</small>
-    `;
-    new bootstrap.Modal(document.getElementById('itemUsageModal')).show();
+    document.getElementById('usage-quantity').value = 1;
+    new bootstrap.Modal(document.getElementById('usageModal')).show();
 }
 </script>
-
 {% endblock %}
