@@ -38,6 +38,7 @@ def logout():
 
 @app.route('/')
 @login_required
+@login_required
 def dashboard():
     # Initialize default types if needed
     init_default_types()
@@ -118,6 +119,7 @@ def dashboard():
                          bags_with_counts=bags_with_counts)
 
 @app.route('/add_items', methods=['GET', 'POST'])
+@login_required
 @login_required
 def add_items():
     if request.method == 'POST':
@@ -318,6 +320,8 @@ def handle_manual_addition():
     return redirect(url_for('add_items'))
 
 @app.route('/inventory')
+@login_required
+@login_required
 def inventory():
     # Get filter parameters
     search = request.args.get('search', '')
@@ -384,6 +388,7 @@ def inventory():
                          })
 
 @app.route('/transfer', methods=['GET', 'POST'])
+@login_required
 def transfer():
     if request.method == 'POST':
         return handle_transfer()
@@ -485,6 +490,7 @@ def handle_transfer():
     return redirect(url_for('transfer'))
 
 @app.route('/usage', methods=['GET', 'POST'])
+@login_required
 def usage():
     if request.method == 'POST':
         return handle_usage()
@@ -549,6 +555,7 @@ def handle_usage():
     return redirect(url_for('usage'))
 
 @app.route('/history')
+@login_required
 def history():
     page = request.args.get('page', 1, type=int)
     movement_filter = request.args.get('type_filter', '')
@@ -587,6 +594,7 @@ def history():
     return render_template('history.html', movements=movements)
 
 @app.route('/expiry')
+@login_required
 def expiry():
     today = date.today()
     thirty_days = today + timedelta(days=30)
@@ -616,6 +624,7 @@ def expiry():
                          today=today)
 
 @app.route('/bags', methods=['GET', 'POST'])
+@login_required
 def bags():
     if request.method == 'POST':
         return handle_bag_management()
@@ -699,6 +708,7 @@ def handle_bag_management():
     return redirect(url_for('bags'))
 
 @app.route('/wastage', methods=['GET', 'POST'])
+@login_required
 def wastage():
     if request.method == 'POST':
         return handle_wastage()
@@ -763,6 +773,7 @@ def handle_wastage():
     return redirect(url_for('wastage'))
 
 @app.route('/item_history/<int:product_id>')
+@login_required
 def item_history(product_id):
     """Show detailed history for a specific product"""
     product = Product.query.get_or_404(product_id)
@@ -784,6 +795,7 @@ def item_history(product_id):
                          movement_history=movement_history)
 
 @app.route('/individual_item_history/<int:item_id>')
+@login_required
 def individual_item_history(item_id):
     """Show detailed history for a specific individual item"""
     item = Item.query.get_or_404(item_id)
@@ -812,6 +824,7 @@ def individual_item_history(item_id):
                          bags=bags)
 
 @app.route('/api/check_existing_product')
+@login_required
 def api_check_existing_product():
     """API endpoint to check if a product already exists"""
     name = request.args.get('name', '').strip()
@@ -827,6 +840,7 @@ def api_check_existing_product():
     })
 
 @app.route('/api/items/search')
+@login_required
 def api_search_items():
     """API endpoint for item name autocomplete"""
     query = request.args.get('q', '').strip()
@@ -870,6 +884,7 @@ def api_search_items():
     return jsonify(results[:10])
 
 @app.route('/weekly_check')
+@login_required
 def weekly_check():
     """Display weekly check page for consumable items"""
     # Get all items that require weekly check (types 4 and 5)
@@ -900,6 +915,7 @@ def weekly_check():
     return render_template('weekly_check.html', grouped_items=grouped_items)
 
 @app.route('/weekly_check', methods=['POST'])
+@login_required
 def handle_weekly_check():
     """Process weekly check form submission"""
     if request.method == 'POST':

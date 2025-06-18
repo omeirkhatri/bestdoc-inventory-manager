@@ -114,6 +114,12 @@
                     <i class="fas fa-sun me-2" id="themeIcon"></i>
                     <span id="themeText">Light Mode</span>
                 </button>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('logout') }}" class="logout-button" title="Logout">
+                    <i class="fas fa-sign-out-alt me-2"></i>
+                    <span>Logout</span>
+                </a>
+                {% endif %}
             </div>
         </aside>
         

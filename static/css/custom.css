@@ -276,6 +276,73 @@ body {
     text-overflow: ellipsis !important;
 }
 
+/* Logo styling */
+.brand-logo {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.brand-logo img {
+    max-height: 50px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.brand-subtitle {
+    font-size: 0.875rem;
+    color: var(--inventory-sidebar-text);
+    text-align: center;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
+/* Dark/Light mode logo switching */
+[data-bs-theme="dark"] .logo-light {
+    display: none;
+}
+
+[data-bs-theme="dark"] .logo-dark {
+    display: block;
+}
+
+[data-bs-theme="light"] .logo-light {
+    display: block;
+}
+
+[data-bs-theme="light"] .logo-dark {
+    display: none;
+}
+
+/* Logout button styling */
+.logout-button {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background-color: transparent;
+    color: var(--inventory-sidebar-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    margin-top: 0.5rem;
+}
+
+.logout-button:hover {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    text-decoration: none;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 1rem;
+}
+
 /* Badge styling */
 .inventory-item-left .badge,
 .inventory-item-right .badge {
