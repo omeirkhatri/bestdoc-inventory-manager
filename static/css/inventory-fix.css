@@ -1,165 +1,284 @@
-/* Inventory Accordion Layout Fix - Single Row Force */
+/* Clean Inventory Layout */
 
-/* Override Bootstrap accordion completely for inventory */
-#inventoryAccordion .accordion-item {
-    border: 1px solid rgba(0,0,0,0.125);
-    margin-bottom: 0.5rem;
-    border-radius: 0.375rem;
+/* Inventory Grid Layout - Replace accordion with clean card grid */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
-#inventoryAccordion .accordion-header {
-    margin-bottom: 0;
+.inventory-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    background: white;
+    transition: all 0.2s ease;
+    overflow: hidden;
 }
 
-#inventoryAccordion .accordion-button {
-    position: relative;
-    display: flex !important;
-    align-items: center !important;
-    width: 100% !important;
-    padding: 0.75rem 1rem !important;
-    font-size: 1rem;
-    color: inherit;
-    text-align: left;
-    background-color: transparent;
-    border: 0;
-    border-radius: 0;
-    overflow: visible !important;
-    flex-wrap: nowrap !important;
-    white-space: nowrap !important;
+.inventory-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
-#inventoryAccordion .accordion-button:not(.collapsed) {
-    color: var(--bs-accordion-active-color);
-    background-color: var(--bs-accordion-active-bg);
-    box-shadow: none;
+.inventory-card-header {
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
-#inventoryAccordion .accordion-button:focus {
-    z-index: 3;
-    border-color: var(--bs-accordion-btn-focus-border-color);
-    outline: 0;
-    box-shadow: none;
-}
-
-#inventoryAccordion .accordion-button::after {
-    flex-shrink: 0;
-    width: 1.25rem;
-    height: 1.25rem;
-    margin-left: auto;
-    content: "";
-    background-image: var(--bs-accordion-btn-icon);
-    background-repeat: no-repeat;
-    background-size: 1.25rem;
-    transition: transform 0.2s ease-in-out;
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-#inventoryAccordion .accordion-button:not(.collapsed)::after {
-    background-image: var(--bs-accordion-btn-active-icon);
-    transform: translateY(-50%) var(--bs-accordion-btn-icon-transform);
-}
-
-/* Force the inventory row to stay in one line */
-#inventoryAccordion .inventory-item-row {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    width: calc(100% - 2.5rem) !important;
-    flex-wrap: nowrap !important;
-    overflow: hidden !important;
-    min-height: 2.5rem !important;
-    flex: 1 !important;
-}
-
-#inventoryAccordion .inventory-item-left {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
-    min-width: 0 !important;
-    flex: 0 1 auto !important;
-    gap: 0.5rem !important;
-    overflow: hidden !important;
-}
-
-#inventoryAccordion .inventory-item-right {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
-    flex-shrink: 0 !important;
-    margin-left: auto !important;
-    gap: 0.5rem !important;
-}
-
-#inventoryAccordion .inventory-actions {
-    display: flex !important;
-    gap: 0.25rem !important;
-    flex-wrap: nowrap !important;
-    flex-shrink: 0 !important;
-}
-
-#inventoryAccordion .inventory-actions .btn {
-    padding: 0.25rem 0.5rem !important;
-    font-size: 0.75rem !important;
-    line-height: 1.2 !important;
-    white-space: nowrap !important;
-    min-width: auto !important;
-    border-radius: 0.25rem !important;
-}
-
-/* Text and badge styling */
-#inventoryAccordion .inventory-item-left strong {
+.inventory-card-title {
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+    font-size: 1.1rem;
     max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-#inventoryAccordion .badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    white-space: nowrap;
+.inventory-card-badges {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
 }
 
-#inventoryAccordion .text-muted {
+.inventory-card-quantity {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-weight: 600;
     font-size: 0.875rem;
-    white-space: nowrap;
+}
+
+.inventory-card-quantity.low-stock {
+    background: #dc3545;
+    color: white;
+}
+
+.inventory-card-quantity.medium-stock {
+    background: #ffc107;
+    color: #212529;
+}
+
+.inventory-card-quantity.good-stock {
+    background: #198754;
+    color: white;
+}
+
+.inventory-card-body {
+    padding: 1rem;
+}
+
+.inventory-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.inventory-stat {
+    text-align: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 0.375rem;
+}
+
+.inventory-stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.inventory-stat-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #495057;
+}
+
+.inventory-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.inventory-actions .btn {
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.inventory-details {
+    margin-top: 1rem;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.inventory-details.show {
+    max-height: 500px;
+}
+
+.inventory-details-table {
+    width: 100%;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+}
+
+.inventory-details-table th {
+    background: #f8f9fa;
+    padding: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.inventory-details-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.details-toggle {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 0.875rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.details-toggle:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.details-toggle i {
+    transition: transform 0.3s ease;
+}
+
+.details-toggle.expanded i {
+    transform: rotate(180deg);
+}
+
+/* Quick search styling */
+.quick-search {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.quick-search input {
+    padding-left: 2.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    transition: border-color 0.2s ease;
+}
+
+.quick-search input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.quick-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 2;
 }
 
 /* Responsive adjustments */
-@media (max-width: 1200px) {
-    #inventoryAccordion .inventory-item-left strong {
-        max-width: 150px;
+@media (max-width: 768px) {
+    .inventory-grid {
+        grid-template-columns: 1fr;
     }
     
-    #inventoryAccordion .inventory-actions .btn {
-        padding: 0.125rem 0.375rem !important;
-        font-size: 0.7rem !important;
+    .inventory-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .inventory-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .inventory-actions {
+        flex-direction: column;
     }
 }
 
-@media (max-width: 768px) {
-    #inventoryAccordion .accordion-button {
-        padding: 0.5rem 0.75rem !important;
+/* Status badges */
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.expired {
+    background: #dc3545;
+    color: white;
+}
+
+.status-badge.expiring {
+    background: #ffc107;
+    color: #212529;
+}
+
+.status-badge.good {
+    background: #198754;
+    color: white;
+}
+
+.status-badge.low-stock {
+    background: #dc3545;
+    color: white;
+}
+
+/* Loading and empty states */
+.inventory-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.inventory-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Animation for search results */
+.inventory-card.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
-    
-    #inventoryAccordion .inventory-item-left strong {
-        max-width: 100px;
-    }
-    
-    #inventoryAccordion .badge {
-        font-size: 0.65rem;
-        padding: 0.125rem 0.375rem;
-    }
-    
-    #inventoryAccordion .inventory-actions .btn {
-        padding: 0.125rem 0.25rem !important;
-        font-size: 0.65rem !important;
-    }
-    
-    #inventoryAccordion .text-muted {
-        font-size: 0.75rem;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

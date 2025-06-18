@@ -267,113 +267,11 @@ body {
     flex-shrink: 0;
 }
 
-/* Inventory layout improvements - Nuclear option to force single row */
-#inventoryAccordion .accordion-header .accordion-button {
-    padding: 0.75rem 1rem !important;
-    overflow: visible !important;
-    white-space: nowrap !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    width: 100% !important;
-    border: none !important;
-    position: relative !important;
-    flex-wrap: nowrap !important;
-    height: auto !important;
-    min-height: 3rem !important;
-}
 
-#inventoryAccordion .accordion-header .accordion-button:not(.collapsed) {
-    background-color: rgba(var(--bs-primary-rgb), 0.1);
-}
 
-#inventoryAccordion .accordion-header .accordion-button:focus {
-    box-shadow: none !important;
-}
-
-#inventoryAccordion .accordion-header .accordion-button::after {
-    content: "\F054" !important;
-    font-family: "Font Awesome 6 Free" !important;
-    font-weight: 900 !important;
-    position: absolute !important;
-    right: 0.75rem !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    margin: 0 !important;
-    z-index: 10 !important;
-    background-image: none !important;
-    transition: transform 0.2s ease !important;
-}
-
-#inventoryAccordion .accordion-header .accordion-button:not(.collapsed)::after {
-    transform: translateY(-50%) rotate(90deg) !important;
-}
-
-/* Force single row layout with ultra-high specificity */
-#inventoryAccordion .accordion-header .accordion-button .inventory-item-row {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    width: calc(100% - 2.5rem) !important;
-    flex-wrap: nowrap !important;
-    overflow: hidden !important;
-    min-height: 2.5rem !important;
-    flex: 1 !important;
-}
-
-#inventoryAccordion .accordion-header .inventory-item-left {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
-    min-width: 0 !important;
-    flex: 0 1 auto !important;
-    gap: 0.5rem !important;
-}
-
-#inventoryAccordion .accordion-header .inventory-item-right {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
-    flex-shrink: 0 !important;
-    margin-left: auto !important;
-    gap: 0.5rem !important;
-}
-
-/* Compact action buttons for inventory with ultra-high specificity */
-#inventoryAccordion .accordion-header .inventory-actions {
-    display: flex !important;
-    gap: 0.25rem !important;
-    flex-wrap: nowrap !important;
-    flex-shrink: 0 !important;
-}
-
-#inventoryAccordion .accordion-header .inventory-actions .btn {
-    padding: 0.25rem 0.5rem !important;
-    font-size: 0.75rem !important;
-    line-height: 1.2 !important;
-    white-space: nowrap !important;
-    min-width: auto !important;
-    border-radius: 0.25rem !important;
-}
-
-/* Additional override for Bootstrap accordion structure */
-#inventoryAccordion .accordion-header .accordion-button * {
-    flex-shrink: 0 !important;
-}
-
-#inventoryAccordion .accordion-header .accordion-button .inventory-item-left * {
-    flex-shrink: 1 !important;
-}
-
-/* Prevent text wrapping */
+/* Clean text wrapping utilities */
 .text-nowrap {
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.inventory-item-left strong {
-    max-width: 200px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }

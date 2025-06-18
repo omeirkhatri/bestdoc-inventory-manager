@@ -66,10 +66,17 @@
                 </a>
             </div>
         </form>
+        
+        <!-- Quick Search -->
+        <div class="quick-search mt-3">
+            <i class="fas fa-search quick-search-icon"></i>
+            <input type="text" class="form-control" id="quickSearch" placeholder="Quick search items..." 
+                   onkeyup="filterInventoryCards(this.value)">
+        </div>
     </div>
 </div>
 
-<!-- Inventory Table -->
+<!-- Inventory Cards -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">
@@ -83,137 +90,142 @@
     </div>
     <div class="card-body">
         {% if products %}
-        <div class="accordion" id="inventoryAccordion">
+        <div class="inventory-grid" id="inventoryGrid">
             {% for product_data in products %}
             {% set product = product_data.product %}
             {% set batches = product_data.batches %}
             {% set total_quantity = product_data.total_quantity %}
             {% set is_low_stock = product_data.is_low_stock %}
             
-            <div class="accordion-item mb-3">
-                <h2 class="accordion-header" id="heading{{ product.id }}">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                            data-bs-target="#collapse{{ product.id }}" aria-expanded="false" 
-                            aria-controls="collapse{{ product.id }}">
-                        <div class="inventory-item-row">
-                            <div class="inventory-item-left">
-                                <strong class="me-2 text-nowrap">{{ product.name }}</strong>
-                                <span class="badge bg-secondary me-2 text-nowrap">{{ product.type }}</span>
-                                {% if is_low_stock %}
-                                <span class="badge bg-danger me-2 text-nowrap">
-                                    <i class="fas fa-exclamation-triangle me-1"></i>Low Stock
-                                </span>
-                                {% endif %}
-                            </div>
-                            <div class="inventory-item-right">
-                                <span class="badge bg-{% if is_low_stock %}danger{% elif total_quantity <= 10 %}warning{% else %}primary{% endif %} me-2 text-nowrap">
-                                    Total: {{ total_quantity }}
-                                </span>
-                                <span class="text-muted small me-2 text-nowrap">Min: {{ product.minimum_stock }}</span>
-                                <div class="inventory-actions" onclick="event.stopPropagation();">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" 
-                                            onclick="showProductTransferModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
-                                            title="Transfer items">
-                                        <i class="fas fa-exchange-alt"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-outline-warning btn-sm" 
-                                            onclick="showProductUsageModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
-                                            title="Record usage">
-                                        <i class="fas fa-minus"></i>
-                                    </button>
-                                    <a href="{{ url_for('item_history', product_id=product.id) }}" 
-                                       class="btn btn-outline-info btn-sm" 
-                                       title="View history">
-                                        <i class="fas fa-history"></i>
-                                    </a>
-                                </div>
-                            </div>
+            <div class="inventory-card" data-product-name="{{ product.name.lower() }}" data-product-type="{{ product.type.lower() }}">
+                <div class="inventory-card-header">
+                    <div>
+                        <h6 class="inventory-card-title" title="{{ product.name }}">{{ product.name }}</h6>
+                        <div class="inventory-card-badges">
+                            <span class="badge bg-secondary">{{ product.type }}</span>
+                            {% if is_low_stock %}
+                            <span class="status-badge low-stock">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Low Stock
+                            </span>
+                            {% endif %}
                         </div>
+                    </div>
+                    <div class="inventory-card-quantity {% if is_low_stock %}low-stock{% elif total_quantity <= 10 %}medium-stock{% else %}good-stock{% endif %}">
+                        {{ total_quantity }}
+                    </div>
+                </div>
+                
+                <div class="inventory-card-body">
+                    <div class="inventory-summary">
+                        <div class="inventory-stat">
+                            <span class="inventory-stat-label">Total Stock</span>
+                            <span class="inventory-stat-value">{{ total_quantity }}</span>
+                        </div>
+                        <div class="inventory-stat">
+                            <span class="inventory-stat-label">Min Required</span>
+                            <span class="inventory-stat-value">{{ product.minimum_stock }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="inventory-actions">
+                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                onclick="showProductTransferModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
+                                title="Transfer items">
+                            <i class="fas fa-exchange-alt"></i> Transfer
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" 
+                                onclick="showProductUsageModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
+                                title="Record usage">
+                            <i class="fas fa-minus"></i> Use
+                        </button>
+                        <a href="{{ url_for('item_history', product_id=product.id) }}" 
+                           class="btn btn-outline-info btn-sm" 
+                           title="View history">
+                            <i class="fas fa-history"></i> History
+                        </a>
+                    </div>
+                    
+                    <button class="details-toggle" onclick="toggleDetails({{ product.id }})">
+                        <i class="fas fa-chevron-down"></i> Show Details
                     </button>
-                </h2>
-                <div id="collapse{{ product.id }}" class="accordion-collapse collapse" 
-                     aria-labelledby="heading{{ product.id }}" data-bs-parent="#inventoryAccordion">
-                    <div class="accordion-body">
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Size</th>
-                                        <th>Quantity</th>
-                                        <th>Bag</th>
-                                        <th>Expiry Date</th>
-                                        <th>Batch</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in batches %}
-                                    <tr>
-                                        <td>{{ item.size or '-' }}</td>
-                                        <td>
-                                            <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">
-                                                {{ item.quantity }}
+                    
+                    <div class="inventory-details" id="details-{{ product.id }}">
+                        <table class="inventory-details-table">
+                            <thead>
+                                <tr>
+                                    <th>Size</th>
+                                    <th>Qty</th>
+                                    <th>Bag</th>
+                                    <th>Expiry</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in batches %}
+                                <tr>
+                                    <td>{{ item.size or '-' }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">
+                                            {{ item.quantity }}
+                                        </span>
+                                    </td>
+                                    <td>{{ item.bag.name }}</td>
+                                    <td>
+                                        {% if item.expiry_date %}
+                                            {{ item.expiry_date|date_gmt4 }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.expiry_status == 'expired' %}
+                                            <span class="status-badge expired">
+                                                <i class="fas fa-times-circle"></i>
                                             </span>
-                                        </td>
-                                        <td>{{ item.bag.name }}</td>
-                                        <td>
-                                            {% if item.expiry_date %}
-                                                {{ item.expiry_date|date_gmt4 }}
-                                            {% else %}
-                                                <span class="text-muted">No expiry</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ item.batch_number or '-' }}</td>
-                                        <td>
-                                            {% if item.expiry_status == 'expired' %}
-                                                <span class="badge bg-danger">
-                                                    <i class="fas fa-times-circle me-1"></i>Expired
-                                                </span>
-                                            {% elif item.expiry_status == 'expiring' %}
-                                                <span class="badge bg-warning">
-                                                    <i class="fas fa-clock me-1"></i>Expiring Soon
-                                                </span>
-                                            {% else %}
-                                                <span class="badge bg-success">
-                                                    <i class="fas fa-check-circle me-1"></i>Good
-                                                </span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                        onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
-                                                        title="Transfer items">
-                                                    <i class="fas fa-exchange-alt"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-warning btn-sm" 
-                                                        onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})"
-                                                        title="Record usage">
-                                                    <i class="fas fa-minus"></i>
-                                                </button>
-                                                <a href="{{ url_for('individual_item_history', item_id=item.id) }}" 
-                                                   class="btn btn-outline-info btn-sm" 
-                                                   title="View item history">
-                                                    <i class="fas fa-history"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                        {% elif item.expiry_status == 'expiring' %}
+                                            <span class="status-badge expiring">
+                                                <i class="fas fa-clock"></i>
+                                            </span>
+                                        {% else %}
+                                            <span class="status-badge good">
+                                                <i class="fas fa-check-circle"></i>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                    onclick="showTransferModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
+                                                    title="Transfer">
+                                                <i class="fas fa-exchange-alt"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning btn-sm" 
+                                                    onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})"
+                                                    title="Use">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <a href="{{ url_for('individual_item_history', item_id=item.id) }}" 
+                                               class="btn btn-outline-info btn-sm" 
+                                               title="History">
+                                                <i class="fas fa-history"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-search fa-3x text-muted mb-3"></i>
-            <h5 class="text-muted">No products found</h5>
-            <p class="text-muted">Try adjusting your filters or <a href="{{ url_for('add_items') }}">add some items</a>.</p>
+        <div class="inventory-empty">
+            <i class="fas fa-search"></i>
+            <h5>No products found</h5>
+            <p>Try adjusting your filters or <a href="{{ url_for('add_items') }}">add some items</a>.</p>
         </div>
         {% endif %}
     </div>
@@ -295,17 +307,52 @@
 
 {% block extra_scripts %}
 <script>
-// Initialize DataTable
-$(document).ready(function() {
-    $('#inventoryTable').DataTable({
-        responsive: true,
-        pageLength: 25,
-        order: [[0, 'asc']],
-        columnDefs: [
-            { orderable: false, targets: [-1] } // Disable sorting on Actions column
-        ]
+// Toggle inventory card details
+function toggleDetails(productId) {
+    const details = document.getElementById(`details-${productId}`);
+    const toggle = details.previousElementSibling;
+    const icon = toggle.querySelector('i');
+    
+    if (details.classList.contains('show')) {
+        details.classList.remove('show');
+        toggle.classList.remove('expanded');
+        toggle.innerHTML = '<i class="fas fa-chevron-down"></i> Show Details';
+    } else {
+        details.classList.add('show');
+        toggle.classList.add('expanded');
+        toggle.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Details';
+    }
+}
+
+// Quick search functionality
+function filterInventoryCards(query) {
+    const cards = document.querySelectorAll('.inventory-card');
+    const lowerQuery = query.toLowerCase().trim();
+    
+    cards.forEach(card => {
+        const productName = card.dataset.productName;
+        const productType = card.dataset.productType;
+        
+        const matches = !lowerQuery || 
+                       productName.includes(lowerQuery) || 
+                       productType.includes(lowerQuery);
+        
+        if (matches) {
+            card.style.display = 'block';
+            card.classList.add('fade-in');
+        } else {
+            card.style.display = 'none';
+            card.classList.remove('fade-in');
+        }
     });
-});
+    
+    // Update results count
+    const visibleCards = document.querySelectorAll('.inventory-card[style*="block"], .inventory-card:not([style*="none"])');
+    const countElement = document.querySelector('.card-title');
+    if (countElement && lowerQuery) {
+        countElement.textContent = `Products (${visibleCards.length} found)`;
+    }
+}
 
 // Show transfer modal for individual items
 function showTransferModal(itemId, itemName, maxQuantity, currentBagName) {
@@ -359,6 +406,27 @@ function showProductUsageModal(productId, productName, totalQuantity) {
     // For now, redirect to usage page with product filter
     window.location.href = `/usage?product=${encodeURIComponent(productName)}`;
 }
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners
+    const quickSearch = document.getElementById('quickSearch');
+    if (quickSearch) {
+        quickSearch.addEventListener('input', function() {
+            filterInventoryCards(this.value);
+        });
+    }
+    
+    // Initialize all inventory cards with fade-in animation
+    const cards = document.querySelectorAll('.inventory-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('fade-in');
+        }, index * 50);
+    });
+    
+    console.log('Healthcare Inventory Management System loaded successfully');
+});
 
 // Auto-submit filters on change (optional)
 document.querySelectorAll('#search, #type, #bag, #expiry').forEach(element => {
