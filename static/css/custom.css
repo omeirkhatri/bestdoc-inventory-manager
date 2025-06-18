@@ -271,11 +271,17 @@ body {
 .accordion-button {
     padding: 1rem 1.25rem;
     overflow: hidden;
+    white-space: nowrap;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
 }
 
 .accordion-button .d-flex {
     width: 100%;
     min-width: 0;
+    flex-wrap: nowrap !important;
 }
 
 .accordion-button .action-buttons {
@@ -286,8 +292,9 @@ body {
 /* Ensure proper spacing and alignment in inventory headers */
 .accordion-header .d-flex.justify-content-between {
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
     min-width: 0;
+    flex-wrap: nowrap !important;
 }
 
 .accordion-header .badge {
@@ -309,20 +316,66 @@ body {
     flex-wrap: nowrap !important;
 }
 
+/* Force single line layout for inventory items */
+.inventory-item-row {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.inventory-item-left {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+}
+
+.inventory-item-right {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+}
+
+/* Compact action buttons for inventory */
+.inventory-actions {
+    display: flex !important;
+    gap: 0.25rem !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.inventory-actions .btn {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
 /* Ensure responsive layout on smaller screens */
 @media (max-width: 768px) {
     .accordion-button {
-        padding: 0.75rem 1rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
     }
     
     .accordion-button .badge {
         font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
+        padding: 0.125rem 0.375rem;
     }
     
     .accordion-button .btn-sm {
-        padding: 0.25rem 0.375rem;
+        padding: 0.125rem 0.25rem;
         font-size: 0.75rem;
+    }
+    
+    .inventory-actions .btn {
+        padding: 0.125rem 0.25rem !important;
+        font-size: 0.75rem !important;
     }
 }
 
