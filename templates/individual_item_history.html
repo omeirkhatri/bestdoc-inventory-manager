@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Individual Item History{% endblock %}
+{% block title %}{{ product.name }} - Item Details{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,69 +8,135 @@
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2>Individual Item History</h2>
-                    <p class="text-muted">History for specific item batch</p>
+                    <h2>{{ product.name }} - Item Details</h2>
+                    <p class="text-muted">View all instances across different locations</p>
                 </div>
                 <a href="{{ url_for('inventory') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Inventory
                 </a>
             </div>
 
-            <!-- Item Details Card -->
+            <!-- Product Summary Card -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Item Details</h5>
+                    <h5 class="card-title mb-0">Product Summary</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3">
-                            <strong>Name:</strong><br>
-                            <span class="text-primary">{{ item.name }}</span>
+                            <strong>Product Name:</strong><br>
+                            <span class="text-primary">{{ product.name }}</span>
                         </div>
                         <div class="col-md-2">
                             <strong>Type:</strong><br>
-                            <span class="badge bg-secondary">{{ item.type }}</span>
+                            <span class="badge bg-secondary">{{ product.type }}</span>
                         </div>
                         <div class="col-md-2">
-                            <strong>Size:</strong><br>
-                            <span class="badge bg-info">{{ item.size or 'N/A' }}</span>
+                            <strong>Total Quantity:</strong><br>
+                            <span class="badge bg-{% if product.total_quantity() <= product.minimum_stock %}danger{% elif product.total_quantity() <= 10 %}warning{% else %}success{% endif %}">{{ product.total_quantity() }}</span>
                         </div>
                         <div class="col-md-2">
-                            <strong>Current Quantity:</strong><br>
-                            <span class="badge bg-success">{{ item.quantity }}</span>
+                            <strong>Minimum Stock:</strong><br>
+                            <span class="badge bg-info">{{ product.minimum_stock }}</span>
                         </div>
                         <div class="col-md-3">
-                            <strong>Current Location:</strong><br>
-                            <span class="badge bg-primary">{{ item.bag.name }}</span>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-4">
-                            <strong>Batch Number:</strong><br>
-                            {{ item.batch_number or 'Not specified' }}
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Expiry Date:</strong><br>
-                            {% if item.expiry_date %}
-                                <span class="{% if item.is_expired %}text-danger{% elif item.expires_soon %}text-warning{% else %}text-success{% endif %}">
-                                    {{ item.expiry_date|date_gmt4 }}
+                            <strong>Status:</strong><br>
+                            {% if product.is_low_stock() %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-exclamation-triangle"></i> Low Stock
                                 </span>
                             {% else %}
-                                N/A
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> Good Stock
+                                </span>
                             {% endif %}
                         </div>
-                        <div class="col-md-4">
-                            <strong>Date Added:</strong><br>
-                            {{ item.date_added.strftime('%Y-%m-%d %H:%M') }}
-                        </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Items by Location -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Items by Location</h5>
+                </div>
+                <div class="card-body">
+                    {% if items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Location</th>
+                                        <th>Size</th>
+                                        <th>Quantity</th>
+                                        <th>Batch</th>
+                                        <th>Expiry Date</th>
+                                        <th>Status</th>
+                                        <th>Added</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-primary">{{ item.bag.name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ item.size or 'N/A' }}</span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-primary">{{ item.quantity }}</strong>
+                                        </td>
+                                        <td>{{ item.batch_number or 'N/A' }}</td>
+                                        <td>
+                                            {% if item.expiry_date %}
+                                                {{ item.expiry_date|format_date_gmt4 }}
+                                            {% else %}
+                                                <span class="text-muted">No expiry</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if item.expiry_status() == 'expired' %}
+                                                <span class="badge bg-danger">Expired</span>
+                                            {% elif item.expiry_status() == 'expiring' %}
+                                                <span class="badge bg-warning">Expiring Soon</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Good</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.date_added|format_datetime_gmt4 }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                        onclick="showItemTransferModal({{ item.id }}, '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
+                                                        title="Transfer this item">
+                                                    <i class="fas fa-exchange-alt"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-warning btn-sm" 
+                                                        onclick="showItemUsageModal({{ item.id }}, '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
+                                                        title="Record usage">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">No items found for this product.</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 
             <!-- Movement History -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Movement History</h5>
+                    <h5 class="card-title mb-0">Recent Movement History</h5>
                 </div>
                 <div class="card-body">
                     {% if movements %}
@@ -90,7 +156,7 @@
                             <tbody>
                                 {% for movement in movements %}
                                 <tr>
-                                    <td>{{ movement.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ movement.timestamp|format_datetime_gmt4 }}</td>
                                     <td>
                                         {% if movement.movement_type == 'addition' %}
                                             <span class="badge bg-success">Added</span>
@@ -122,9 +188,7 @@
                     </div>
                     {% else %}
                     <div class="text-center py-4">
-                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No Movement History</h5>
-                        <p class="text-muted">This item has no recorded movements yet.</p>
+                        <p class="text-muted">No movement history found for this product.</p>
                     </div>
                     {% endif %}
                 </div>
@@ -132,4 +196,115 @@
         </div>
     </div>
 </div>
+
+<!-- Individual Item Transfer Modal -->
+<div class="modal fade" id="itemTransferModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transfer Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('handle_transfer') }}">
+                <div class="modal-body">
+                    <input type="hidden" id="transfer-item-id" name="item_id">
+                    <div class="mb-3">
+                        <label class="form-label">Item Details</label>
+                        <div id="transfer-item-details" class="p-2 bg-light rounded">
+                            <!-- Item details will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transfer-quantity" class="form-label">Quantity to Transfer</label>
+                        <input type="number" class="form-control" id="transfer-quantity" name="quantity" min="1" required>
+                        <div class="form-text">Available: <span id="transfer-available-qty"></span></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transfer-to-bag" class="form-label">Transfer To</label>
+                        <select class="form-select" id="transfer-to-bag" name="to_bag" required>
+                            <option value="">Select destination...</option>
+                            {% for bag in bags %}
+                                <option value="{{ bag.id }}">{{ bag.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transfer-notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="transfer-notes" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Transfer Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Individual Item Usage Modal -->
+<div class="modal fade" id="itemUsageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Record Usage</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('handle_usage') }}">
+                <div class="modal-body">
+                    <input type="hidden" id="usage-item-id" name="item_id">
+                    <div class="mb-3">
+                        <label class="form-label">Item Details</label>
+                        <div id="usage-item-details" class="p-2 bg-light rounded">
+                            <!-- Item details will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="usage-quantity" class="form-label">Quantity Used</label>
+                        <input type="number" class="form-control" id="usage-quantity" name="quantity" min="1" required>
+                        <div class="form-text">Available: <span id="usage-available-qty"></span></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="usage-patient" class="form-label">Patient Name</label>
+                        <input type="text" class="form-control" id="usage-patient" name="patient_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="usage-notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="usage-notes" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Record Usage</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// JavaScript functions for individual item operations
+function showItemTransferModal(itemId, itemName, quantity, bagName) {
+    document.getElementById('transfer-item-id').value = itemId;
+    document.getElementById('transfer-quantity').max = quantity;
+    document.getElementById('transfer-available-qty').textContent = quantity;
+    document.getElementById('transfer-item-details').innerHTML = `
+        <strong>${itemName}</strong><br>
+        <small class="text-muted">Current location: ${bagName} | Available: ${quantity}</small>
+    `;
+    new bootstrap.Modal(document.getElementById('itemTransferModal')).show();
+}
+
+function showItemUsageModal(itemId, itemName, quantity, bagName) {
+    document.getElementById('usage-item-id').value = itemId;
+    document.getElementById('usage-quantity').max = quantity;
+    document.getElementById('usage-available-qty').textContent = quantity;
+    document.getElementById('usage-item-details').innerHTML = `
+        <strong>${itemName}</strong><br>
+        <small class="text-muted">Current location: ${bagName} | Available: ${quantity}</small>
+    `;
+    new bootstrap.Modal(document.getElementById('itemUsageModal')).show();
+}
+</script>
+
 {% endblock %}
