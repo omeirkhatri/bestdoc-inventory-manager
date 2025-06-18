@@ -144,7 +144,6 @@
                         <th>Bag</th>
                         <th>Expiry Date</th>
                         <th>Days Left</th>
-                        <th>Batch</th>
                         <th>Priority</th>
                         <th>Actions</th>
                     </tr>
@@ -433,11 +432,11 @@ function updateExpiry() {
 // Export expiry report
 function exportExpiryReport() {
     const today = new Date().toISOString().split('T')[0];
-    let csvContent = 'Status,Item Name,Type,Size,Quantity,Bag,Expiry Date,Days Until/Past Expiry,Batch,Priority\n';
+    let csvContent = 'Status,Item Name,Type,Size,Quantity,Bag,Expiry Date,Days Until/Past Expiry,Priority\n';
     
     // Add expired items
     {% for item in expired_items %}
-    csvContent += 'Expired,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ (today - item.expiry_date).days }},"","Critical"\n';
+    csvContent += 'Expired,"{{ item.name }}","{{ item.type }}","{{ item.size or '' }}",{{ item.quantity }},"{{ item.bag.name }}","{{ item.expiry_date.strftime('%Y-%m-%d') }}",{{ (today - item.expiry_date).days }},"Critical"\n';
     {% endfor %}
     
     // Add expiring items
