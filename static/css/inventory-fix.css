@@ -1,0 +1,165 @@
+/* Inventory Accordion Layout Fix - Single Row Force */
+
+/* Override Bootstrap accordion completely for inventory */
+#inventoryAccordion .accordion-item {
+    border: 1px solid rgba(0,0,0,0.125);
+    margin-bottom: 0.5rem;
+    border-radius: 0.375rem;
+}
+
+#inventoryAccordion .accordion-header {
+    margin-bottom: 0;
+}
+
+#inventoryAccordion .accordion-button {
+    position: relative;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem;
+    color: inherit;
+    text-align: left;
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    overflow: visible !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+}
+
+#inventoryAccordion .accordion-button:not(.collapsed) {
+    color: var(--bs-accordion-active-color);
+    background-color: var(--bs-accordion-active-bg);
+    box-shadow: none;
+}
+
+#inventoryAccordion .accordion-button:focus {
+    z-index: 3;
+    border-color: var(--bs-accordion-btn-focus-border-color);
+    outline: 0;
+    box-shadow: none;
+}
+
+#inventoryAccordion .accordion-button::after {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-left: auto;
+    content: "";
+    background-image: var(--bs-accordion-btn-icon);
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+    transition: transform 0.2s ease-in-out;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+#inventoryAccordion .accordion-button:not(.collapsed)::after {
+    background-image: var(--bs-accordion-btn-active-icon);
+    transform: translateY(-50%) var(--bs-accordion-btn-icon-transform);
+}
+
+/* Force the inventory row to stay in one line */
+#inventoryAccordion .inventory-item-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: calc(100% - 2.5rem) !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+    min-height: 2.5rem !important;
+    flex: 1 !important;
+}
+
+#inventoryAccordion .inventory-item-left {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+    flex: 0 1 auto !important;
+    gap: 0.5rem !important;
+    overflow: hidden !important;
+}
+
+#inventoryAccordion .inventory-item-right {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+    gap: 0.5rem !important;
+}
+
+#inventoryAccordion .inventory-actions {
+    display: flex !important;
+    gap: 0.25rem !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+#inventoryAccordion .inventory-actions .btn {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    min-width: auto !important;
+    border-radius: 0.25rem !important;
+}
+
+/* Text and badge styling */
+#inventoryAccordion .inventory-item-left strong {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#inventoryAccordion .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    white-space: nowrap;
+}
+
+#inventoryAccordion .text-muted {
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    #inventoryAccordion .inventory-item-left strong {
+        max-width: 150px;
+    }
+    
+    #inventoryAccordion .inventory-actions .btn {
+        padding: 0.125rem 0.375rem !important;
+        font-size: 0.7rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #inventoryAccordion .accordion-button {
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    #inventoryAccordion .inventory-item-left strong {
+        max-width: 100px;
+    }
+    
+    #inventoryAccordion .badge {
+        font-size: 0.65rem;
+        padding: 0.125rem 0.375rem;
+    }
+    
+    #inventoryAccordion .inventory-actions .btn {
+        padding: 0.125rem 0.25rem !important;
+        font-size: 0.65rem !important;
+    }
+    
+    #inventoryAccordion .text-muted {
+        font-size: 0.75rem;
+    }
+}
