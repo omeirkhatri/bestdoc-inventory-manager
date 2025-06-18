@@ -176,6 +176,7 @@ def handle_csv_upload(file):
                     item = Item(
                         name=row['name'].strip(),
                         type=row['type'].strip(),
+                        brand=row.get('brand', '').strip() or None,
                         size=row.get('size', '').strip() or None,
                         quantity=int(row['quantity']),
                         expiry_date=expiry_date,
@@ -228,6 +229,7 @@ def handle_manual_addition():
         # Get form data
         names = request.form.getlist('name')
         types = request.form.getlist('type')
+        brands = request.form.getlist('brand')
         sizes = request.form.getlist('size')
         quantities = request.form.getlist('quantity')
         expiry_dates = request.form.getlist('expiry_date')
@@ -440,7 +442,7 @@ def handle_transfer():
             type=item.type,
             size=item.size,
             expiry_date=item.expiry_date,
-            batch_number=item.batch_number,
+            brand=item.brand,
             bag_id=to_bag_id
         ).first()
         
@@ -453,6 +455,7 @@ def handle_transfer():
             new_item = Item(
                 name=item.name,
                 type=item.type,
+                brand=item.brand,
                 size=item.size,
                 quantity=quantity,
                 expiry_date=item.expiry_date,

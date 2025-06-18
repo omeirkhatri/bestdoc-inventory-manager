@@ -98,6 +98,7 @@ class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.String(100), nullable=False)  # Consumables, Pharmacy Vials, IV Vials, etc.
+    brand = db.Column(db.String(100))  # Brand name - optional
     size = db.Column(db.String(50))  # 22G, 5ml, etc.
     quantity = db.Column(db.Integer, nullable=False, default=0)
     expiry_date = db.Column(db.Date)  # Optional
