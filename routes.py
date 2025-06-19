@@ -530,7 +530,7 @@ def inventory():
             if not product.is_low_stock:
                 continue
         
-        # Get ALL items for this product to collect generic names, then filter for active ones
+        # Get ALL items for this product to collect generic names
         all_items_for_product = Item.query.filter(Item.product_id == product.id).all()
         
         # Get active items for this product for display
@@ -591,6 +591,8 @@ def inventory():
                 if item.generic_name and item.generic_name.strip():
                     if item.generic_name not in unique_generic_names:
                         unique_generic_names.append(item.generic_name)
+            
+
             
 
 
