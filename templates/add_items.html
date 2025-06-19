@@ -602,6 +602,46 @@ document.getElementById('manualForm').addEventListener('submit', function(e) {
 // Initialize autocomplete when page loads
 initializeAutocomplete();
 
+// Date formatting functions
+function formatDateForDisplay(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    // Convert DD/MM/YYYY to YYYY-MM-DD for HTML input
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+    return dateString;
+}
+
+function initializeDateInputs() {
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        // Add placeholder text
+        input.setAttribute('placeholder', 'DD/MM/YYYY');
+        input.setAttribute('title', 'Enter date in DD/MM/YYYY format');
+        
+        // Handle input display
+        input.addEventListener('blur', function() {
+            if (this.value) {
+                const date = new Date(this.value);
+                if (!isNaN(date.getTime())) {
+                    // Update the title to show formatted date
+                    this.setAttribute('title', `Selected: ${formatDateForDisplay(this.value)}`);
+                }
+            }
+        });
+    });
+}
+
 // OVERRIDE ANY CONFLICTING AUTOCOMPLETE SYSTEMS
 // Disable any existing autocomplete handlers that might be interfering
 document.addEventListener('DOMContentLoaded', function() {
@@ -612,6 +652,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const newInput = input.cloneNode(true);
         input.parentNode.replaceChild(newInput, input);
     });
+    
+    // Initialize date inputs
+    initializeDateInputs();
     
     // Re-initialize our autocomplete after clearing conflicting handlers
     setTimeout(() => {
