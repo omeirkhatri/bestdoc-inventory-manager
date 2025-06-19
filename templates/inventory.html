@@ -121,9 +121,11 @@
                         <td>
                             <div class="product-name" title="{{ product.name }}">
                                 {{ product.name }}
-                                {% for generic_name in product_data.unique_generic_names %}
-                                    <span class="badge bg-info text-white ms-2" style="font-size: 0.75em;">{{ generic_name }}</span>
-                                {% endfor %}
+                                {% if product_data.unique_generic_names %}
+                                    {% for generic_name in product_data.unique_generic_names %}
+                                        <span class="badge bg-info text-white ms-2" style="font-size: 0.75em; white-space: nowrap;">{{ generic_name }}</span>
+                                    {% endfor %}
+                                {% endif %}
                             </div>
                         </td>
                         <td>
