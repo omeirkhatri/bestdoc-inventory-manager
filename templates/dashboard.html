@@ -174,7 +174,8 @@
                                     <i class="fas fa-briefcase me-2"></i>{{ bag_info.bag.name }}
                                 </h6>
                                 <span class="badge me-2" style="background: linear-gradient(135deg, #ffc107, #e0a800); color: #000; border-radius: 6px; font-size: 0.7rem;">
-                                    {{ bag_info.low_items|length }} items need restocking
+                                    <span class="d-none d-md-inline">{{ bag_info.low_items|length }} items need restocking</span>
+                                    <span class="d-md-none">{{ bag_info.low_items|length }} items</span>
                                 </span>
                                 <button type="button" class="btn btn-sm" 
                                         style="background: linear-gradient(135deg, #4fd1c7, #3bb3a9); color: white; border: none; border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.7rem;"
