@@ -26,7 +26,11 @@
 <body>
     <!-- Mobile Navigation Toggle -->
     <button class="mobile-nav-toggle d-lg-none" id="mobileNavToggle">
-        <i class="fas fa-bars"></i>
+        <div class="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
     </button>
     
     <!-- Mobile Overlay -->
@@ -227,10 +231,16 @@
             // Mobile navigation functionality
             if (mobileNavToggle) {
                 mobileNavToggle.addEventListener('click', function() {
-                    sidebar.classList.add('show');
-                    mobileOverlay.classList.add('show');
-                    mobileNavToggle.classList.add('active');
-                    document.body.style.overflow = 'hidden';
+                    const isOpen = sidebar.classList.contains('show');
+                    
+                    if (isOpen) {
+                        closeMobileNav();
+                    } else {
+                        sidebar.classList.add('show');
+                        mobileOverlay.classList.add('show');
+                        mobileNavToggle.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    }
                 });
             }
             
