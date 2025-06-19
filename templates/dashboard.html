@@ -153,35 +153,35 @@
 {% if low_stock_bags %}
 <div class="row mb-3 dashboard-section">
     <div class="col-12">
-        <div class="card" style="background: linear-gradient(135deg, rgba(79, 209, 199, 0.1), rgba(59, 179, 169, 0.05)); border: 1px solid rgba(79, 209, 199, 0.3);">
+        <div class="card" style="background: linear-gradient(135deg, #2b3035, #1a1d20); border: 1px solid rgba(79, 209, 199, 0.3);">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0" style="color: #3bb3a9;">
+                    <h5 class="mb-0" style="color: #4fd1c7;">
                         <i class="fas fa-briefcase-medical me-2"></i>
                         Bags Need Restocking
                     </h5>
-                    <a href="{{ url_for('bag_minimums') }}" class="btn" style="background: linear-gradient(135deg, #4fd1c7, #3bb3a9); color: white; border: none; border-radius: 8px; padding: 0.375rem 0.75rem;">
-                        <i class="fas fa-cog me-1"></i>Manage Minimums
+                    <a href="{{ url_for('bag_minimums') }}" class="btn btn-sm" style="background: linear-gradient(135deg, #4fd1c7, #3bb3a9); color: white; border: none; border-radius: 8px; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                        <i class="fas fa-cog me-1"></i>Manage
                     </a>
                 </div>
                 <div class="row">
                     {% for bag_info in low_stock_bags %}
                     <div class="col-md-6 mb-3">
-                        <div class="card" style="border: 1px solid rgba(79, 209, 199, 0.2); border-radius: 12px; background: rgba(255, 255, 255, 0.8);">
+                        <div class="card" style="border: 1px solid rgba(79, 209, 199, 0.3); border-radius: 12px; background: rgba(43, 48, 53, 0.95);">
                             <div class="card-body p-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="card-title mb-0" style="color: #3bb3a9;">
+                                    <h6 class="card-title mb-0" style="color: #4fd1c7;">
                                         <i class="fas fa-briefcase me-1"></i>{{ bag_info.bag.name }}
                                     </h6>
                                     <button type="button" class="btn btn-sm" 
-                                            style="background: linear-gradient(135deg, #4fd1c7, #3bb3a9); color: white; border: none; border-radius: 8px; padding: 0.25rem 0.5rem;"
+                                            style="background: linear-gradient(135deg, #4fd1c7, #3bb3a9); color: white; border: none; border-radius: 8px; padding: 0.25rem 0.5rem; font-size: 0.75rem;"
                                             onclick="showQuickRestockModal('{{ bag_info.bag.name }}', {{ bag_info.bag.id }})">
                                         <i class="fas fa-sync me-1"></i>Restock
                                     </button>
                                 </div>
                                 {% for item in bag_info.low_items %}
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <small style="color: #495057;">{{ item.product.name }}</small>
+                                    <small style="color: #dee2e6;">{{ item.product.name }}</small>
                                     <span class="badge" style="background: linear-gradient(135deg, #ffc107, #e0a800); color: #000; border-radius: 6px; font-size: 0.7rem;">
                                         {{ item.current }}/{{ item.minimum }} (need {{ item.shortage }})
                                     </span>
@@ -528,29 +528,37 @@ document.addEventListener('DOMContentLoaded', function() {
         padding: 10px 12px !important;
         margin-bottom: 0.25rem !important;
         border-radius: 12px !important;
+        position: relative !important;
     }
     
     .stat-content {
         height: 100% !important;
-        justify-content: space-between !important;
+        justify-content: flex-start !important;
         align-items: center !important;
+        gap: 12px !important;
+        position: relative !important;
     }
     
     .stat-icon {
-        width: 24px !important;
-        height: 24px !important;
-        margin-right: 10px !important;
+        width: 32px !important;
+        height: 32px !important;
+        margin-right: 0 !important;
         flex-shrink: 0 !important;
         border-radius: 8px !important;
+        position: absolute !important;
+        right: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
     }
     
     .stat-icon i {
-        font-size: 14px !important;
+        font-size: 16px !important;
     }
     
     .stat-info {
         flex: 1 !important;
         text-align: left !important;
+        padding-right: 50px !important;
     }
     
     .stat-number {
