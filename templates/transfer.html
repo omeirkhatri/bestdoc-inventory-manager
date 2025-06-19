@@ -185,7 +185,7 @@
 
 <!-- Mobile Scroll to Transfer Button -->
 <button class="btn btn-primary mobile-transfer-toggle d-flex align-items-center justify-content-center" 
-        onclick="scrollToTransfer()" id="mobileScrollBtn" style="display: none;">
+        onclick="scrollToTransfer()" id="mobileScrollBtn">
     <i class="fas fa-arrow-down"></i>
     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
           id="mobileSelectedBadge" style="display: none;">
@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
         margin-top: 0.5rem;
     }
     
-    /* Show mobile scroll button */
+    /* Mobile scroll button - hidden by default */
     .mobile-transfer-toggle {
         position: fixed;
         bottom: 20px;
@@ -283,21 +283,23 @@ document.addEventListener('DOMContentLoaded', function() {
         width: 60px;
         height: 60px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        display: none;
+        display: none !important;
+    }
+    
+    /* Only show on mobile when items are selected */
+    .mobile-transfer-toggle.show {
+        display: flex !important;
     }
 }
 
 @media (min-width: 769px) {
-    /* Hide mobile button on desktop */
+    /* Always hide on desktop */
     .mobile-transfer-toggle {
         display: none !important;
     }
-}
-
-@media (max-width: 768px) {
-    /* Only show on mobile when items are selected */
+    
     .mobile-transfer-toggle.show {
-        display: flex !important;
+        display: none !important;
     }
 }
 </style>
