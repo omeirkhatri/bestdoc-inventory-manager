@@ -582,9 +582,13 @@ def inventory():
                     current_group['items'].append(item)
                     current_group['total_quantity'] += item.quantity
             
+            # Collect unique generic names for this product
+            unique_generic_names = list(set(item.generic_name for item in items if item.generic_name))
+            
             filtered_products.append({
                 'product': product,
                 'grouped_items': grouped_items,
+                'unique_generic_names': unique_generic_names,
                 'total_quantity': sum(item.quantity for item in items),
                 'is_low_stock': product.is_low_stock
             })
