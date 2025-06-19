@@ -284,6 +284,7 @@
                 })
                 .catch(error => {
                     console.error('Error checking undo actions:', error);
+                    document.getElementById('undoButton').classList.add('d-none');
                 });
         }
 

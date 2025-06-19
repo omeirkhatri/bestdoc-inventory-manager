@@ -2,7 +2,7 @@ import os
 import csv
 import io
 from datetime import datetime, date, timedelta
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, session
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from flask_login import login_user, logout_user, login_required, current_user
@@ -34,6 +34,7 @@ def login():
 @login_required
 def logout():
     logout_user()
+    session.clear()  # Clear all session data
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
