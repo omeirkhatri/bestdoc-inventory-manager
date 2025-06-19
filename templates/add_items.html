@@ -49,15 +49,15 @@
                         <div class="item-row border rounded p-3 mb-3">
                             <div class="row">
                                 <div class="col-md-3 mb-2">
-                                    <label class="form-label">Generic Name</label>
-                                    <input type="text" class="form-control generic-name-input" name="generic_name" 
-                                           autocomplete="off" placeholder="Generic medicine name (optional)">
-                                </div>
-                                <div class="col-md-3 mb-2">
                                     <label class="form-label">Item Name <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control item-name-input" name="name" required 
                                            autocomplete="off" placeholder="Start typing item name...">
                                     <div class="dropdown-menu item-suggestions" style="display: none;"></div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label">Generic Name</label>
+                                    <input type="text" class="form-control generic-name-input" name="generic_name" 
+                                           autocomplete="off" placeholder="Generic medicine name (optional)">
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label class="form-label">Type <span class="text-danger">*</span></label>
@@ -84,15 +84,53 @@
                                 </div>
                                 <div class="col-md-3 mb-2">
                                     <label class="form-label">Expiry Month/Year</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control expiry-input" name="expiry_date" 
-                                               placeholder="MM/YY" pattern="^(0[1-9]|1[0-2])\/\d{2}$" maxlength="5">
-                                        <button type="button" class="btn btn-outline-secondary no-expiry-btn" 
-                                                title="No expiry date">
-                                            <i class="fas fa-infinity"></i>
-                                        </button>
+                                    <div class="expiry-container">
+                                        <div class="btn-group mb-2" role="group">
+                                            <input type="radio" class="btn-check" name="expiry_input_type" id="expiry_selectors" value="selectors" checked>
+                                            <label class="btn btn-outline-primary btn-sm" for="expiry_selectors">Selectors</label>
+                                            
+                                            <input type="radio" class="btn-check" name="expiry_input_type" id="expiry_text" value="text">
+                                            <label class="btn btn-outline-primary btn-sm" for="expiry_text">Type</label>
+                                        </div>
+                                        
+                                        <!-- Selector inputs -->
+                                        <div id="expiry_selector_inputs" class="input-group mb-1">
+                                            <select class="form-select" id="expiry_month" name="expiry_month">
+                                                <option value="">Month</option>
+                                                <option value="01">January</option>
+                                                <option value="02">February</option>
+                                                <option value="03">March</option>
+                                                <option value="04">April</option>
+                                                <option value="05">May</option>
+                                                <option value="06">June</option>
+                                                <option value="07">July</option>
+                                                <option value="08">August</option>
+                                                <option value="09">September</option>
+                                                <option value="10">October</option>
+                                                <option value="11">November</option>
+                                                <option value="12">December</option>
+                                            </select>
+                                            <select class="form-select" id="expiry_year" name="expiry_year">
+                                                <option value="">Year</option>
+                                            </select>
+                                            <button type="button" class="btn btn-outline-secondary no-expiry-btn" 
+                                                    title="No expiry date">
+                                                <i class="fas fa-infinity"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Text input -->
+                                        <div id="expiry_text_input" class="input-group mb-1" style="display: none;">
+                                            <input type="text" class="form-control expiry-input" name="expiry_date" 
+                                                   placeholder="MM/YY" pattern="^(0[1-9]|1[0-2])\/\d{2}$" maxlength="5">
+                                            <button type="button" class="btn btn-outline-secondary no-expiry-btn" 
+                                                    title="No expiry date">
+                                                <i class="fas fa-infinity"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <small class="text-muted">Choose month/year or type MM/YY format</small>
                                     </div>
-                                    <small class="text-muted">Format: MM/YY (e.g., 04/26)</small>
                                 </div>
                                 <div class="col-md-3 mb-2">
                                     <label class="form-label">Minimum Stock <span class="text-muted">(new products only)</span></label>
@@ -264,6 +302,9 @@ function initializeAutocomplete() {
     
     // Initialize expiry date formatting
     initializeExpiryDateFormatting();
+    
+    // Initialize expiry date selectors and switching
+    initializeExpiryDateSelectors();
 }
 
 // MM/YY date formatting functionality
@@ -315,6 +356,104 @@ function handleExpiryKeydown(e) {
     if (value.length >= 5) {
         e.preventDefault();
     }
+}
+
+// Initialize expiry date selectors and switching functionality
+function initializeExpiryDateSelectors() {
+    // Populate year dropdown
+    populateYearDropdown();
+    
+    // Handle switching between selectors and text input
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'expiry_input_type') {
+            toggleExpiryInputType(e.target.value);
+        }
+    });
+    
+    // Handle month/year selector changes
+    document.addEventListener('change', function(e) {
+        if (e.target.id === 'expiry_month' || e.target.id === 'expiry_year') {
+            updateExpiryDateFromSelectors();
+        }
+    });
+    
+    // Handle no expiry buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.no-expiry-btn')) {
+            clearExpiryDate();
+        }
+    });
+}
+
+function populateYearDropdown() {
+    const yearSelect = document.getElementById('expiry_year');
+    if (!yearSelect) return;
+    
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear;
+    const endYear = currentYear + 10; // Next 10 years
+    
+    // Clear existing options except the first one
+    yearSelect.innerHTML = '<option value="">Year</option>';
+    
+    for (let year = startYear; year <= endYear; year++) {
+        const option = document.createElement('option');
+        const shortYear = year.toString().substr(-2); // Get last 2 digits
+        option.value = shortYear;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    }
+}
+
+function toggleExpiryInputType(type) {
+    const selectorInputs = document.getElementById('expiry_selector_inputs');
+    const textInput = document.getElementById('expiry_text_input');
+    
+    if (type === 'selectors') {
+        selectorInputs.style.display = 'flex';
+        textInput.style.display = 'none';
+        // Clear text input when switching to selectors
+        const textField = textInput.querySelector('input[name="expiry_date"]');
+        if (textField) textField.value = '';
+    } else {
+        selectorInputs.style.display = 'none';
+        textInput.style.display = 'flex';
+        // Clear selectors when switching to text
+        const monthSelect = document.getElementById('expiry_month');
+        const yearSelect = document.getElementById('expiry_year');
+        if (monthSelect) monthSelect.value = '';
+        if (yearSelect) yearSelect.value = '';
+    }
+}
+
+function updateExpiryDateFromSelectors() {
+    const monthSelect = document.getElementById('expiry_month');
+    const yearSelect = document.getElementById('expiry_year');
+    const textInput = document.querySelector('input[name="expiry_date"]');
+    
+    if (monthSelect && yearSelect && textInput) {
+        const month = monthSelect.value;
+        const year = yearSelect.value;
+        
+        if (month && year) {
+            // Update the hidden text input with MM/YY format
+            textInput.value = month + '/' + year;
+        } else {
+            textInput.value = '';
+        }
+    }
+}
+
+function clearExpiryDate() {
+    // Clear text input
+    const textInputs = document.querySelectorAll('input[name="expiry_date"]');
+    textInputs.forEach(input => input.value = '');
+    
+    // Clear selectors
+    const monthSelect = document.getElementById('expiry_month');
+    const yearSelect = document.getElementById('expiry_year');
+    if (monthSelect) monthSelect.value = '';
+    if (yearSelect) yearSelect.value = '';
 }
 
 function handleItemNameInput(input) {

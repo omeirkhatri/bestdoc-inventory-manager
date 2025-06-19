@@ -747,12 +747,14 @@
             
             element.innerHTML = inputHtml;
             const expiryInput = document.getElementById('inline-edit-expiry');
-            expiryInput.focus();
-            
-            // Add MM/YY formatting to the input field
-            expiryInput.addEventListener('input', function() {
-                formatExpiryInput(this);
-            });
+            if (expiryInput) {
+                expiryInput.focus();
+                
+                // Add MM/YY formatting to the input field
+                expiryInput.addEventListener('input', function() {
+                    formatExpiryInput(this);
+                });
+            }
         };
 
         window.saveExpiryEdit = function(itemId) {
