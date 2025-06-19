@@ -330,31 +330,37 @@
             const modalHtml = `
                 <div class="modal fade" id="undoModal" tabindex="-1" aria-labelledby="undoModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="undoModalLabel">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header bg-warning border-0">
+                                <h5 class="modal-title fw-bold text-white" id="undoModalLabel">
                                     <i class="fas fa-undo me-2"></i>Undo Last Action
                                 </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body">
-                                <div class="alert alert-warning d-flex align-items-center" role="alert">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    <div>
-                                        <strong>Are you sure you want to undo this action?</strong>
+                            <div class="modal-body p-4">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-exclamation-triangle text-warning fs-1 mb-3"></i>
+                                    <h6 class="fw-bold mb-3 text-dark">Are you sure you want to undo this action?</h6>
+                                </div>
+                                <div class="card border-0 shadow-sm" style="background-color: var(--bs-gray-100);">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-2" style="color: var(--bs-gray-700);">
+                                            <i class="fas fa-history me-2"></i>Action to undo:
+                                        </h6>
+                                        <p class="card-text fw-medium mb-0" style="color: var(--bs-gray-900);">${description}</p>
                                     </div>
                                 </div>
-                                <div class="bg-light p-3 rounded">
-                                    <strong>Action to undo:</strong><br>
-                                    ${description}
+                                <div class="small mt-3 text-center" style="color: var(--bs-gray-600);">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    This action cannot be undone once confirmed.
                                 </div>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    <i class="fas fa-times me-1"></i>Cancel
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancel
                                 </button>
-                                <button type="button" class="btn btn-warning" onclick="executeUndo()">
-                                    <i class="fas fa-undo me-1"></i>Undo Action
+                                <button type="button" class="btn btn-warning px-4 fw-bold" onclick="executeUndo()">
+                                    <i class="fas fa-undo me-2"></i>Undo Action
                                 </button>
                             </div>
                         </div>
