@@ -14,7 +14,7 @@
 
 <!-- Summary Cards -->
 <div class="row mb-4">
-    <div class="col-md-6 mb-3">
+    <div class="col-md-4 mb-3">
         <div class="card bg-danger">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -30,7 +30,7 @@
         </div>
     </div>
     
-    <div class="col-md-6 mb-3">
+    <div class="col-md-4 mb-3">
         <div class="card bg-warning">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -40,6 +40,22 @@
                     </div>
                     <div class="align-self-center">
                         <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ expiring_90_days|length }}</h4>
+                        <p class="card-text">Expiring Later (90 days)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-alt fa-2x"></i>
                     </div>
                 </div>
             </div>
@@ -199,8 +215,88 @@
 </div>
 {% endif %}
 
+<!-- Expiring in 90 Days Section -->
+{% if expiring_90_days %}
+<div class="card mb-4">
+    <div class="card-header bg-info">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>
+            Expiring Later - 90 Days ({{ expiring_90_days|length }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <strong><i class="fas fa-calendar-alt me-2"></i>Plan Ahead!</strong>
+            These items will expire within the next 90 days. Good time to plan usage and inventory rotation.
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped" id="expiring90Table">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Quantity</th>
+                        <th>Storage</th>
+                        <th>Expiry Date</th>
+                        <th>Days Left</th>
+                        <th>Priority</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in expiring_90_days %}
+                    <tr>
+                        <td><strong>{{ item.name }}</strong></td>
+                        <td>
+                            <span class="badge bg-secondary">{{ item.type }}</span>
+                        </td>
+                        <td>{{ item.size or '-' }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ item.quantity }}</span>
+                        </td>
+                        <td>{{ item.bag.name }}</td>
+                        <td>{{ item.expiry_date|format_date_gmt4 }}</td>
+                        <td>
+                            {% set days_left = (item.expiry_date - today).days %}
+                            <span class="badge bg-{% if days_left <= 60 %}warning{% else %}info{% endif %}">
+                                {{ days_left }} days
+                            </span>
+                        </td>
+                        <td>
+                            {% set days_left = (item.expiry_date - today).days %}
+                            {% if days_left <= 60 %}
+                                <span class="badge bg-warning">Medium</span>
+                            {% else %}
+                                <span class="badge bg-info">Low</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if item.bag.name != 'Cabinet' %}
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="showUsageModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }})">
+                                    <i class="fas fa-minus"></i> Use
+                                </button>
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-info" 
+                                        onclick="showUpdateExpiryModal('{{ item.id }}', '{{ item.name }}', '{{ item.expiry_date.strftime('%Y-%m-%d') }}')">
+                                    <i class="fas fa-edit"></i> Update
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- No Issues Section -->
-{% if not expired_items and not expiring_items %}
+{% if not expired_items and not expiring_items and not expiring_90_days %}
 <div class="card">
     <div class="card-body text-center py-5">
         <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
@@ -230,6 +326,9 @@
                     </a>
                     <a href="{{ url_for('inventory') }}?expiry=expiring" class="btn btn-outline-warning">
                         <i class="fas fa-clock me-1"></i>View All Expiring
+                    </a>
+                    <a href="{{ url_for('inventory') }}?expiry=expiring_90" class="btn btn-outline-info">
+                        <i class="fas fa-calendar-alt me-1"></i>View 90-Day Expiring
                     </a>
                     <button type="button" class="btn btn-outline-info" onclick="exportExpiryReport()">
                         <i class="fas fa-download me-1"></i>Export Report

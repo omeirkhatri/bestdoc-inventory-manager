@@ -517,6 +517,12 @@ def inventory():
                 item_query = item_query.filter(and_(Item.expiry_date.isnot(None), 
                                                 Item.expiry_date >= today, 
                                                 Item.expiry_date <= thirty_days))
+            elif status_filter == 'expiring_90':
+                thirty_days = today + timedelta(days=30)
+                ninety_days = today + timedelta(days=90)
+                item_query = item_query.filter(and_(Item.expiry_date.isnot(None), 
+                                                Item.expiry_date > thirty_days, 
+                                                Item.expiry_date <= ninety_days))
         
         items = item_query.order_by(Item.brand, Item.size, Item.expiry_date).all()
         
@@ -982,6 +988,7 @@ def history():
 def expiry():
     today = date.today()
     thirty_days = today + timedelta(days=30)
+    ninety_days = today + timedelta(days=90)
     
     # Expired items
     expired_items = Item.query.filter(
@@ -1002,9 +1009,20 @@ def expiry():
         )
     ).order_by(Item.expiry_date).all()
     
+    # Items expiring within 90 days (but not within 30 days)
+    expiring_90_days = Item.query.filter(
+        and_(
+            Item.expiry_date.isnot(None),
+            Item.expiry_date > thirty_days,
+            Item.expiry_date <= ninety_days,
+            Item.quantity > 0
+        )
+    ).order_by(Item.expiry_date).all()
+    
     return render_template('expiry.html', 
                          expired_items=expired_items, 
                          expiring_items=expiring_items,
+                         expiring_90_days=expiring_90_days,
                          today=today)
 
 @app.route('/bags', methods=['GET', 'POST'])
