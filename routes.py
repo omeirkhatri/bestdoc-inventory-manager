@@ -591,6 +591,8 @@ def inventory():
                 if item.generic_name and item.generic_name.strip():
                     if item.generic_name not in unique_generic_names:
                         unique_generic_names.append(item.generic_name)
+            
+
 
             filtered_products.append({
                 'product': product,
