@@ -347,6 +347,7 @@ def handle_csv_upload(file):
 def handle_manual_addition():
     try:
         # Get form data
+        generic_names = request.form.getlist('generic_name')
         names = request.form.getlist('name')
         types = request.form.getlist('type')
         brands = request.form.getlist('brand')
@@ -379,6 +380,7 @@ def handle_manual_addition():
                             continue
                     
                     # Get additional fields safely
+                    generic_name = generic_names[i].strip() if i < len(generic_names) and generic_names[i].strip() else None
                     size = sizes[i].strip() if i < len(sizes) and sizes[i].strip() else None
                     brand = brands[i].strip() if i < len(brands) and brands[i].strip() else None
                     
@@ -422,6 +424,7 @@ def handle_manual_addition():
                     else:
                         # Create new item
                         item = Item(
+                            generic_name=generic_name,
                             name=product_name,
                             type=product_type,
                             brand=brand,
@@ -494,7 +497,17 @@ def inventory():
     
     # Apply product-level filters
     if search:
-        product_query = product_query.filter(Product.name.ilike(f'%{search}%'))
+        # Search in product names and also in item generic names
+        product_ids_from_items = db.session.query(Item.product_id).filter(
+            Item.generic_name.ilike(f'%{search}%')
+        ).distinct().subquery()
+        
+        product_query = product_query.filter(
+            db.or_(
+                Product.name.ilike(f'%{search}%'),
+                Product.id.in_(db.session.query(product_ids_from_items.c.product_id))
+            )
+        )
     
     if type_filter:
         product_query = product_query.filter(Product.type == type_filter)
@@ -1363,9 +1376,12 @@ def api_search_items():
     if not query or len(query) < 2:
         return jsonify([])
     
-    # Search in current inventory
-    items = db.session.query(Item.name, Item.type, Item.brand, Item.size).filter(
-        Item.name.ilike(f'%{query}%')
+    # Search in current inventory (search by name or generic name)
+    items = db.session.query(Item.name, Item.type, Item.brand, Item.size, Item.generic_name).filter(
+        db.or_(
+            Item.name.ilike(f'%{query}%'),
+            Item.generic_name.ilike(f'%{query}%')
+        )
     ).distinct().limit(10).all()
     
     # Search in movement history for historical items
