@@ -276,12 +276,14 @@ document.addEventListener('DOMContentLoaded', function() {
     .mobile-transfer-toggle {
         position: fixed;
         bottom: 20px;
-        right: 20px;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 1040;
         border-radius: 50%;
         width: 60px;
         height: 60px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: none;
     }
 }
 
@@ -289,6 +291,13 @@ document.addEventListener('DOMContentLoaded', function() {
     /* Hide mobile button on desktop */
     .mobile-transfer-toggle {
         display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Only show on mobile when items are selected */
+    .mobile-transfer-toggle.show {
+        display: flex !important;
     }
 }
 </style>
@@ -352,15 +361,11 @@ function updateSelectedItemsList() {
         if (selectedCount > 0) {
             mobileSelectedBadge.textContent = selectedCount;
             mobileSelectedBadge.style.display = 'block';
-            mobileButton.style.display = 'flex';
-            console.log('Mobile button should now be visible with count:', selectedCount);
+            mobileButton.classList.add('show');
         } else {
             mobileSelectedBadge.style.display = 'none';
-            mobileButton.style.display = 'none';
-            console.log('Mobile button hidden - no items selected');
+            mobileButton.classList.remove('show');
         }
-    } else {
-        console.log('Mobile elements not found:', { badge: !!mobileSelectedBadge, button: !!mobileButton });
     }
     
     // Clear previous content
