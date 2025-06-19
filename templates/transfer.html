@@ -609,13 +609,23 @@ function validateAndSubmitTransfer(e, bagSelectId, quantitySelector) {
 function filterItems(section) {
     const searchInput = document.getElementById(section + 'Search');
     const itemsList = document.getElementById(section + 'ItemsList');
+    
+    if (!searchInput || !itemsList) {
+        return;
+    }
+    
     const searchTerm = searchInput.value.toLowerCase();
     const items = itemsList.querySelectorAll('.list-group-item');
     
     items.forEach(item => {
         const itemName = item.querySelector('h6').textContent.toLowerCase();
-        const itemType = item.querySelector('.badge').textContent.toLowerCase();
-        const itemText = itemName + ' ' + itemType;
+        const badges = item.querySelectorAll('.badge');
+        let itemText = itemName;
+        
+        // Include all badge text in search (generic names, brands, types)
+        badges.forEach(badge => {
+            itemText += ' ' + badge.textContent.toLowerCase();
+        });
         
         if (itemText.includes(searchTerm)) {
             item.style.display = 'block';
@@ -725,25 +735,7 @@ function filterByBag(bagName, bagId) {
     window.location.href = '/inventory?bag=' + bagId;
 }
 
-// Search functionality for transfer items
-function filterItems(section) {
-    const searchInput = document.getElementById(section + 'Search');
-    const itemsList = document.getElementById(section + 'ItemsList');
-    const searchTerm = searchInput.value.toLowerCase();
-    const items = itemsList.querySelectorAll('.list-group-item');
-    
-    items.forEach(item => {
-        const itemName = item.querySelector('h6').textContent.toLowerCase();
-        const itemType = item.querySelector('.badge').textContent.toLowerCase();
-        const itemText = itemName + ' ' + itemType;
-        
-        if (itemText.includes(searchTerm)) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
+
 
 // Clear search when form is reset
 function clearSearch() {

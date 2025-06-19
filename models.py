@@ -147,7 +147,7 @@ class Item(db.Model):
     @property
     def is_consumables_audit_item(self):
         """Check if this item type requires consumables audit (types 4 and 5)"""
-        consumables_audit_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
+        consumables_audit_types = ['Consumable Dressings/Swabs', 'Catheters & Containers', 'Needles & Syringes']
         return self.type in consumables_audit_types
 
 class MovementHistory(db.Model):
