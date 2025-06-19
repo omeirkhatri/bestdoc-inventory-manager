@@ -531,7 +531,9 @@
                         const sizeEl = document.getElementById('itemSize');
                         if (sizeEl) sizeEl.textContent = value || 'N/A';
                     } else if (field === 'generic_name') {
-                        const genericNameEl = document.getElementById('itemGenericName');
+                        // Handle both single item view and table view with multiple items
+                        const genericNameEl = document.getElementById('itemGenericName') || 
+                                               document.getElementById(`itemGenericName-${itemId}`);
                         if (genericNameEl) genericNameEl.textContent = value || 'Not specified';
                     }
                     
