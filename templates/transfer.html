@@ -287,13 +287,12 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 @media (min-width: 769px) {
-    /* Always hide on desktop */
-    .mobile-transfer-button {
+    /* Always hide on desktop - force hidden regardless of classes */
+    .mobile-transfer-button,
+    .mobile-transfer-button.show,
+    #mobileScrollBtn {
         display: none !important;
-    }
-    
-    .mobile-transfer-button.show {
-        display: none !important;
+        visibility: hidden !important;
     }
 }
 </style>
@@ -751,7 +750,7 @@ function clearSearch() {
 <!-- Mobile Transfer Button - Outside all containers for proper positioning -->
 <button class="btn btn-success mobile-transfer-button" 
         onclick="scrollToTransfer()" id="mobileScrollBtn"
-        style="position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 9999 !important;">
+        style="position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 9999 !important; display: none !important;">
     <i class="fas fa-exchange-alt me-2"></i>
     Transfer <span id="mobileSelectedBadge" class="ms-1">(0)</span>
 </button>
