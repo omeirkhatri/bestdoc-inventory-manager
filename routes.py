@@ -56,7 +56,9 @@ def dashboard():
     total_bags = len(bags)
     
     # Count unique products
-    total_unique_items = Product.query.count()
+    # Count unique items by name and type
+    unique_items = db.session.query(Item.name, Item.type).distinct().count()
+    total_unique_items = unique_items
     
     # Items expiring soon (within 30 days)
     thirty_days_from_now = date.today() + timedelta(days=30)
@@ -78,16 +80,22 @@ def dashboard():
         )
     ).all()
     
-    # Low stock items (using product minimum stock thresholds)
-    low_stock_products = Product.query.filter(Product.minimum_stock > 0).all()
+    # Low stock items - find items where total quantity across all locations is below minimum
     low_stock_items = []
-    for product in low_stock_products:
-        total_qty = sum(item.quantity for item in product.items if item.quantity > 0)
-        if total_qty <= product.minimum_stock:
+    unique_items = db.session.query(
+        Item.name, 
+        Item.type, 
+        func.sum(Item.quantity).label('total_quantity'),
+        func.max(Item.minimum_stock).label('min_stock')
+    ).filter(Item.minimum_stock > 0).group_by(Item.name, Item.type).all()
+    
+    for item_group in unique_items:
+        if item_group.total_quantity <= item_group.min_stock:
             low_stock_items.append({
-                'product': product,
-                'current_qty': total_qty,
-                'minimum_stock': product.minimum_stock
+                'name': item_group.name,
+                'type': item_group.type,
+                'current_qty': item_group.total_quantity,
+                'minimum_stock': item_group.min_stock
             })
     
     # Low stock items in cabinet (quantity <= 10) - for alerts section
@@ -477,7 +485,6 @@ def handle_manual_addition():
 
 @app.route('/inventory')
 @login_required
-@login_required
 def inventory():
     # Get filter parameters
     search = request.args.get('search', '')
@@ -485,31 +492,31 @@ def inventory():
     bag_filter = request.args.get('bag', '')
     status_filter = request.args.get('status', '')
     
-    # Base query - get products with their items
-    product_query = Product.query
+    # Base query - get unique items grouped by name and type
+    base_query = db.session.query(
+        Item.name,
+        Item.type,
+        func.sum(Item.quantity).label('total_quantity'),
+        func.max(Item.minimum_stock).label('min_stock')
+    ).group_by(Item.name, Item.type)
     
-    # Apply product-level filters
+    # Apply filters
     if search:
-        # Search in product names and also in item generic names
-        product_ids_from_items = db.session.query(Item.product_id).filter(
-            Item.generic_name.ilike(f'%{search}%')
-        ).distinct().subquery()
-        
-        product_query = product_query.filter(
-            db.or_(
-                Product.name.ilike(f'%{search}%'),
-                Product.id.in_(db.session.query(product_ids_from_items.c.product_id))
+        base_query = base_query.filter(
+            or_(
+                Item.name.ilike(f'%{search}%'),
+                Item.generic_name.ilike(f'%{search}%')
             )
         )
     
     if type_filter:
-        product_query = product_query.filter(Product.type == type_filter)
+        base_query = base_query.filter(Item.type == type_filter)
     
-    products = product_query.order_by(Product.name).all()
+    unique_items = base_query.order_by(Item.name).all()
     
-    # Filter products based on item-level criteria and group items
-    filtered_products = []
-    for product in products:
+    # Filter items based on status and get detailed item information
+    filtered_items = []
+    for item_group in unique_items:
         # Check low stock filter first (applies to entire product)
         if status_filter == 'low_stock':
             if not product.is_low_stock:
