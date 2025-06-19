@@ -71,7 +71,7 @@
         <!-- Quick Search -->
         <div class="quick-search mt-3">
             <i class="fas fa-search quick-search-icon"></i>
-            <input type="text" class="form-control" id="quickSearch" placeholder="Quick search items..." 
+            <input type="text" class="form-control" id="quickSearch" placeholder="Search by product name, generic name, or type..." 
                    onkeyup="filterInventoryCards(this.value)">
         </div>
     </div>
@@ -115,6 +115,7 @@
                     <tr class="expandable-row" 
                         data-product-name="{{ product.name.lower() }}" 
                         data-product-type="{{ product.type.lower() }}"
+                        data-generic-names="{% for generic_name in product_data.unique_generic_names %}{{ generic_name.lower() }}{% if not loop.last %} {% endif %}{% endfor %}"
                         onclick="toggleProductDetails({{ product.id }})">
                         <td class="text-center">
                             <i class="fas fa-chevron-right expand-icon" id="icon-{{ product.id }}"></i>
@@ -408,11 +409,13 @@ function filterInventoryCards(query) {
     rows.forEach(row => {
         const productName = row.dataset.productName;
         const productType = row.dataset.productType;
+        const genericNames = row.dataset.genericNames || '';
         const detailsRow = row.nextElementSibling;
         
         const matches = !lowerQuery || 
                        productName.includes(lowerQuery) || 
-                       productType.includes(lowerQuery);
+                       productType.includes(lowerQuery) ||
+                       genericNames.includes(lowerQuery);
         
         if (matches) {
             row.style.display = '';
