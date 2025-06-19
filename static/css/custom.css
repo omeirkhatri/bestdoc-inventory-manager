@@ -1236,7 +1236,7 @@ body {
         position: fixed;
         top: 1rem;
         left: 1rem;
-        z-index: 1060;
+        z-index: 1070;
         background: linear-gradient(135deg, #4fd1c7, #3bb3a9);
         color: white;
         border: none;
@@ -1253,10 +1253,19 @@ body {
         justify-content: center;
     }
     
+    .mobile-nav-toggle.active {
+        left: 300px;
+        transform: translateX(-20px);
+    }
+    
     .mobile-nav-toggle:hover {
         transform: translateY(-2px);
         box-shadow: 0 12px 40px rgba(79, 209, 199, 0.35);
         background: linear-gradient(135deg, #5dd8ce, #4cc2b7);
+    }
+    
+    .mobile-nav-toggle.active:hover {
+        transform: translateX(-20px) translateY(-2px);
     }
     
     .mobile-nav-toggle:active {
