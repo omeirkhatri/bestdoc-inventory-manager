@@ -78,8 +78,8 @@
         </div>
     </div>
 
-    <!-- Desktop Transfer Form -->
-    <div class="col-md-6 mb-4 desktop-transfer-form">
+    <!-- Transfer Form -->
+    <div class="col-md-6 mb-4" id="transfer-details-section">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -194,39 +194,9 @@
 
 
 <script>
-// Add mobile body padding class on page load for mobile devices
+// Initialize page
 document.addEventListener('DOMContentLoaded', function() {
-    if (window.innerWidth <= 768) {
-        document.body.classList.add('mobile-body-padding');
-    }
-    
-    // Handle window resize
-    window.addEventListener('resize', function() {
-        if (window.innerWidth <= 768) {
-            document.body.classList.add('mobile-body-padding');
-        } else {
-            document.body.classList.remove('mobile-body-padding');
-            // Hide mobile form on desktop
-            const mobileForm = document.getElementById('mobile-transfer-sticky');
-            if (mobileForm) {
-                mobileForm.style.display = 'none';
-            }
-        }
-    });
-    
-    // Initialize mobile form validation after DOM is ready
-    const mobileTransferForm = document.getElementById('mobileTransferForm');
-    if (mobileTransferForm) {
-        mobileTransferForm.addEventListener('submit', function(e) {
-            validateAndSubmitTransfer(e, 'mobile_to_bag_id', '#mobileSelectedItemsList input[type="number"]');
-            // Sync destination back to desktop
-            const mobileBag = document.getElementById('mobile_to_bag_id').value;
-            const desktopBag = document.getElementById('to_bag_id');
-            if (desktopBag && mobileBag) {
-                desktopBag.value = mobileBag;
-            }
-        });
-    }
+    // Page initialization complete
 });
 </script>
 {% endblock %}
@@ -386,7 +356,6 @@ function updateSelectedItemsList() {
     
     // Clear previous content
     selectedItemsList.innerHTML = '';
-    if (mobileSelectedItemsList) mobileSelectedItemsList.innerHTML = '';
     
     if (selectedCount === 0) {
         const noItemsDiv = document.createElement('div');
@@ -395,89 +364,19 @@ function updateSelectedItemsList() {
         noItemsDiv.textContent = 'No items selected. Click on items in the Cabinet to add them.';
         selectedItemsList.appendChild(noItemsDiv);
         
-        // Mobile no items
-        if (mobileSelectedItemsList) {
-            const mobileNoItemsDiv = document.createElement('div');
-            mobileNoItemsDiv.className = 'text-body-secondary text-center py-2';
-            mobileNoItemsDiv.textContent = 'No items selected';
-            mobileSelectedItemsList.appendChild(mobileNoItemsDiv);
-        }
-        
         transferBtn.disabled = true;
-        if (mobileTransferBtn) mobileTransferBtn.disabled = true;
         
         // Reset form action for single transfer
         document.getElementById('singleTransferForm').action = '';
-        if (document.getElementById('mobileTransferForm')) {
-            document.getElementById('mobileTransferForm').action = '';
-        }
     } else {
         transferBtn.disabled = false;
-        if (mobileTransferBtn) mobileTransferBtn.disabled = false;
         
-        // Generate items for both desktop and mobile
-        generateItemsList(selectedItemsList, false);
-        if (mobileSelectedItemsList) {
-            generateItemsList(mobileSelectedItemsList, true);
-        }
-    }
-}
-
-function generateItemsList(container, isMobile) {
-    const selectedCount = selectedItems.size;
-    
-    // Determine if single or multi transfer
-    if (selectedCount === 1) {
-        // Single item transfer - show simple interface
-        const itemData = selectedItems.values().next().value;
-        const itemDiv = document.createElement('div');
-        itemDiv.className = isMobile ? 'p-2 bg-body-secondary rounded border' : 'p-2 bg-body-secondary rounded border';
-        const inputSize = isMobile ? 'form-control-sm' : 'form-control-sm';
-        const inputName = isMobile ? 'quantity' : 'quantity';
-        const hiddenName = isMobile ? 'item_id' : 'item_id';
-        
-        itemDiv.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <strong class="text-body">${itemData.name}</strong>
-                    <div class="small text-body-secondary">
-                        ${itemData.type}${itemData.size ? ' - ' + itemData.size : ''}
-                    </div>
-                    <div class="small">
-                        Quantity: <input type="number" class="${inputSize} d-inline-block" 
-                                       style="width: 70px;" min="1" max="${itemData.maxQuantity}" 
-                                       value="${itemData.maxQuantity}" 
-                                       name="${inputName}" required>
-                        <span class="text-body-secondary">/ ${itemData.maxQuantity}</span>
-                        <input type="hidden" name="${hiddenName}" value="${itemData.id}">
-                    </div>
-                </div>
-                <button type="button" class="btn btn-sm btn-outline-danger" 
-                        onclick="removeFromSelection('${itemData.id}')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-        container.appendChild(itemDiv);
-        
-        // Use regular transfer route for single items
-        document.getElementById('singleTransferForm').action = '';
-        if (document.getElementById('mobileTransferForm')) {
-            document.getElementById('mobileTransferForm').action = '';
-        }
-    } else {
-        // Multi item transfer - show detailed interface
-        document.getElementById('singleTransferForm').action = '{{ url_for("handle_multi_transfer") }}';
-        if (document.getElementById('mobileTransferForm')) {
-            document.getElementById('mobileTransferForm').action = '{{ url_for("handle_multi_transfer") }}';
-        }
-        
-        selectedItems.forEach((itemData, itemId) => {
+        // Determine if single or multi transfer
+        if (selectedItems.size === 1) {
+            // Single item transfer - show simple interface
+            const itemData = selectedItems.values().next().value;
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'border rounded p-2 mb-2 bg-body-secondary';
-            const inputSize = isMobile ? 'form-control-sm' : 'form-control-sm';
-            const inputName = `items[${itemId}][quantity]`;
-            const hiddenName = `items[${itemId}][item_id]`;
+            itemDiv.className = 'p-2 bg-body-secondary rounded border';
             
             itemDiv.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center">
@@ -487,22 +386,57 @@ function generateItemsList(container, isMobile) {
                             ${itemData.type}${itemData.size ? ' - ' + itemData.size : ''}
                         </div>
                         <div class="small">
-                            Quantity: <input type="number" class="${inputSize} d-inline-block" 
-                                           style="width: 70px;" min="1" max="${itemData.maxQuantity}" 
+                            Quantity: <input type="number" class="form-control-sm d-inline-block" 
+                                           style="width: 80px;" min="1" max="${itemData.maxQuantity}" 
                                            value="${itemData.maxQuantity}" 
-                                           name="${inputName}" required>
-                            <span class="text-body-secondary">/ ${itemData.maxQuantity}</span>
-                            <input type="hidden" name="${hiddenName}" value="${itemId}">
+                                           name="quantity" required>
+                            <span class="text-body-secondary">/ ${itemData.maxQuantity} available</span>
+                            <input type="hidden" name="item_id" value="${itemData.id}">
                         </div>
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-danger" 
-                            onclick="removeFromSelection('${itemId}')">
+                            onclick="removeFromSelection('${itemData.id}')">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             `;
-            container.appendChild(itemDiv);
-        });
+            selectedItemsList.appendChild(itemDiv);
+            
+            // Use regular transfer route for single items
+            document.getElementById('singleTransferForm').action = '';
+        } else {
+            // Multi item transfer - show detailed interface
+            document.getElementById('singleTransferForm').action = '{{ url_for("handle_multi_transfer") }}';
+            
+            selectedItems.forEach((itemData, itemId) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'border rounded p-2 mb-2 bg-body-secondary';
+                
+                itemDiv.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-body">${itemData.name}</strong>
+                            <div class="small text-body-secondary">
+                                ${itemData.type}${itemData.size ? ' - ' + itemData.size : ''}
+                            </div>
+                            <div class="small">
+                                Quantity: <input type="number" class="form-control-sm d-inline-block" 
+                                               style="width: 80px;" min="1" max="${itemData.maxQuantity}" 
+                                               value="${itemData.maxQuantity}" 
+                                               name="items[${itemId}][quantity]" required>
+                                <span class="text-body-secondary">/ ${itemData.maxQuantity}</span>
+                                <input type="hidden" name="items[${itemId}][item_id]" value="${itemId}">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="removeFromSelection('${itemId}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                selectedItemsList.appendChild(itemDiv);
+            });
+        }
     }
 }
 
@@ -589,7 +523,7 @@ function selectItemForTransfer(itemId, itemName, itemType, itemSize, itemBrand, 
 
 // Mobile scroll to transfer functionality
 function scrollToTransfer() {
-    const transferSection = document.querySelector('.desktop-transfer-form');
+    const transferSection = document.getElementById('transfer-details-section');
     if (transferSection) {
         transferSection.scrollIntoView({ 
             behavior: 'smooth', 
