@@ -1761,12 +1761,13 @@ def get_last_action():
     
     if last_action:
         return jsonify({
-            'has_action': True,
-            'description': last_action.description,
-            'timestamp': last_action.timestamp.isoformat()
+            'action': {
+                'description': last_action.description,
+                'timestamp': last_action.timestamp.isoformat()
+            }
         })
     else:
-        return jsonify({'has_action': False})
+        return jsonify({'action': None})
 
 @app.route('/weekly_check')
 @login_required
