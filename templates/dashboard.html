@@ -153,42 +153,45 @@
 {% if low_stock_bags %}
 <div class="row mb-3 dashboard-section">
     <div class="col-12">
-        <div class="alert alert-warning">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-briefcase-medical me-2"></i>
-                    Bags Need Restocking
-                </h5>
-                <a href="{{ url_for('bag_minimums') }}" class="btn btn-warning btn-sm">
-                    <i class="fas fa-cog me-1"></i>Manage Minimums
-                </a>
-            </div>
-            <div class="row">
-                {% for bag_info in low_stock_bags %}
-                <div class="col-md-6 mb-2">
-                    <div class="card border-warning">
-                        <div class="card-body py-2">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="card-title text-warning mb-0">
-                                    <i class="fas fa-briefcase me-1"></i>{{ bag_info.bag.name }}
-                                </h6>
-                                <button type="button" class="btn btn-success btn-sm" 
-                                        onclick="showQuickRestockModal('{{ bag_info.bag.name }}', {{ bag_info.bag.id }})">
-                                    <i class="fas fa-sync me-1"></i>Restock
-                                </button>
+        <div class="card" style="background: linear-gradient(135deg, rgba(79, 209, 199, 0.1), rgba(59, 179, 169, 0.05)); border: 1px solid rgba(79, 209, 199, 0.3);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0" style="color: #3bb3a9;">
+                        <i class="fas fa-briefcase-medical me-2"></i>
+                        Bags Need Restocking
+                    </h5>
+                    <a href="{{ url_for('bag_minimums') }}" class="btn" style="background: linear-gradient(135deg, #4fd1c7, #3bb3a9); color: white; border: none; border-radius: 8px; padding: 0.375rem 0.75rem;">
+                        <i class="fas fa-cog me-1"></i>Manage Minimums
+                    </a>
+                </div>
+                <div class="row">
+                    {% for bag_info in low_stock_bags %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card" style="border: 1px solid rgba(79, 209, 199, 0.2); border-radius: 12px; background: rgba(255, 255, 255, 0.8);">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-title mb-0" style="color: #3bb3a9;">
+                                        <i class="fas fa-briefcase me-1"></i>{{ bag_info.bag.name }}
+                                    </h6>
+                                    <button type="button" class="btn btn-sm" 
+                                            style="background: linear-gradient(135deg, #4fd1c7, #3bb3a9); color: white; border: none; border-radius: 8px; padding: 0.25rem 0.5rem;"
+                                            onclick="showQuickRestockModal('{{ bag_info.bag.name }}', {{ bag_info.bag.id }})">
+                                        <i class="fas fa-sync me-1"></i>Restock
+                                    </button>
+                                </div>
+                                {% for item in bag_info.low_items %}
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small style="color: #495057;">{{ item.product.name }}</small>
+                                    <span class="badge" style="background: linear-gradient(135deg, #ffc107, #e0a800); color: #000; border-radius: 6px; font-size: 0.7rem;">
+                                        {{ item.current }}/{{ item.minimum }} (need {{ item.shortage }})
+                                    </span>
+                                </div>
+                                {% endfor %}
                             </div>
-                            {% for item in bag_info.low_items %}
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small>{{ item.product.name }}</small>
-                                <span class="badge bg-warning text-dark">
-                                    {{ item.current }}/{{ item.minimum }} (need {{ item.shortage }})
-                                </span>
-                            </div>
-                            {% endfor %}
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
@@ -711,26 +714,7 @@ a.text-decoration-none:hover .stat-card {
     margin-bottom: 2rem;
 }
 
-/* Responsive adjustments */
-@media (max-width: 576px) {
-    .stat-card {
-        padding: 8px 12px !important;
-        height: 40px !important;
-    }
-    
-    .stat-number {
-        font-size: 14px !important;
-    }
-    
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        margin-right: 12px;
-    }
-    
-    .stat-icon i {
-        font-size: 20px;
-    }
+/* Clean up removed conflicting styles */
 }
 </style>
 {% endblock %}
