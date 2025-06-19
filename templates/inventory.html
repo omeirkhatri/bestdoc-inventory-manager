@@ -97,6 +97,7 @@
                     <tr>
                         <th style="width: 40px;"></th>
                         <th>Product</th>
+                        <th>Item Name</th>
                         <th>Type</th>
                         <th class="text-center">Total Qty</th>
                         <th class="text-center">Min Stock</th>
@@ -123,10 +124,18 @@
                                 {% if product_data.unique_generic_names %}
                                     {% for generic_name in product_data.unique_generic_names %}
                                         <span title="{{ generic_name }}">{{ generic_name }}</span>
-                                        <span class="badge bg-info text-white ms-2" style="font-size: 0.75em; white-space: nowrap;">{{ product.name }}</span>
                                     {% endfor %}
                                 {% else %}
                                     <span class="text-white" title="{{ product.name }}">{{ product.name }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="item-name">
+                                {% if product_data.unique_generic_names %}
+                                    <span class="text-muted" title="{{ product.name }}">{{ product.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
                                 {% endif %}
                             </div>
                         </td>
@@ -177,7 +186,7 @@
                     
                     <!-- Details Row -->
                     <tr class="details-row" id="details-{{ product.id }}">
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="details-content">
                                 <h6 class="mb-3">
                                     <i class="fas fa-boxes me-2"></i>
