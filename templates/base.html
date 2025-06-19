@@ -535,6 +535,22 @@
                         const genericNameEl = document.getElementById('itemGenericName') || 
                                                document.getElementById(`itemGenericName-${itemId}`);
                         if (genericNameEl) genericNameEl.textContent = value || 'Not specified';
+                    } else if (field === 'brand') {
+                        // Handle both single item view and table view with multiple items
+                        const brandEl = document.getElementById('itemBrand') || 
+                                        document.getElementById(`itemBrand-${itemId}`);
+                        if (brandEl) brandEl.textContent = value || 'Not specified';
+                    } else if (field === 'expiry_date') {
+                        // Handle both single item view and table view with multiple items
+                        const expiryEl = document.getElementById('itemExpiry') || 
+                                         document.getElementById(`itemExpiry-${itemId}`);
+                        if (expiryEl) {
+                            if (value) {
+                                expiryEl.innerHTML = value;
+                            } else {
+                                expiryEl.innerHTML = '<span class="text-muted">No expiry</span>';
+                            }
+                        }
                     }
                     
                     // Show success message
@@ -694,6 +710,69 @@
         window.editMinimumStock = function(productId, currentValue) {
             editProductField('minimum_stock', currentValue, productId);
         };
+
+        // Special function for editing expiry dates with MM/YY format
+        window.editExpiryField = function(currentValue, itemId) {
+            const elementId = document.getElementById(`itemExpiry-${itemId}`) ? 
+                              `itemExpiry-${itemId}` : 'itemExpiry';
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const originalContent = element.innerHTML;
+            
+            // Convert MM/YY display format back to input format if it exists
+            let inputValue = '';
+            if (currentValue && currentValue !== 'No expiry') {
+                // Parse the display format (e.g., "04/26") to get MM/YY
+                const match = currentValue.match(/(\d{2})\/(\d{2})/);
+                if (match) {
+                    inputValue = `${match[1]}/${match[2]}`;
+                }
+            }
+            
+            const inputHtml = `
+                <div class="d-flex align-items-center">
+                    <input type="text" class="form-control form-control-sm expiry-input me-2" 
+                           value="${inputValue}" id="inline-edit-expiry" 
+                           placeholder="MM/YY" pattern="^(0[1-9]|1[0-2])\\/\\d{2}$" 
+                           maxlength="5" style="width: 100px;">
+                    <button class="btn btn-sm btn-success me-1" onclick="saveExpiryEdit(${itemId})">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="cancelInlineEdit('${elementId}', \`${originalContent.replace(/`/g, '\\`')}\`)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            element.innerHTML = inputHtml;
+            const expiryInput = document.getElementById('inline-edit-expiry');
+            expiryInput.focus();
+            
+            // Add MM/YY formatting to the input field
+            expiryInput.addEventListener('input', function() {
+                formatExpiryInput(this);
+            });
+        };
+
+        window.saveExpiryEdit = function(itemId) {
+            const inputElement = document.getElementById('inline-edit-expiry');
+            const newValue = inputElement.value.trim();
+            
+            updateItemField('expiry_date', newValue, itemId);
+        };
+
+        // MM/YY formatting function for inline editing
+        function formatExpiryInput(input) {
+            let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+            
+            if (value.length >= 2) {
+                // Insert slash after MM
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            
+            input.value = value;
+        }
     </script>
     
     <style>

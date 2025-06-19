@@ -2285,12 +2285,36 @@ def update_item():
         item = Item.query.get_or_404(item_id)
         
         # Validate field
-        if field not in ['name', 'type', 'size', 'brand', 'generic_name']:
+        if field not in ['name', 'type', 'size', 'brand', 'generic_name', 'expiry_date']:
             return jsonify({'success': False, 'message': 'Invalid field'})
         
         # Handle empty string for optional fields
         if field in ['size', 'brand', 'generic_name'] and not value:
             value = None
+        
+        # Handle expiry_date field with MM/YY format parsing
+        if field == 'expiry_date':
+            if not value:
+                value = None
+            else:
+                try:
+                    # Parse MM/YY format (e.g., "04/26" -> April 2026, day 01)
+                    if '/' in value and len(value) == 5:
+                        month_str, year_str = value.split('/')
+                        month = int(month_str)
+                        year = int('20' + year_str)  # Convert YY to 20YY
+                        
+                        # Validate month
+                        if month < 1 or month > 12:
+                            return jsonify({'success': False, 'message': 'Invalid month. Use MM/YY format (01-12)'})
+                        
+                        # Create date object with day 01
+                        from datetime import date
+                        value = date(year, month, 1)
+                    else:
+                        return jsonify({'success': False, 'message': 'Invalid expiry date format. Use MM/YY format (e.g., 04/26)'})
+                except (ValueError, TypeError):
+                    return jsonify({'success': False, 'message': 'Invalid expiry date format. Use MM/YY format (e.g., 04/26)'})
         
         # Update the field
         setattr(item, field, value)
