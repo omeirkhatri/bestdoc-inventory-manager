@@ -353,10 +353,14 @@ function updateSelectedItemsList() {
             mobileSelectedBadge.textContent = selectedCount;
             mobileSelectedBadge.style.display = 'block';
             mobileButton.style.display = 'flex';
+            console.log('Mobile button should now be visible with count:', selectedCount);
         } else {
             mobileSelectedBadge.style.display = 'none';
             mobileButton.style.display = 'none';
+            console.log('Mobile button hidden - no items selected');
         }
+    } else {
+        console.log('Mobile elements not found:', { badge: !!mobileSelectedBadge, button: !!mobileButton });
     }
     
     // Clear previous content
@@ -538,10 +542,14 @@ function scrollToTransfer() {
 }
 
 // Form validation for desktop
-document.getElementById('singleTransferForm').addEventListener('submit', function(e) {
-    validateAndSubmitTransfer(e, 'to_bag_id', '#selectedItemsList input[type="number"]');
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('singleTransferForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            validateAndSubmitTransfer(e, 'to_bag_id', '#selectedItemsList input[type="number"]');
+        });
+    }
 });
-
 
 
 function validateAndSubmitTransfer(e, bagSelectId, quantitySelector) {
