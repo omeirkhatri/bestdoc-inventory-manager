@@ -43,7 +43,7 @@ def load_user(user_id):
 
 # Register Jinja filters
 def datetime_gmt4_filter(dt):
-    """Convert datetime to GMT+4 and format as DD/MM/YY HH:MM"""
+    """Convert datetime to GMT+4 and format as DD/MM/YYYY HH:MM"""
     if not dt:
         return ''
     from pytz import timezone
@@ -54,10 +54,10 @@ def datetime_gmt4_filter(dt):
     if dt.tzinfo is None:
         dt = pytz.utc.localize(dt)
     local_dt = dt.astimezone(GMT_PLUS_4)
-    return local_dt.strftime('%d/%m/%y %H:%M')
+    return local_dt.strftime('%d/%m/%Y %H:%M')
 
 def date_gmt4_filter(dt):
-    """Convert date to GMT+4 and format as DD/MM/YY"""
+    """Convert date to GMT+4 and format as DD/MM/YYYY"""
     if not dt:
         return ''
     from datetime import datetime
@@ -70,9 +70,9 @@ def date_gmt4_filter(dt):
         if dt.tzinfo is None:
             dt = pytz.utc.localize(dt)
         local_dt = dt.astimezone(GMT_PLUS_4)
-        return local_dt.strftime('%d/%m/%y')
+        return local_dt.strftime('%d/%m/%Y')
     else:
-        return dt.strftime('%d/%m/%y')
+        return dt.strftime('%d/%m/%Y')
 
 app.jinja_env.filters['format_datetime_gmt4'] = datetime_gmt4_filter
 app.jinja_env.filters['format_date_gmt4'] = date_gmt4_filter

@@ -26,25 +26,25 @@ class User(UserMixin, db.Model):
         return f'<User {self.username}>'
 
 def format_datetime_gmt4(dt):
-    """Convert datetime to GMT+4 and format as DD/MM/YY HH:MM"""
+    """Convert datetime to GMT+4 and format as DD/MM/YYYY HH:MM"""
     if not dt:
         return ''
     if dt.tzinfo is None:
         dt = pytz.utc.localize(dt)
     local_dt = dt.astimezone(GMT_PLUS_4)
-    return local_dt.strftime('%d/%m/%y %H:%M')
+    return local_dt.strftime('%d/%m/%Y %H:%M')
 
 def format_date_gmt4(dt):
-    """Convert date to GMT+4 and format as DD/MM/YY"""
+    """Convert date to GMT+4 and format as DD/MM/YYYY"""
     if not dt:
         return ''
     if isinstance(dt, datetime):
         if dt.tzinfo is None:
             dt = pytz.utc.localize(dt)
         local_dt = dt.astimezone(GMT_PLUS_4)
-        return local_dt.strftime('%d/%m/%y')
+        return local_dt.strftime('%d/%m/%Y')
     else:
-        return dt.strftime('%d/%m/%y')
+        return dt.strftime('%d/%m/%Y')
 
 class Bag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
