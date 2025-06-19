@@ -563,12 +563,18 @@ def inventory():
         
         items = item_query.order_by(Item.brand, Item.size, Item.expiry_date).all()
         
-        if items:  # Only include item groups that have matching items
+        # Get all items for this item group (name + type) - include all items regardless of filters for grouping
+        all_items = Item.query.filter(
+            Item.name == item_group.name,
+            Item.type == item_group.type
+        ).join(Bag).all()
+        
+        if all_items:  # Only include item groups that have items
             # Group items by brand, size, and expiry date
             grouped_items = []
             current_group = None
             
-            for item in items:
+            for item in all_items:
                 # Create a key for grouping (brand, size, expiry_date, bag_id)
                 group_key = (item.brand or 'No Brand', item.size or 'No Size', item.expiry_date, item.bag_id)
                 
