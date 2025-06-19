@@ -1302,25 +1302,30 @@ def handle_wastage():
     
     return redirect(url_for('wastage'))
 
-@app.route('/item_history/<int:product_id>')
+@app.route('/item_history/<name>/<type>')
 @login_required
-def item_history(product_id):
-    """Show detailed history for a specific product"""
-    product = Product.query.get_or_404(product_id)
-    
-    # Get all current items for this product
+def item_history(name, type):
+    """Show detailed history for a specific item (by name and type)"""
+    # Get all current items for this name/type combination
     current_items = Item.query.filter(
-        Item.product_id == product_id,
+        Item.name == name,
+        Item.type == type,
         Item.quantity > 0
     ).join(Bag).order_by(Item.expiry_date.asc().nullslast(), Item.size).all()
     
-    # Get all movement history for this product
+    if not current_items:
+        flash("No active items found", "warning")
+        return redirect(url_for('inventory'))
+    
+    # Get all movement history for this item name/type
     movement_history = MovementHistory.query.filter(
-        MovementHistory.item_name == product.name
+        MovementHistory.item_name == name,
+        MovementHistory.item_type == type
     ).order_by(MovementHistory.timestamp.desc()).all()
     
     return render_template('item_history.html',
-                         product=product,
+                         item_name=name,
+                         item_type=type,
                          current_items=current_items,
                          movement_history=movement_history)
 
