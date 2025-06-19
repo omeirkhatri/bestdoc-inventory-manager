@@ -32,12 +32,14 @@
                     <div class="list-group-item">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1">
-                                <h6 class="mb-1">{{ item.name }}</h6>
+                                <h6 class="mb-1">
+                                    {{ item.name }}
+                                    {% if item.brand %}
+                                    <span class="badge bg-info ms-2">{{ item.brand }}</span>
+                                    {% endif %}
+                                </h6>
                                 <p class="mb-1">
                                     <span class="badge bg-secondary me-2">{{ item.type }}</span>
-                                    {% if item.brand %}
-                                    <span class="badge bg-info me-2">{{ item.brand }}</span>
-                                    {% endif %}
                                     {% if item.size %}
                                     <span class="badge bg-warning me-2">{{ item.size }}</span>
                                     {% endif %}
@@ -58,7 +60,7 @@
                                 </small>
                             </div>
                             <button type="button" class="btn btn-primary btn-sm" id="selectBtn_{{ item.id }}"
-                                    onclick="selectItemForTransfer('{{ item.id }}', '{{ item.name }}', '{{ item.type }}', '{{ item.size or '' }}', {{ item.quantity }})">
+                                    onclick="selectItemForTransfer('{{ item.id }}', '{{ item.name }}', '{{ item.type }}', '{{ item.size or '' }}', '{{ item.brand or '' }}', {{ item.quantity }})">
                                 <i class="fas fa-arrow-right"></i>
                             </button>
                         </div>
@@ -183,7 +185,7 @@
 
 <!-- Mobile Scroll to Transfer Button -->
 <button class="btn btn-primary mobile-transfer-toggle d-flex align-items-center justify-content-center" 
-        onclick="scrollToTransfer()" id="mobileScrollBtn">
+        onclick="scrollToTransfer()" id="mobileScrollBtn" style="display: none;">
     <i class="fas fa-arrow-down"></i>
     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
           id="mobileSelectedBadge" style="display: none;">
@@ -344,13 +346,16 @@ function updateSelectedItemsList() {
     selectedCountBadge.textContent = selectedCount;
     transferItemCount.textContent = selectedCount;
     
-    // Update mobile badge
-    if (mobileSelectedBadge) {
+    // Update mobile badge and button visibility
+    const mobileButton = document.getElementById('mobileScrollBtn');
+    if (mobileSelectedBadge && mobileButton) {
         if (selectedCount > 0) {
             mobileSelectedBadge.textContent = selectedCount;
             mobileSelectedBadge.style.display = 'block';
+            mobileButton.style.display = 'flex';
         } else {
             mobileSelectedBadge.style.display = 'none';
+            mobileButton.style.display = 'none';
         }
     }
     
@@ -456,7 +461,7 @@ function removeFromSelection(itemId) {
         document.querySelectorAll('.list-group-item').forEach(item => {
             const itemButton = item.querySelector(`#selectBtn_${itemId}`);
             if (itemButton) {
-                item.classList.remove('multi-selected');
+                item.classList.remove('border-success', 'bg-success', 'bg-opacity-10');
             }
         });
         
@@ -469,7 +474,7 @@ function clearSelection() {
     
     // Reset all buttons and highlighting
     document.querySelectorAll('.list-group-item').forEach(item => {
-        item.classList.remove('multi-selected');
+        item.classList.remove('border-success', 'bg-success', 'bg-opacity-10');
         const button = item.querySelector('button[id^="selectBtn_"]');
         if (button) {
             button.innerHTML = '<i class="fas fa-arrow-right"></i>';
