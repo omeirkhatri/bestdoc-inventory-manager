@@ -120,13 +120,19 @@ class Item(db.Model):
     def is_expired(self):
         if not self.expiry_date:
             return False
-        return self.expiry_date < date.today()
+        # Use GMT+4 timezone for consistent date comparison
+        gmt4_now = datetime.now(GMT_PLUS_4)
+        today_gmt4 = gmt4_now.date()
+        return self.expiry_date < today_gmt4
     
     @property
     def expires_soon(self):
         if not self.expiry_date:
             return False
-        days_until_expiry = (self.expiry_date - date.today()).days
+        # Use GMT+4 timezone for consistent date comparison
+        gmt4_now = datetime.now(GMT_PLUS_4)
+        today_gmt4 = gmt4_now.date()
+        days_until_expiry = (self.expiry_date - today_gmt4).days
         return 0 <= days_until_expiry <= 30
     
     @property

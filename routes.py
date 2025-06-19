@@ -262,13 +262,19 @@ def handle_csv_upload(file):
                     expiry_date = None
                     if row.get('expiry_date'):
                         try:
+                            # Try YYYY-MM-DD first (HTML date input format)
                             expiry_date = datetime.strptime(row['expiry_date'], '%Y-%m-%d').date()
                         except ValueError:
                             try:
-                                expiry_date = datetime.strptime(row['expiry_date'], '%m/%d/%Y').date()
+                                # Try DD/MM/YYYY format
+                                expiry_date = datetime.strptime(row['expiry_date'], '%d/%m/%Y').date()
                             except ValueError:
-                                errors.append(f"Row {row_num}: Invalid expiry date format")
-                                continue
+                                try:
+                                    # Try DD-MM-YYYY format
+                                    expiry_date = datetime.strptime(row['expiry_date'], '%d-%m-%Y').date()
+                                except ValueError:
+                                    errors.append(f"Row {row_num}: Invalid expiry date format. Use DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD")
+                                    continue
                     
                     # Check if identical item already exists in the same bag
                     existing_item = Item.query.filter_by(
@@ -986,7 +992,10 @@ def history():
 @app.route('/expiry')
 @login_required
 def expiry():
-    today = date.today()
+    # Use GMT+4 timezone for consistent date calculations
+    from models import GMT_PLUS_4
+    gmt4_now = datetime.now(GMT_PLUS_4)
+    today = gmt4_now.date()
     thirty_days = today + timedelta(days=30)
     ninety_days = today + timedelta(days=90)
     
