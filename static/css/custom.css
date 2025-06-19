@@ -1237,23 +1237,39 @@ body {
         top: 1rem;
         left: 1rem;
         z-index: 1060;
-        background: var(--inventory-teal);
+        background: linear-gradient(135deg, #4fd1c7, #3bb3a9);
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 0.75rem;
-        box-shadow: 0 4px 20px rgba(79, 209, 199, 0.3);
-        font-size: 1.25rem;
-        transition: all 0.3s ease;
+        border-radius: 12px;
+        padding: 0.875rem;
+        box-shadow: 0 8px 32px rgba(79, 209, 199, 0.25);
+        font-size: 1.125rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .mobile-nav-toggle:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 25px rgba(79, 209, 199, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(79, 209, 199, 0.35);
+        background: linear-gradient(135deg, #5dd8ce, #4cc2b7);
     }
     
     .mobile-nav-toggle:active {
-        transform: scale(0.95);
+        transform: translateY(0);
+        box-shadow: 0 6px 24px rgba(79, 209, 199, 0.3);
+    }
+    
+    .mobile-nav-toggle i {
+        transition: transform 0.3s ease;
+    }
+    
+    .mobile-nav-toggle.active i {
+        transform: rotate(90deg);
     }
 }
 
