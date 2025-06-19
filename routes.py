@@ -1991,27 +1991,28 @@ def inventory_audit():
     # Get selected bag/storage from query parameter
     selected_bag_id = request.args.get('bag_id', type=int)
     
-    # Get all bags for selection dropdown
+    # Get all bags for selection dropdown (excluding 'All Locations' option)
     all_bags = Bag.query.order_by(Bag.location.desc(), Bag.name).all()
+    
+    # If no bag is selected, default to Cabinet
+    if not selected_bag_id:
+        cabinet_bag = Bag.query.filter_by(name='Cabinet').first()
+        if cabinet_bag:
+            selected_bag_id = cabinet_bag.id
     
     # Get all items that require weekly check (types 4 and 5)
     consumables_audit_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
     
-    # Base query for consumable items
+    # Base query for consumable items - always filter by selected bag
     query = Item.query.join(Bag).filter(
         and_(
             Item.type.in_(consumables_audit_types),
-            Item.quantity > 0
+            Item.quantity > 0,
+            Item.bag_id == selected_bag_id
         )
     )
     
-    # Filter by selected bag if specified
-    if selected_bag_id:
-        query = query.filter(Item.bag_id == selected_bag_id)
-        selected_bag = Bag.query.get(selected_bag_id)
-    else:
-        selected_bag = None
-    
+    selected_bag = Bag.query.get(selected_bag_id) if selected_bag_id else None
     consumable_items = query.order_by(Item.name, Item.size).all()
     
     # Group items by name and size for easier display
