@@ -76,37 +76,39 @@
                                     <label class="form-label">Size</label>
                                     <input type="text" class="form-control" name="size" placeholder="e.g., 22G, 5ml">
                                 </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-2 mb-2">
                                     <label class="form-label">Quantity <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" name="quantity" min="1" required>
                                 </div>
-                                <div class="col-md-1 mb-2 d-flex align-items-end">
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label">Expiry Month/Year</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control expiry-input" name="expiry_date" 
+                                               placeholder="MM/YY" pattern="^(0[1-9]|1[0-2])\/\d{2}$" maxlength="5">
+                                        <button type="button" class="btn btn-outline-secondary no-expiry-btn" 
+                                                title="No expiry date">
+                                            <i class="fas fa-infinity"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">Format: MM/YY (e.g., 04/26)</small>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label">Minimum Stock <span class="text-muted">(new products only)</span></label>
+                                    <input type="number" class="form-control minimum-stock-input" name="minimum_stock" 
+                                           min="0" placeholder="Alert when stock below this number">
+                                </div>
+                                <div class="col-md-2 mb-2 d-flex align-items-end">
                                     <div class="btn-group-vertical w-100">
                                         <button type="button" class="btn btn-outline-success btn-sm clone-item-btn" 
-                                                title="Clone this item for quick entry">
+                                                title="Duplicate Button">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                         <button type="button" class="btn btn-outline-danger btn-sm remove-row" style="display: none;">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label">Expiry Month/Year</label>
-                                    <div class="input-group">
-                                        <input type="month" class="form-control" name="expiry_date" placeholder="MM/YYYY">
-                                        <button type="button" class="btn btn-outline-secondary no-expiry-btn" 
-                                                title="No expiry date">
-                                            <i class="fas fa-infinity"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-md-5">
-                                    <label class="form-label">Minimum Stock <span class="text-muted">(new products only)</span></label>
-                                    <input type="number" class="form-control minimum-stock-input" name="minimum_stock" 
-                                           min="0" placeholder="Alert when stock below this number">
                                 </div>
                             </div>
                         </div>
@@ -144,7 +146,7 @@
                         <li><strong>type</strong> (required) - Item type</li>
                         <li><strong>quantity</strong> (required) - Quantity to add</li>
                         <li><strong>size</strong> (optional) - Item size</li>
-                        <li><strong>expiry_date</strong> (optional) - Format: MM/YYYY</li>
+                        <li><strong>expiry_date</strong> (optional) - Format: MM/YY (e.g., 04/26)</li>
                         <li><strong>bag</strong> (optional) - Destination bag (defaults to Cabinet)</li>
                     </ul>
                     <small class="text-muted">Example: name,type,quantity,size,expiry_date,bag</small>
@@ -259,6 +261,60 @@ function initializeAutocomplete() {
     document.querySelectorAll('.item-row').forEach(row => {
         toggleMinimumStockField(row, true); // Show by default for new items
     });
+    
+    // Initialize expiry date formatting
+    initializeExpiryDateFormatting();
+}
+
+// MM/YY date formatting functionality
+function initializeExpiryDateFormatting() {
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('expiry-input')) {
+            formatExpiryInput(e.target);
+        }
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.target.classList.contains('expiry-input')) {
+            handleExpiryKeydown(e);
+        }
+    });
+}
+
+function formatExpiryInput(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove all non-digits
+    
+    if (value.length >= 2) {
+        // Insert slash after MM
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    
+    input.value = value;
+}
+
+function handleExpiryKeydown(e) {
+    const input = e.target;
+    const value = input.value;
+    
+    // Allow: backspace, delete, tab, escape, enter
+    if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+        // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+        (e.keyCode === 65 && e.ctrlKey === true) ||
+        (e.keyCode === 67 && e.ctrlKey === true) ||
+        (e.keyCode === 86 && e.ctrlKey === true) ||
+        (e.keyCode === 88 && e.ctrlKey === true)) {
+        return;
+    }
+    
+    // Ensure that it's a number and stop the keypress
+    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+        e.preventDefault();
+    }
+    
+    // Prevent input if already at max length
+    if (value.length >= 5) {
+        e.preventDefault();
+    }
 }
 
 function handleItemNameInput(input) {

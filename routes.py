@@ -258,23 +258,23 @@ def handle_csv_upload(file):
                         db.session.add(bag)
                         db.session.flush()
                     
-                    # Parse expiry date (MM/YYYY format, default to 1st of month)
+                    # Parse expiry date (MM/YY format, default to 1st of month)
                     expiry_date = None
                     if row.get('expiry_date'):
                         try:
-                            # Try YYYY-MM format (HTML month input)
-                            expiry_date = datetime.strptime(f"{row['expiry_date']}-01", '%Y-%m-%d').date()
-                        except ValueError:
-                            try:
-                                # Try MM/YYYY format
-                                expiry_date = datetime.strptime(f"01/{row['expiry_date']}", '%d/%m/%Y').date()
-                            except ValueError:
-                                try:
-                                    # Try MM-YYYY format
-                                    expiry_date = datetime.strptime(f"01-{row['expiry_date']}", '%d-%m-%Y').date()
-                                except ValueError:
-                                    errors.append(f"Row {row_num}: Invalid expiry date format. Use MM/YYYY")
-                                    continue
+                            date_str = row['expiry_date'].strip()
+                            if '/' in date_str:
+                                # New MM/YY format (e.g., "04/26")
+                                month, year = date_str.split('/')
+                                # Convert 2-digit year to 4-digit (assume 20XX)
+                                full_year = 2000 + int(year) if int(year) < 50 else 1900 + int(year)
+                                expiry_date = datetime(full_year, int(month), 1).date()
+                            else:
+                                # Try YYYY-MM format (HTML month input)
+                                expiry_date = datetime.strptime(f"{date_str}-01", '%Y-%m-%d').date()
+                        except (ValueError, IndexError):
+                            errors.append(f"Row {row_num}: Invalid expiry date format. Use MM/YY format (e.g., 04/26)")
+                            continue
                     
                     # Check if identical item already exists in the same bag
                     existing_item = Item.query.filter_by(
@@ -369,14 +369,22 @@ def handle_manual_addition():
         for i in range(len(names)):
             if i < len(names) and i < len(types) and i < len(quantities):
                 if names[i].strip() and types[i].strip() and quantities[i].strip():
-                    # Parse expiry date (MM/YYYY format, default to 1st of month)
+                    # Parse expiry date (MM/YY format, default to 1st of month)
                     expiry_date = None
                     if i < len(expiry_dates) and expiry_dates[i].strip():
                         try:
-                            # HTML month input format (YYYY-MM)
-                            expiry_date = datetime.strptime(f"{expiry_dates[i]}-01", '%Y-%m-%d').date()
-                        except ValueError:
-                            flash(f"Invalid expiry date format for item {i+1}. Use MM/YYYY format.", "warning")
+                            date_str = expiry_dates[i].strip()
+                            if '/' in date_str:
+                                # New MM/YY format (e.g., "04/26")
+                                month, year = date_str.split('/')
+                                # Convert 2-digit year to 4-digit (assume 20XX)
+                                full_year = 2000 + int(year) if int(year) < 50 else 1900 + int(year)
+                                expiry_date = datetime(full_year, int(month), 1).date()
+                            else:
+                                # Old YYYY-MM format from HTML month input 
+                                expiry_date = datetime.strptime(f"{date_str}-01", '%Y-%m-%d').date()
+                        except (ValueError, IndexError):
+                            flash(f"Invalid expiry date format for item {i+1}. Use MM/YY format (e.g., 04/26).", "warning")
                             continue
                     
                     # Get additional fields safely
