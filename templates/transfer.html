@@ -183,14 +183,11 @@
     </div>
 </div>
 
-<!-- Mobile Scroll to Transfer Button -->
-<button class="btn btn-primary mobile-transfer-toggle d-flex align-items-center justify-content-center" 
+<!-- Mobile Transfer Button -->
+<button class="btn btn-success mobile-transfer-button d-flex align-items-center justify-content-center" 
         onclick="scrollToTransfer()" id="mobileScrollBtn">
-    <i class="fas fa-arrow-down"></i>
-    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
-          id="mobileSelectedBadge" style="display: none;">
-        0
-    </span>
+    <i class="fas fa-exchange-alt me-2"></i>
+    Transfer <span id="mobileSelectedBadge" class="ms-1">(0)</span>
 </button>
 
 
@@ -272,33 +269,38 @@ document.addEventListener('DOMContentLoaded', function() {
         margin-top: 0.5rem;
     }
     
-    /* Mobile scroll button - hidden by default */
-    .mobile-transfer-toggle {
+    /* Mobile transfer button - wide sticky button */
+    .mobile-transfer-button {
         position: fixed;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 1040;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        width: 50%;
+        min-width: 200px;
+        max-width: 300px;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 16px;
+        padding: 12px 20px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        border: none;
         display: none !important;
     }
     
-    /* Only show on mobile when items are selected */
-    .mobile-transfer-toggle.show {
+    /* Show button when items are selected */
+    .mobile-transfer-button.show {
         display: flex !important;
     }
 }
 
 @media (min-width: 769px) {
     /* Always hide on desktop */
-    .mobile-transfer-toggle {
+    .mobile-transfer-button {
         display: none !important;
     }
     
-    .mobile-transfer-toggle.show {
+    .mobile-transfer-button.show {
         display: none !important;
     }
 }
@@ -361,11 +363,10 @@ function updateSelectedItemsList() {
     const mobileButton = document.getElementById('mobileScrollBtn');
     if (mobileSelectedBadge && mobileButton) {
         if (selectedCount > 0) {
-            mobileSelectedBadge.textContent = selectedCount;
-            mobileSelectedBadge.style.display = 'block';
+            mobileSelectedBadge.textContent = `(${selectedCount})`;
             mobileButton.classList.add('show');
         } else {
-            mobileSelectedBadge.style.display = 'none';
+            mobileSelectedBadge.textContent = '(0)';
             mobileButton.classList.remove('show');
         }
     }
