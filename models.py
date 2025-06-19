@@ -96,6 +96,7 @@ class Product(db.Model):
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    generic_name = db.Column(db.String(200))  # Generic medicine name - optional
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.String(100), nullable=False)  # Consumables, Pharmacy Vials, IV Vials, etc.
     brand = db.Column(db.String(100))  # Brand name - optional

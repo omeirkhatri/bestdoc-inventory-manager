@@ -49,6 +49,11 @@
                         <div class="item-row border rounded p-3 mb-3">
                             <div class="row">
                                 <div class="col-md-3 mb-2">
+                                    <label class="form-label">Generic Name</label>
+                                    <input type="text" class="form-control generic-name-input" name="generic_name" 
+                                           autocomplete="off" placeholder="Generic medicine name (optional)">
+                                </div>
+                                <div class="col-md-3 mb-2">
                                     <label class="form-label">Item Name <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control item-name-input" name="name" required 
                                            autocomplete="off" placeholder="Start typing item name...">
@@ -134,6 +139,7 @@
                     <h6><i class="fas fa-info-circle me-2"></i>CSV Format Requirements:</h6>
                     <p class="mb-2">Your CSV file should have the following columns:</p>
                     <ul class="mb-2">
+                        <li><strong>generic_name</strong> (optional) - Generic medicine name</li>
                         <li><strong>name</strong> (required) - Item name</li>
                         <li><strong>type</strong> (required) - Item type</li>
                         <li><strong>quantity</strong> (required) - Quantity to add</li>

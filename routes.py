@@ -294,6 +294,7 @@ def handle_csv_upload(file):
                     else:
                         # Create new item
                         item = Item(
+                            generic_name=row.get('generic_name', '').strip() or None,
                             name=row['name'].strip(),
                             type=row['type'].strip(),
                             brand=row.get('brand', '').strip() or None,

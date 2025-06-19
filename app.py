@@ -76,6 +76,8 @@ def date_gmt4_filter(dt):
 
 app.jinja_env.filters['format_datetime_gmt4'] = datetime_gmt4_filter
 app.jinja_env.filters['format_date_gmt4'] = date_gmt4_filter
+app.jinja_env.filters['datetime_gmt4'] = datetime_gmt4_filter
+app.jinja_env.filters['date_gmt4'] = date_gmt4_filter
 
 with app.app_context():
     # Import models to ensure tables are created
