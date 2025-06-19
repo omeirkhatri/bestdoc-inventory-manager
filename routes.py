@@ -505,13 +505,13 @@ def inventory():
     bag_filter = request.args.get('bag', '')
     status_filter = request.args.get('status', '')
     
-    # Base query - get unique items grouped by name and type
+    # Base query - get unique items grouped by name and type (include all items)
     base_query = db.session.query(
         Item.name,
         Item.type,
         func.sum(Item.quantity).label('total_quantity'),
         func.max(Item.minimum_stock).label('min_stock')
-    ).group_by(Item.name, Item.type)
+    ).filter(Item.quantity >= 0).group_by(Item.name, Item.type)
     
     # Apply filters
     if search:
@@ -535,11 +535,10 @@ def inventory():
             if item_group.total_quantity > item_group.min_stock:
                 continue
         
-        # Get active items for this item group (name + type)
+        # Get all items for this item group (name + type) - include zero quantity items
         item_query = Item.query.filter(
             Item.name == item_group.name,
-            Item.type == item_group.type,
-            Item.quantity > 0
+            Item.type == item_group.type
         ).join(Bag)
         
         # Apply item-level filters

@@ -81,7 +81,7 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0" id="inventoryCount">
-            Products ({{ products|length }} found)
+            Items ({{ items|length }} found)
         </h5>
         <div>
             <a href="{{ url_for('add_items') }}" class="btn btn-success btn-sm">
@@ -90,13 +90,13 @@
         </div>
     </div>
     <div class="card-body p-0">
-        {% if products %}
+        {% if items %}
         <div class="table-responsive">
             <table class="inventory-table table" id="inventoryTable">
                 <thead>
                     <tr>
                         <th style="width: 40px;"></th>
-                        <th>Product</th>
+                        <th>Item Name</th>
                         <th>Type</th>
                         <th class="text-center">Total Qty</th>
                         <th class="text-center">Min Stock</th>
@@ -105,22 +105,24 @@
                     </tr>
                 </thead>
                 <tbody id="inventoryTableBody">
-                    {% for product_data in products %}
-                    {% set product = product_data.product %}
-                    {% set grouped_items = product_data.grouped_items %}
-                    {% set total_quantity = product_data.total_quantity %}
-                    {% set is_low_stock = product_data.is_low_stock %}
+                    {% for item_data in items %}
+                    {% set item_name = item_data.name %}
+                    {% set item_type = item_data.type %}
+                    {% set grouped_items = item_data.grouped_items %}
+                    {% set total_quantity = item_data.total_quantity %}
+                    {% set minimum_stock = item_data.minimum_stock %}
+                    {% set is_low_stock = item_data.is_low_stock %}
                     
                     <tr class="expandable-row" 
-                        data-product-name="{{ product.name.lower() }}" 
-                        data-product-type="{{ product.type.lower() }}"
-                        onclick="toggleProductDetails({{ product.id }})">
+                        data-item-name="{{ item_name.lower() }}" 
+                        data-item-type="{{ item_type.lower() }}"
+                        onclick="toggleItemDetails('{{ item_name }}', '{{ item_type }}')">
                         <td class="text-center">
-                            <i class="fas fa-chevron-right expand-icon" id="icon-{{ product.id }}"></i>
+                            <i class="fas fa-chevron-right expand-icon" id="icon-{{ loop.index }}"></i>
                         </td>
                         <td>
-                            <div class="product-name" title="{{ product.name }}">
-                                {{ product.name }}
+                            <div class="product-name" title="{{ item_name }}">
+                                {{ item_name }}
                                 {% set unique_brands = [] %}
                                 {% for group in grouped_items %}
                                     {% if group['brand'] and group['brand'] not in unique_brands %}
@@ -133,7 +135,7 @@
                             </div>
                         </td>
                         <td>
-                            <span class="product-type">{{ product.type }}</span>
+                            <span class="product-type">{{ item_type }}</span>
                         </td>
                         <td class="quantity-cell">
                             <span class="status-indicator {% if is_low_stock %}low-stock{% elif total_quantity <= 10 %}medium-stock{% else %}good-stock{% endif %}">
