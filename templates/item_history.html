@@ -108,6 +108,8 @@
                 <thead>
                     <tr>
                         <th>Generic Name</th>
+                        <th>Item Name</th>
+                        <th>Type</th>
                         <th>Brand</th>
                         <th>Size</th>
                         <th>Quantity</th>
@@ -130,13 +132,37 @@
                             </div>
                         </td>
                         <td>
-                            {% if item.brand %}
-                                <span class="badge bg-info">{{ item.brand }}</span>
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
+                            <div class="d-flex align-items-center">
+                                <span class="fw-bold" id="itemName-{{ item.id }}">{{ item.name }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('name', '{{ item.name }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </td>
-                        <td>{{ item.size or '-' }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary" id="itemType-{{ item.id }}">{{ item.type }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('type', '{{ item.type }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-info" id="itemBrand-{{ item.id }}">{{ item.brand or 'No brand' }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('brand', '{{ item.brand or '' }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span id="itemSize-{{ item.id }}">{{ item.size or '-' }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('size', '{{ item.size or '' }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
                         <td>
                             <span class="badge bg-{% if item.quantity <= 5 %}warning{% else %}primary{% endif %}">
                                 {{ item.quantity }}
@@ -144,11 +170,18 @@
                         </td>
                         <td>{{ item.bag.name }}</td>
                         <td>
-                            {% if item.expiry_date %}
-                                {{ item.expiry_date|format_date_gmt4 }}
-                            {% else %}
-                                <span class="text-muted">No expiry</span>
-                            {% endif %}
+                            <div class="d-flex align-items-center">
+                                <span id="itemExpiry-{{ item.id }}">
+                                    {% if item.expiry_date %}
+                                        {{ item.expiry_date|format_date_gmt4 }}
+                                    {% else %}
+                                        <span class="text-muted">No expiry</span>
+                                    {% endif %}
+                                </span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editExpiryField('{{ item.expiry_date|format_date_gmt4 if item.expiry_date else '' }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </td>
                         <td>
                             {% if item.expiry_status == 'expired' %}

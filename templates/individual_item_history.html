@@ -114,21 +114,27 @@
                         </div>
                         <div class="col-md-3">
                             <strong>Expiry Date:</strong><br>
-                            {% if item.expiry_date %}
-                                <span class="text-{% if item.expiry_status == 'expired' %}danger{% elif item.expiry_status == 'expiring' %}warning{% else %}success{% endif %}">
-                                    {{ item.expiry_date|format_date_gmt4 }}
+                            <div class="d-flex align-items-center">
+                                <span class="text-{% if item.expiry_status == 'expired' %}danger{% elif item.expiry_status == 'expiring' %}warning{% else %}success{% endif %}" id="itemExpiry">
+                                    {% if item.expiry_date %}
+                                        {{ item.expiry_date|format_date_gmt4 }}
+                                    {% else %}
+                                        <span class="text-muted">No expiry date</span>
+                                    {% endif %}
                                 </span>
-                            {% else %}
-                                <span class="text-muted">No expiry date</span>
-                            {% endif %}
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editExpiryField('{{ item.expiry_date|format_date_gmt4 if item.expiry_date else '' }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <strong>Brand:</strong><br>
-                            {% if item.brand %}
-                                <span class="badge bg-info">{{ item.brand }}</span>
-                            {% else %}
-                                <span class="text-muted">Not specified</span>
-                            {% endif %}
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-info" id="itemBrand">{{ item.brand or 'Not specified' }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('brand', '{{ item.brand or '' }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <strong>Last Updated:</strong><br>

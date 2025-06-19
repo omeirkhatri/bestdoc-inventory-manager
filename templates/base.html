@@ -593,15 +593,19 @@
             } else {
                 // For items, check if we have a specific ID suffix (for tables with multiple items)
                 const specificId = field === 'generic_name' ? `itemGenericName-${itemId}` : 
-                                  field === 'name' ? `itemName-${itemId}` || 'itemName' :
-                                  field === 'size' ? `itemSize-${itemId}` || 'itemSize' :
-                                  field === 'type' ? `itemType-${itemId}` || 'itemType' : 'itemType';
+                                  field === 'name' ? `itemName-${itemId}` :
+                                  field === 'size' ? `itemSize-${itemId}` :
+                                  field === 'type' ? `itemType-${itemId}` :
+                                  field === 'brand' ? `itemBrand-${itemId}` : 'itemType';
                 
                 // Check if the specific element exists, otherwise fall back to generic
                 if (document.getElementById(specificId)) {
                     elementId = specificId;
                 } else {
-                    elementId = field === 'name' ? 'itemName' : field === 'size' ? 'itemSize' : field === 'generic_name' ? 'itemGenericName' : 'itemType';
+                    elementId = field === 'name' ? 'itemName' : 
+                              field === 'size' ? 'itemSize' : 
+                              field === 'generic_name' ? 'itemGenericName' : 
+                              field === 'brand' ? 'itemBrand' : 'itemType';
                 }
             }
             
