@@ -81,28 +81,24 @@
     <!-- Transfer Form -->
     <div class="col-md-6 mb-4">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-share me-2"></i>
                     Transfer Details
                 </h5>
-                <div class="btn-group btn-group-sm" role="group">
-                    <input type="radio" class="btn-check" name="transferMode" id="singleMode" checked>
-                    <label class="btn btn-outline-primary" for="singleMode">Single</label>
-                    
-                    <input type="radio" class="btn-check" name="transferMode" id="multiMode">
-                    <label class="btn btn-outline-primary" for="multiMode">Multiple</label>
-                </div>
             </div>
             <div class="card-body">
                 <!-- Single Transfer Form -->
-                <form method="POST" id="singleTransferForm" style="display: block;">
+                <form method="POST" id="singleTransferForm">
                     <input type="hidden" id="item_id" name="item_id">
                     
                     <div class="mb-3">
-                        <label for="selectedItem" class="form-label">Selected Item</label>
-                        <input type="text" class="form-control" id="selectedItem" readonly 
-                               placeholder="Select an item from the Cabinet">
+                        <label for="selectedItems" class="form-label">Selected Items <span id="selectedCount" class="badge bg-primary">0</span></label>
+                        <div id="selectedItemsList" class="border rounded p-2" style="min-height: 100px; max-height: 300px; overflow-y: auto;">
+                            <div class="text-muted text-center py-3" id="noItemsSelected">
+                                No items selected. Click on items in the Cabinet to add them.
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -118,48 +114,11 @@
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Quantity to Transfer <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
-                        <div class="form-text">Available: <span id="maxQuantity">0</span> units</div>
-                    </div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-success" id="transferBtn" disabled>
-                            <i class="fas fa-exchange-alt me-2"></i>Transfer Item
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Multiple Transfer Form -->
-                <form method="POST" id="multiTransferForm" action="{{ url_for('handle_multi_transfer') }}" style="display: none;">
-                    <div class="mb-3">
-                        <label class="form-label">Selected Items <span id="selectedCount" class="badge bg-primary">0</span></label>
-                        <div id="selectedItemsList" class="border rounded p-2" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
-                            <div class="text-muted text-center py-3" id="noItemsSelected">
-                                No items selected. Click on items in the Cabinet to add them.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="multi_to_bag_id" class="form-label">Destination Storage <span class="text-danger">*</span></label>
-                        <select class="form-select" id="multi_to_bag_id" name="to_bag_id" required>
-                            <option value="">Select destination...</option>
-                            {% if cabinet %}
-                            <option value="{{ cabinet.id }}">{{ cabinet.name }} (Cabinet)</option>
-                            {% endif %}
-                            {% for bag in bags %}
-                            <option value="{{ bag.id }}">{{ bag.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-secondary" onclick="clearMultiSelection()">
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearSelection()">
                             <i class="fas fa-times me-1"></i>Clear All
                         </button>
-                        <button type="submit" class="btn btn-success flex-grow-1" id="multiTransferBtn" disabled>
+                        <button type="submit" class="btn btn-success flex-grow-1" id="transferBtn" disabled>
                             <i class="fas fa-exchange-alt me-2"></i>Transfer <span id="transferItemCount">0</span> Items
                         </button>
                     </div>
@@ -256,53 +215,12 @@
 
 {% block extra_scripts %}
 <script>
-let selectedItemData = null;
-let multiSelectedItems = new Map(); // Map of itemId -> item data
-let isMultiMode = false;
+let selectedItems = new Map(); // Map of itemId -> item data
 
-// Toggle between single and multi mode
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('singleMode').addEventListener('change', function() {
-        if (this.checked) {
-            switchToSingleMode();
-        }
-    });
-    
-    document.getElementById('multiMode').addEventListener('change', function() {
-        if (this.checked) {
-            switchToMultiMode();
-        }
-    });
+    updateSelectedItemsList();
 });
-
-function switchToSingleMode() {
-    isMultiMode = false;
-    document.getElementById('singleTransferForm').style.display = 'block';
-    document.getElementById('multiTransferForm').style.display = 'none';
-    
-    // Clear multi-selection highlighting
-    document.querySelectorAll('.list-group-item').forEach(item => {
-        item.classList.remove('multi-selected');
-    });
-    
-    // Update button states
-    updateButtonStates();
-}
-
-function switchToMultiMode() {
-    isMultiMode = true;
-    document.getElementById('singleTransferForm').style.display = 'none';
-    document.getElementById('multiTransferForm').style.display = 'block';
-    
-    // Clear single selection highlighting
-    document.querySelectorAll('.list-group-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // Update button states
-    updateButtonStates();
-    updateMultiSelection();
-}
 
 function selectItemForTransfer(itemId, itemName, itemType, itemSize, maxQty) {
     const itemData = {
@@ -313,92 +231,60 @@ function selectItemForTransfer(itemId, itemName, itemType, itemSize, maxQty) {
         maxQuantity: maxQty
     };
     
-    if (isMultiMode) {
-        handleMultiSelection(itemData);
-    } else {
-        handleSingleSelection(itemData);
-    }
-}
-
-function handleSingleSelection(itemData) {
-    selectedItemData = itemData;
-    
-    // Update form fields
-    document.getElementById('item_id').value = itemData.id;
-    
-    let itemDisplay = itemData.name + ' (' + itemData.type + ')';
-    if (itemData.size) {
-        itemDisplay += ' - ' + itemData.size;
-    }
-    document.getElementById('selectedItem').value = itemDisplay;
-    
-    document.getElementById('maxQuantity').textContent = itemData.maxQuantity;
-    document.getElementById('quantity').max = itemData.maxQuantity;
-    document.getElementById('quantity').value = '';
-    
-    // Enable form
-    document.getElementById('transferBtn').disabled = false;
-    document.getElementById('to_bag_id').focus();
-    
-    // Highlight selected item
-    document.querySelectorAll('.list-group-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    event.target.closest('.list-group-item').classList.add('active');
-}
-
-function handleMultiSelection(itemData) {
     const itemElement = event.target.closest('.list-group-item');
     const button = document.getElementById(`selectBtn_${itemData.id}`);
     
-    if (multiSelectedItems.has(itemData.id)) {
+    if (selectedItems.has(itemId)) {
         // Remove from selection
-        multiSelectedItems.delete(itemData.id);
+        selectedItems.delete(itemId);
         itemElement.classList.remove('multi-selected');
         button.innerHTML = '<i class="fas fa-arrow-right"></i>';
         button.classList.remove('btn-success');
         button.classList.add('btn-primary');
     } else {
         // Add to selection
-        multiSelectedItems.set(itemData.id, itemData);
+        selectedItems.set(itemId, itemData);
         itemElement.classList.add('multi-selected');
         button.innerHTML = '<i class="fas fa-check"></i>';
         button.classList.remove('btn-primary');
         button.classList.add('btn-success');
     }
     
-    updateMultiSelection();
+    updateSelectedItemsList();
 }
 
-function updateMultiSelection() {
-    const selectedCount = multiSelectedItems.size;
+function updateSelectedItemsList() {
+    const selectedCount = selectedItems.size;
     const selectedItemsList = document.getElementById('selectedItemsList');
-    const noItemsSelected = document.getElementById('noItemsSelected');
     const selectedCountBadge = document.getElementById('selectedCount');
     const transferItemCount = document.getElementById('transferItemCount');
-    const multiTransferBtn = document.getElementById('multiTransferBtn');
+    const transferBtn = document.getElementById('transferBtn');
     
     selectedCountBadge.textContent = selectedCount;
     transferItemCount.textContent = selectedCount;
     
+    // Clear previous content
+    selectedItemsList.innerHTML = '';
+    
     if (selectedCount === 0) {
-        noItemsSelected.style.display = 'block';
-        multiTransferBtn.disabled = true;
-        // Clear the list
-        Array.from(selectedItemsList.children).forEach(child => {
-            if (child !== noItemsSelected) {
-                child.remove();
-            }
-        });
-    } else {
-        noItemsSelected.style.display = 'none';
-        multiTransferBtn.disabled = false;
+        const noItemsDiv = document.createElement('div');
+        noItemsDiv.className = 'text-muted text-center py-3';
+        noItemsDiv.id = 'noItemsSelected';
+        noItemsDiv.textContent = 'No items selected. Click on items in the Cabinet to add them.';
+        selectedItemsList.appendChild(noItemsDiv);
+        transferBtn.disabled = true;
         
-        // Update selected items list
-        selectedItemsList.innerHTML = '';
-        multiSelectedItems.forEach((itemData, itemId) => {
+        // Reset form action for single transfer
+        document.getElementById('singleTransferForm').action = '';
+    } else {
+        transferBtn.disabled = false;
+        
+        // Determine if single or multi transfer
+        if (selectedCount === 1) {
+            // Single item transfer - show simple interface
+            const itemData = selectedItems.values().next().value;
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'border rounded p-2 mb-2 bg-light';
+            itemDiv.className = 'p-2 bg-light rounded';
             itemDiv.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -410,25 +296,59 @@ function updateMultiSelection() {
                             Quantity: <input type="number" class="form-control form-control-sm d-inline-block" 
                                            style="width: 80px;" min="1" max="${itemData.maxQuantity}" 
                                            value="${itemData.maxQuantity}" 
-                                           name="items[${itemId}][quantity]" required>
-                            <span class="text-muted">/ ${itemData.maxQuantity}</span>
-                            <input type="hidden" name="items[${itemId}][item_id]" value="${itemId}">
+                                           name="quantity" required>
+                            <span class="text-muted">/ ${itemData.maxQuantity} available</span>
+                            <input type="hidden" name="item_id" value="${itemData.id}">
                         </div>
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-danger" 
-                            onclick="removeFromMultiSelection('${itemId}')">
+                            onclick="removeFromSelection('${itemData.id}')">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             `;
             selectedItemsList.appendChild(itemDiv);
-        });
+            
+            // Use regular transfer route for single items
+            document.getElementById('singleTransferForm').action = '';
+        } else {
+            // Multi item transfer - show detailed interface
+            document.getElementById('singleTransferForm').action = '{{ url_for("handle_multi_transfer") }}';
+            
+            selectedItems.forEach((itemData, itemId) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'border rounded p-2 mb-2 bg-light';
+                itemDiv.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${itemData.name}</strong>
+                            <div class="small text-muted">
+                                ${itemData.type}${itemData.size ? ' - ' + itemData.size : ''}
+                            </div>
+                            <div class="small">
+                                Quantity: <input type="number" class="form-control form-control-sm d-inline-block" 
+                                               style="width: 80px;" min="1" max="${itemData.maxQuantity}" 
+                                               value="${itemData.maxQuantity}" 
+                                               name="items[${itemId}][quantity]" required>
+                                <span class="text-muted">/ ${itemData.maxQuantity}</span>
+                                <input type="hidden" name="items[${itemId}][item_id]" value="${itemId}">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="removeFromSelection('${itemId}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                selectedItemsList.appendChild(itemDiv);
+            });
+        }
     }
 }
 
-function removeFromMultiSelection(itemId) {
-    if (multiSelectedItems.has(itemId)) {
-        multiSelectedItems.delete(itemId);
+function removeFromSelection(itemId) {
+    if (selectedItems.has(itemId)) {
+        selectedItems.delete(itemId);
         
         // Update button appearance
         const button = document.getElementById(`selectBtn_${itemId}`);
@@ -446,12 +366,12 @@ function removeFromMultiSelection(itemId) {
             }
         });
         
-        updateMultiSelection();
+        updateSelectedItemsList();
     }
 }
 
-function clearMultiSelection() {
-    multiSelectedItems.clear();
+function clearSelection() {
+    selectedItems.clear();
     
     // Reset all buttons and highlighting
     document.querySelectorAll('.list-group-item').forEach(item => {
@@ -464,36 +384,15 @@ function clearMultiSelection() {
         }
     });
     
-    updateMultiSelection();
-}
-
-function updateButtonStates() {
-    document.querySelectorAll('button[id^="selectBtn_"]').forEach(button => {
-        const itemId = button.id.replace('selectBtn_', '');
-        
-        if (isMultiMode && multiSelectedItems.has(itemId)) {
-            button.innerHTML = '<i class="fas fa-check"></i>';
-            button.classList.remove('btn-primary');
-            button.classList.add('btn-success');
-        } else {
-            button.innerHTML = '<i class="fas fa-arrow-right"></i>';
-            button.classList.remove('btn-success');
-            button.classList.add('btn-primary');
-        }
-    });
-}
-
-// Form validation for single transfer
-document.getElementById('singleTransferForm').addEventListener('submit', function(e) {
-    const itemId = document.getElementById('item_id').value;
-    const toBagId = document.getElementById('to_bag_id').value;
-    const quantity = parseInt(document.getElementById('quantity').value);
+    // Reset form and destination
+    document.getElementById('to_bag_id').value = '';
     
-    if (!itemId) {
-        e.preventDefault();
-        alert('Please select an item from the Cabinet');
-        return false;
-    }
+    updateSelectedItemsList();
+}
+
+// Form validation
+document.getElementById('singleTransferForm').addEventListener('submit', function(e) {
+    const toBagId = document.getElementById('to_bag_id').value;
     
     if (!toBagId) {
         e.preventDefault();
@@ -502,42 +401,7 @@ document.getElementById('singleTransferForm').addEventListener('submit', functio
         return false;
     }
     
-    if (!quantity || quantity <= 0) {
-        e.preventDefault();
-        alert('Please enter a valid quantity');
-        document.getElementById('quantity').focus();
-        return false;
-    }
-    
-    if (selectedItemData && quantity > selectedItemData.maxQuantity) {
-        e.preventDefault();
-        alert(`Cannot transfer more than ${selectedItemData.maxQuantity} units`);
-        document.getElementById('quantity').focus();
-        return false;
-    }
-    
-    // Confirm transfer
-    const bagName = document.getElementById('to_bag_id').options[document.getElementById('to_bag_id').selectedIndex].text;
-    const itemName = selectedItemData ? selectedItemData.name : 'selected item';
-    
-    if (!confirm(`Transfer ${quantity} units of ${itemName} to ${bagName}?`)) {
-        e.preventDefault();
-        return false;
-    }
-});
-
-// Form validation for multi transfer
-document.getElementById('multiTransferForm').addEventListener('submit', function(e) {
-    const toBagId = document.getElementById('multi_to_bag_id').value;
-    
-    if (!toBagId) {
-        e.preventDefault();
-        alert('Please select a destination bag');
-        document.getElementById('multi_to_bag_id').focus();
-        return false;
-    }
-    
-    if (multiSelectedItems.size === 0) {
+    if (selectedItems.size === 0) {
         e.preventDefault();
         alert('Please select at least one item to transfer');
         return false;
@@ -562,26 +426,17 @@ document.getElementById('multiTransferForm').addEventListener('submit', function
         return false;
     }
     
-    // Confirm multi transfer
-    const bagName = document.getElementById('multi_to_bag_id').options[document.getElementById('multi_to_bag_id').selectedIndex].text;
-    const itemCount = multiSelectedItems.size;
+    // Confirm transfer
+    const bagName = document.getElementById('to_bag_id').options[document.getElementById('to_bag_id').selectedIndex].text;
+    const itemCount = selectedItems.size;
     
-    if (!confirm(`Transfer ${itemCount} different items to ${bagName}?`)) {
+    const confirmMessage = itemCount === 1 
+        ? `Transfer 1 item to ${bagName}?`
+        : `Transfer ${itemCount} different items to ${bagName}?`;
+    
+    if (!confirm(confirmMessage)) {
         e.preventDefault();
         return false;
-    }
-});
-
-// Real-time quantity validation for single transfer
-document.getElementById('quantity').addEventListener('input', function() {
-    const quantity = parseInt(this.value);
-    const maxQty = selectedItemData ? selectedItemData.maxQuantity : 0;
-    
-    if (quantity > maxQty) {
-        this.setCustomValidity(`Maximum available: ${maxQty}`);
-        this.reportValidity();
-    } else {
-        this.setCustomValidity('');
     }
 });
 
@@ -613,22 +468,11 @@ function filterByBag(bagName, bagId) {
 
 // Clear search when form is reset
 function clearSearch() {
-    document.getElementById('cabinetSearch').value = '';
-    filterItems('cabinet');
-}
-
-function clearSelection() {
-    selectedItemData = null;
-    document.getElementById('item_id').value = '';
-    document.getElementById('selectedItem').value = '';
-    document.getElementById('maxQuantity').textContent = '0';
-    document.getElementById('quantity').value = '';
-    document.getElementById('to_bag_id').value = '';
-    document.getElementById('transferBtn').disabled = true;
-    
-    document.querySelectorAll('.list-group-item').forEach(item => {
-        item.classList.remove('active');
-    });
+    const searchInput = document.getElementById('cabinetSearch');
+    if (searchInput) {
+        searchInput.value = '';
+        filterItems('cabinet');
+    }
 }
 
 // Form validation
