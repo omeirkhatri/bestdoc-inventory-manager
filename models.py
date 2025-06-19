@@ -65,34 +65,7 @@ class Bag(db.Model):
     def is_cabinet(self):
         return self.location == 'cabinet'
 
-class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False, unique=True)
-    type = db.Column(db.String(100), nullable=False)
-    minimum_stock = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationship to items (batches)
-    items = db.relationship('Item', backref='product', lazy=True)
-    
-    def __repr__(self):
-        return f'<Product {self.name}>'
-    
-    @property
-    def total_quantity(self):
-        return sum(item.quantity for item in self.items if item.quantity > 0)
-    
-    @property
-    def is_low_stock(self):
-        return self.total_quantity <= self.minimum_stock
-    
-    @property
-    def unique_sizes(self):
-        return list(set(item.size for item in self.items if item.size))
-    
-    @property
-    def active_batches(self):
-        return [item for item in self.items if item.quantity > 0]
+
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -108,7 +81,7 @@ class Item(db.Model):
     
     # Foreign keys
     bag_id = db.Column(db.Integer, db.ForeignKey('bag.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=True)  # Link to product
+    minimum_stock = db.Column(db.Integer, nullable=False, default=0)  # Minimum stock level for this item
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -149,6 +122,28 @@ class Item(db.Model):
         """Check if this item type requires consumables audit (types 4 and 5)"""
         consumables_audit_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
         return self.type in consumables_audit_types
+    
+    @property
+    def is_low_stock(self):
+        """Check if this item is below minimum stock level"""
+        return self.quantity <= self.minimum_stock
+    
+    @classmethod
+    def get_total_quantity_by_name_type(cls, name, type_name):
+        """Get total quantity for all items with the same name and type"""
+        return sum(item.quantity for item in cls.query.filter_by(name=name, type=type_name).all() if item.quantity > 0)
+    
+    @classmethod
+    def get_unique_items(cls):
+        """Get unique items grouped by name and type"""
+        from sqlalchemy import func
+        return db.session.query(
+            cls.name,
+            cls.type,
+            func.sum(cls.quantity).label('total_quantity'),
+            func.min(cls.minimum_stock).label('minimum_stock'),
+            func.count(cls.id).label('batch_count')
+        ).filter(cls.quantity > 0).group_by(cls.name, cls.type).all()
 
 class MovementHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -176,41 +171,7 @@ class ItemType(db.Model):
     def __repr__(self):
         return f'<ItemType {self.name}>'
 
-class BagMinimum(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    bag_id = db.Column(db.Integer, db.ForeignKey('bag.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    minimum_quantity = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    bag = db.relationship('Bag', backref='minimums')
-    product = db.relationship('Product', backref='bag_minimums')
-    
-    # Unique constraint to prevent duplicate entries
-    __table_args__ = (db.UniqueConstraint('bag_id', 'product_id', name='unique_bag_product_minimum'),)
-    
-    def __repr__(self):
-        return f'<BagMinimum {self.bag.name} - {self.product.name}: {self.minimum_quantity}>'
-    
-    def current_quantity(self):
-        """Get current quantity of this product in this bag"""
-        total = 0
-        for item in Item.query.filter_by(bag_id=self.bag_id, product_id=self.product_id).all():
-            total += item.quantity
-        return total
-    
-    def is_below_minimum(self):
-        """Check if current quantity is below minimum"""
-        return self.current_quantity() < self.minimum_quantity
-    
-    def shortage_amount(self):
-        """Calculate how many items are needed to reach minimum"""
-        current = self.current_quantity()
-        if current < self.minimum_quantity:
-            return self.minimum_quantity - current
-        return 0
+
 
 class UndoAction(db.Model):
     id = db.Column(db.Integer, primary_key=True)

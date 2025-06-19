@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, PermanentDeletion, InventoryAudit, init_default_types, format_datetime_gmt4, format_date_gmt4, GMT_PLUS_4
+from models import Item, Bag, MovementHistory, ItemType, User, UndoAction, PermanentDeletion, InventoryAudit, init_default_types, format_datetime_gmt4, format_date_gmt4, GMT_PLUS_4
 import json
 
 # Authentication routes
@@ -392,32 +392,18 @@ def handle_manual_addition():
                     size = sizes[i].strip() if i < len(sizes) and sizes[i].strip() else None
                     brand = brands[i].strip() if i < len(brands) and brands[i].strip() else None
                     
-                    # Handle product creation/lookup
-                    product_name = names[i].strip()
-                    product_type = types[i].strip()
-                    product = Product.query.filter_by(name=product_name).first()
-                    
-                    if not product:
-                        # New product - get minimum stock if provided
-                        min_stock = 0
-                        if i < len(minimum_stocks) and minimum_stocks[i].strip():
-                            try:
-                                min_stock = int(minimum_stocks[i])
-                            except ValueError:
-                                min_stock = 0
-                        
-                        product = Product(
-                            name=product_name,
-                            type=product_type,
-                            minimum_stock=min_stock
-                        )
-                        db.session.add(product)
-                        db.session.flush()  # Get the product ID
+                    # Get minimum stock if provided
+                    min_stock = 0
+                    if i < len(minimum_stocks) and minimum_stocks[i].strip():
+                        try:
+                            min_stock = int(minimum_stocks[i])
+                        except ValueError:
+                            min_stock = 0
                     
                     # Check if identical item already exists in the same bag
                     existing_item = Item.query.filter_by(
-                        name=product_name,
-                        type=product_type,
+                        name=names[i].strip(),
+                        type=types[i].strip(),
                         brand=brand,
                         size=size,
                         expiry_date=expiry_date,
@@ -433,14 +419,14 @@ def handle_manual_addition():
                         # Create new item
                         item = Item(
                             generic_name=generic_name,
-                            name=product_name,
-                            type=product_type,
+                            name=names[i].strip(),
+                            type=types[i].strip(),
                             brand=brand,
                             size=size,
                             quantity=int(quantities[i]),
                             expiry_date=expiry_date,
                             bag_id=bag.id,
-                            product_id=product.id
+                            minimum_stock=min_stock
                         )
                         db.session.add(item)
                     
@@ -467,8 +453,7 @@ def handle_manual_addition():
                         'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
                         'bag_id': bag.id,
                         'bag_name': bag.name,
-                        'product_id': product.id if product else None,
-                        'product_created': not Product.query.filter_by(name=product_name).first() if product_name else False
+                        'minimum_stock': min_stock
                     }
                     
                     undo_action = UndoAction(
