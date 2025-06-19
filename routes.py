@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, User, UndoAction, PermanentDeletion, InventoryAudit, init_default_types, format_datetime_gmt4, format_date_gmt4, GMT_PLUS_4
+from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, PermanentDeletion, InventoryAudit, init_default_types, format_datetime_gmt4, format_date_gmt4, GMT_PLUS_4
 import json
 
 # Authentication routes
@@ -56,9 +56,7 @@ def dashboard():
     total_bags = len(bags)
     
     # Count unique products
-    # Count unique items by name and type
-    unique_items = db.session.query(Item.name, Item.type).distinct().count()
-    total_unique_items = unique_items
+    total_unique_items = Product.query.count()
     
     # Items expiring soon (within 30 days)
     thirty_days_from_now = date.today() + timedelta(days=30)
@@ -80,22 +78,16 @@ def dashboard():
         )
     ).all()
     
-    # Low stock items - find items where total quantity across all locations is below minimum
+    # Low stock items (using product minimum stock thresholds)
+    low_stock_products = Product.query.filter(Product.minimum_stock > 0).all()
     low_stock_items = []
-    unique_items = db.session.query(
-        Item.name, 
-        Item.type, 
-        func.sum(Item.quantity).label('total_quantity'),
-        func.max(Item.minimum_stock).label('min_stock')
-    ).filter(Item.minimum_stock > 0).group_by(Item.name, Item.type).all()
-    
-    for item_group in unique_items:
-        if item_group.total_quantity <= item_group.min_stock:
+    for product in low_stock_products:
+        total_qty = sum(item.quantity for item in product.items if item.quantity > 0)
+        if total_qty <= product.minimum_stock:
             low_stock_items.append({
-                'name': item_group.name,
-                'type': item_group.type,
-                'current_qty': item_group.total_quantity,
-                'minimum_stock': item_group.min_stock
+                'product': product,
+                'current_qty': total_qty,
+                'minimum_stock': product.minimum_stock
             })
     
     # Low stock items in cabinet (quantity <= 10) - for alerts section
@@ -110,31 +102,18 @@ def dashboard():
     # Empty bags
     empty_bags = [bag for bag in bags if bag.get_total_items() == 0]
     
-    # Bags below minimum quantities - check items with minimum_stock > 0
+    # Bags below minimum quantities
     low_stock_bags = []
     for bag in bags:
         bag_low_items = []
-        # Get unique items in this bag that have minimum stock requirements
-        unique_items_in_bag = db.session.query(
-            Item.name,
-            Item.type,
-            func.sum(Item.quantity).label('current_quantity'),
-            func.max(Item.minimum_stock).label('min_stock')
-        ).filter(
-            Item.bag_id == bag.id,
-            Item.minimum_stock > 0
-        ).group_by(Item.name, Item.type).all()
-        
-        for item_group in unique_items_in_bag:
-            if item_group.current_quantity <= item_group.min_stock:
+        for minimum in bag.minimums:
+            if minimum.is_below_minimum():
                 bag_low_items.append({
-                    'name': item_group.name,
-                    'type': item_group.type,
-                    'current': item_group.current_quantity,
-                    'minimum': item_group.min_stock,
-                    'shortage': item_group.min_stock - item_group.current_quantity
+                    'product': minimum.product,
+                    'current': minimum.current_quantity(),
+                    'minimum': minimum.minimum_quantity,
+                    'shortage': minimum.shortage_amount()
                 })
-        
         if bag_low_items:
             low_stock_bags.append({
                 'bag': bag,
@@ -413,18 +392,32 @@ def handle_manual_addition():
                     size = sizes[i].strip() if i < len(sizes) and sizes[i].strip() else None
                     brand = brands[i].strip() if i < len(brands) and brands[i].strip() else None
                     
-                    # Get minimum stock if provided
-                    min_stock = 0
-                    if i < len(minimum_stocks) and minimum_stocks[i].strip():
-                        try:
-                            min_stock = int(minimum_stocks[i])
-                        except ValueError:
-                            min_stock = 0
+                    # Handle product creation/lookup
+                    product_name = names[i].strip()
+                    product_type = types[i].strip()
+                    product = Product.query.filter_by(name=product_name).first()
+                    
+                    if not product:
+                        # New product - get minimum stock if provided
+                        min_stock = 0
+                        if i < len(minimum_stocks) and minimum_stocks[i].strip():
+                            try:
+                                min_stock = int(minimum_stocks[i])
+                            except ValueError:
+                                min_stock = 0
+                        
+                        product = Product(
+                            name=product_name,
+                            type=product_type,
+                            minimum_stock=min_stock
+                        )
+                        db.session.add(product)
+                        db.session.flush()  # Get the product ID
                     
                     # Check if identical item already exists in the same bag
                     existing_item = Item.query.filter_by(
-                        name=names[i].strip(),
-                        type=types[i].strip(),
+                        name=product_name,
+                        type=product_type,
                         brand=brand,
                         size=size,
                         expiry_date=expiry_date,
@@ -440,14 +433,14 @@ def handle_manual_addition():
                         # Create new item
                         item = Item(
                             generic_name=generic_name,
-                            name=names[i].strip(),
-                            type=types[i].strip(),
+                            name=product_name,
+                            type=product_type,
                             brand=brand,
                             size=size,
                             quantity=int(quantities[i]),
                             expiry_date=expiry_date,
                             bag_id=bag.id,
-                            minimum_stock=min_stock
+                            product_id=product.id
                         )
                         db.session.add(item)
                     
@@ -474,7 +467,8 @@ def handle_manual_addition():
                         'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
                         'bag_id': bag.id,
                         'bag_name': bag.name,
-                        'minimum_stock': min_stock
+                        'product_id': product.id if product else None,
+                        'product_created': not Product.query.filter_by(name=product_name).first() if product_name else False
                     }
                     
                     undo_action = UndoAction(
@@ -498,6 +492,7 @@ def handle_manual_addition():
 
 @app.route('/inventory')
 @login_required
+@login_required
 def inventory():
     # Get filter parameters
     search = request.args.get('search', '')
@@ -505,41 +500,38 @@ def inventory():
     bag_filter = request.args.get('bag', '')
     status_filter = request.args.get('status', '')
     
-    # Base query - get unique items grouped by name and type (include all items)
-    base_query = db.session.query(
-        Item.name,
-        Item.type,
-        func.sum(Item.quantity).label('total_quantity'),
-        func.max(Item.minimum_stock).label('min_stock')
-    ).filter(Item.quantity >= 0).group_by(Item.name, Item.type)
+    # Base query - get products with their items
+    product_query = Product.query
     
-    # Apply filters
+    # Apply product-level filters
     if search:
-        base_query = base_query.filter(
-            or_(
-                Item.name.ilike(f'%{search}%'),
-                Item.generic_name.ilike(f'%{search}%')
+        # Search in product names and also in item generic names
+        product_ids_from_items = db.session.query(Item.product_id).filter(
+            Item.generic_name.ilike(f'%{search}%')
+        ).distinct().subquery()
+        
+        product_query = product_query.filter(
+            db.or_(
+                Product.name.ilike(f'%{search}%'),
+                Product.id.in_(db.session.query(product_ids_from_items.c.product_id))
             )
         )
     
     if type_filter:
-        base_query = base_query.filter(Item.type == type_filter)
+        product_query = product_query.filter(Product.type == type_filter)
     
-    unique_items = base_query.order_by(Item.name).all()
+    products = product_query.order_by(Product.name).all()
     
-    # Filter items based on status and get detailed item information
-    filtered_items = []
-    for item_group in unique_items:
-        # Check low stock filter first
+    # Filter products based on item-level criteria and group items
+    filtered_products = []
+    for product in products:
+        # Check low stock filter first (applies to entire product)
         if status_filter == 'low_stock':
-            if item_group.total_quantity > item_group.min_stock:
+            if not product.is_low_stock:
                 continue
         
-        # Get all items for this item group (name + type) - include zero quantity items
-        item_query = Item.query.filter(
-            Item.name == item_group.name,
-            Item.type == item_group.type
-        ).join(Bag)
+        # Get active items for this product
+        item_query = Item.query.filter(Item.product_id == product.id, Item.quantity > 0).join(Bag)
         
         # Apply item-level filters
         if bag_filter:
@@ -563,18 +555,12 @@ def inventory():
         
         items = item_query.order_by(Item.brand, Item.size, Item.expiry_date).all()
         
-        # Get all items for this item group (name + type) - include all items regardless of filters for grouping
-        all_items = Item.query.filter(
-            Item.name == item_group.name,
-            Item.type == item_group.type
-        ).join(Bag).all()
-        
-        if all_items:  # Only include item groups that have items
+        if items:  # Only include products that have matching items
             # Group items by brand, size, and expiry date
             grouped_items = []
             current_group = None
             
-            for item in all_items:
+            for item in items:
                 # Create a key for grouping (brand, size, expiry_date, bag_id)
                 group_key = (item.brand or 'No Brand', item.size or 'No Size', item.expiry_date, item.bag_id)
                 
@@ -595,13 +581,11 @@ def inventory():
                     current_group['items'].append(item)
                     current_group['total_quantity'] += item.quantity
             
-            filtered_items.append({
-                'name': item_group.name,
-                'type': item_group.type,
-                'total_quantity': item_group.total_quantity,
-                'minimum_stock': item_group.min_stock,
+            filtered_products.append({
+                'product': product,
                 'grouped_items': grouped_items,
-                'is_low_stock': item_group.total_quantity <= item_group.min_stock
+                'total_quantity': sum(item.quantity for item in items),
+                'is_low_stock': product.is_low_stock
             })
     
     # Get filter options
@@ -609,7 +593,7 @@ def inventory():
     item_types = ItemType.query.all()
     
     return render_template('inventory.html',
-                         items=filtered_items,
+                         products=filtered_products,
                          bags=bags,
                          item_types=item_types,
                          today=datetime.now(GMT_PLUS_4).date(),
@@ -1204,7 +1188,15 @@ def handle_bag_management():
                     )
                     db.session.add(movement)
             
-            # No need to handle bag minimums - they are now stored in items directly
+            # Remove bag minimums and track for undo
+            bag_minimums = BagMinimum.query.filter_by(bag_id=bag.id).all()
+            for minimum in bag_minimums:
+                undo_data['deleted_minimums'].append({
+                    'bag_id': minimum.bag_id,
+                    'product_id': minimum.product_id,
+                    'minimum_quantity': minimum.minimum_quantity
+                })
+                db.session.delete(minimum)
             
             # Record permanent deletion
             permanent_deletion = PermanentDeletion(
@@ -1307,30 +1299,25 @@ def handle_wastage():
     
     return redirect(url_for('wastage'))
 
-@app.route('/item_history/<name>/<type>')
+@app.route('/item_history/<int:product_id>')
 @login_required
-def item_history(name, type):
-    """Show detailed history for a specific item (by name and type)"""
-    # Get all current items for this name/type combination
+def item_history(product_id):
+    """Show detailed history for a specific product"""
+    product = Product.query.get_or_404(product_id)
+    
+    # Get all current items for this product
     current_items = Item.query.filter(
-        Item.name == name,
-        Item.type == type,
+        Item.product_id == product_id,
         Item.quantity > 0
     ).join(Bag).order_by(Item.expiry_date.asc().nullslast(), Item.size).all()
     
-    if not current_items:
-        flash("No active items found", "warning")
-        return redirect(url_for('inventory'))
-    
-    # Get all movement history for this item name/type
+    # Get all movement history for this product
     movement_history = MovementHistory.query.filter(
-        MovementHistory.item_name == name,
-        MovementHistory.item_type == type
+        MovementHistory.item_name == product.name
     ).order_by(MovementHistory.timestamp.desc()).all()
     
     return render_template('item_history.html',
-                         item_name=name,
-                         item_type=type,
+                         product=product,
                          current_items=current_items,
                          movement_history=movement_history)
 

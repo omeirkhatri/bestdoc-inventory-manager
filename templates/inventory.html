@@ -1,232 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Inventory - Healthcare Inventory Management{% endblock %}
-
-{% block extra_head %}
-<style>
-.inventory-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    transition: all 0.3s ease;
-}
-
-.inventory-card:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    border-color: #007bff;
-}
-
-.card-header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-bottom: 1px solid #dee2e6;
-    cursor: pointer;
-    padding: 15px 20px;
-}
-
-.card-header:hover {
-    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-}
-
-.expand-icon {
-    transition: transform 0.3s ease;
-    color: #6c757d;
-}
-
-.expand-icon.expanded {
-    transform: rotate(90deg);
-    color: #007bff;
-}
-
-.item-name {
-    font-weight: 600;
-    color: #2c3e50;
-    font-size: 1.1em;
-}
-
-.item-type {
-    color: #6c757d;
-    font-size: 0.9em;
-    margin-left: 8px;
-}
-
-.quantity-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.quantity-badge {
-    background: #28a745;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9em;
-}
-
-.quantity-badge.low-stock {
-    background: #dc3545;
-}
-
-.quantity-badge.medium-stock {
-    background: #ffc107;
-    color: #000;
-}
-
-.minimum-stock-info {
-    color: #6c757d;
-    font-size: 0.85em;
-}
-
-.card-body {
-    display: none;
-    padding: 20px;
-    background: #fafafa;
-}
-
-.card-body.show {
-    display: block;
-    animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        max-height: 0;
-    }
-    to {
-        opacity: 1;
-        max-height: 1000px;
-    }
-}
-
-.details-table {
-    background: white;
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.details-table th {
-    background: #f8f9fa;
-    font-weight: 600;
-    color: #495057;
-    font-size: 0.85em;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 12px 8px;
-}
-
-.details-table td {
-    padding: 10px 8px;
-    vertical-align: middle;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.expiry-status {
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 0.75em;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.expiry-status.expired {
-    background: #dc3545;
-    color: white;
-}
-
-.expiry-status.expires-soon {
-    background: #ffc107;
-    color: #000;
-}
-
-.expiry-status.good {
-    background: #28a745;
-    color: white;
-}
-
-.expiry-status.no-expiry {
-    background: #6c757d;
-    color: white;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 5px;
-}
-
-.search-container {
-    position: relative;
-    max-width: 400px;
-}
-
-.search-input {
-    padding-right: 40px;
-}
-
-.search-clear {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #6c757d;
-    cursor: pointer;
-    padding: 0;
-    font-size: 16px;
-}
-
-.search-clear:hover {
-    color: #dc3545;
-}
-
-.inventory-summary {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 25px;
-}
-
-.summary-item {
-    text-align: center;
-}
-
-.summary-number {
-    font-size: 2em;
-    font-weight: 700;
-    margin-bottom: 5px;
-}
-
-.summary-label {
-    font-size: 0.9em;
-    opacity: 0.9;
-}
-
-.low-stock-alert {
-    background: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-    padding: 12px 16px;
-    border-radius: 6px;
-    margin-bottom: 20px;
-}
-
-.no-items-message {
-    text-align: center;
-    padding: 60px 20px;
-    color: #6c757d;
-}
-
-.no-items-message i {
-    font-size: 4em;
-    margin-bottom: 20px;
-    opacity: 0.3;
-}
-</style>
-{% endblock %}
+{% block title %}Inventory - Healthcare Inventory{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -307,7 +81,7 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0" id="inventoryCount">
-            Items ({{ items|length }} found)
+            Products ({{ products|length }} found)
         </h5>
         <div>
             <a href="{{ url_for('add_items') }}" class="btn btn-success btn-sm">
@@ -316,13 +90,13 @@
         </div>
     </div>
     <div class="card-body p-0">
-        {% if items %}
+        {% if products %}
         <div class="table-responsive">
             <table class="inventory-table table" id="inventoryTable">
                 <thead>
                     <tr>
                         <th style="width: 40px;"></th>
-                        <th>Item Name</th>
+                        <th>Product</th>
                         <th>Type</th>
                         <th class="text-center">Total Qty</th>
                         <th class="text-center">Min Stock</th>
@@ -331,24 +105,22 @@
                     </tr>
                 </thead>
                 <tbody id="inventoryTableBody">
-                    {% for item_data in items %}
-                    {% set item_name = item_data.name %}
-                    {% set item_type = item_data.type %}
-                    {% set grouped_items = item_data.grouped_items %}
-                    {% set total_quantity = item_data.total_quantity %}
-                    {% set minimum_stock = item_data.minimum_stock %}
-                    {% set is_low_stock = item_data.is_low_stock %}
+                    {% for product_data in products %}
+                    {% set product = product_data.product %}
+                    {% set grouped_items = product_data.grouped_items %}
+                    {% set total_quantity = product_data.total_quantity %}
+                    {% set is_low_stock = product_data.is_low_stock %}
                     
                     <tr class="expandable-row" 
-                        data-item-name="{{ item_name.lower() }}" 
-                        data-item-type="{{ item_type.lower() }}"
-                        onclick="toggleItemDetails({{ loop.index }})">
+                        data-product-name="{{ product.name.lower() }}" 
+                        data-product-type="{{ product.type.lower() }}"
+                        onclick="toggleProductDetails({{ product.id }})">
                         <td class="text-center">
-                            <i class="fas fa-chevron-right expand-icon" id="icon-{{ loop.index }}"></i>
+                            <i class="fas fa-chevron-right expand-icon" id="icon-{{ product.id }}"></i>
                         </td>
                         <td>
-                            <div class="product-name" title="{{ item_name }}">
-                                {{ item_name }}
+                            <div class="product-name" title="{{ product.name }}">
+                                {{ product.name }}
                                 {% set unique_brands = [] %}
                                 {% for group in grouped_items %}
                                     {% if group['brand'] and group['brand'] not in unique_brands %}
@@ -361,7 +133,7 @@
                             </div>
                         </td>
                         <td>
-                            <span class="product-type">{{ item_type }}</span>
+                            <span class="product-type">{{ product.type }}</span>
                         </td>
                         <td class="quantity-cell">
                             <span class="status-indicator {% if is_low_stock %}low-stock{% elif total_quantity <= 10 %}medium-stock{% else %}good-stock{% endif %}">
@@ -369,7 +141,7 @@
                             </span>
                         </td>
                         <td class="text-center">
-                            <span class="text-muted">{{ minimum_stock }}</span>
+                            <span class="text-muted">{{ product.minimum_stock }}</span>
                         </td>
                         <td class="text-center">
                             {% if is_low_stock %}
@@ -387,16 +159,16 @@
                         <td class="actions-cell" onclick="event.stopPropagation();">
                             <div class="compact-actions">
                                 <button type="button" class="btn btn-outline-primary btn-sm" 
-                                        onclick="showItemTransferModal('{{ item_name }}', '{{ item_type }}', {{ total_quantity }})"
+                                        onclick="showProductTransferModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
                                         title="Transfer items">
                                     <i class="fas fa-exchange-alt"></i>
                                 </button>
                                 <button type="button" class="btn btn-outline-warning btn-sm" 
-                                        onclick="showItemUsageModal('{{ item_name }}', '{{ item_type }}', {{ total_quantity }})"
+                                        onclick="showProductUsageModal('{{ product.id }}', '{{ product.name }}', {{ total_quantity }})"
                                         title="Record usage">
                                     <i class="fas fa-minus"></i>
                                 </button>
-                                <a href="{{ url_for('item_history', name=item_name, type=item_type) }}" 
+                                <a href="{{ url_for('item_history', product_id=product.id) }}" 
                                    class="btn btn-outline-info btn-sm" 
                                    title="View history">
                                     <i class="fas fa-history"></i>
@@ -406,12 +178,12 @@
                     </tr>
                     
                     <!-- Details Row -->
-                    <tr class="details-row" id="details-{{ loop.index }}">
+                    <tr class="details-row" id="details-{{ product.id }}">
                         <td colspan="7">
                             <div class="details-content">
                                 <h6 class="mb-3">
                                     <i class="fas fa-boxes me-2"></i>
-                                    Individual Items for {{ item_name }}
+                                    Individual Items for {{ product.name }}
                                 </h6>
                                 <table class="details-table table table-sm">
                                     <thead>
@@ -514,7 +286,7 @@
         {% else %}
         <div class="text-center py-5">
             <i class="fas fa-search fa-3x text-muted mb-3"></i>
-            <h5 class="text-muted">No items found</h5>
+            <h5 class="text-muted">No products found</h5>
             <p class="text-muted">Try adjusting your filters or <a href="{{ url_for('add_items') }}">add some items</a>.</p>
         </div>
         {% endif %}
@@ -627,13 +399,13 @@ function filterInventoryCards(query) {
     let visibleCount = 0;
     
     rows.forEach(row => {
-        const itemName = row.dataset.itemName;
-        const itemType = row.dataset.itemType;
+        const productName = row.dataset.productName;
+        const productType = row.dataset.productType;
         const detailsRow = row.nextElementSibling;
         
         const matches = !lowerQuery || 
-                       itemName.includes(lowerQuery) || 
-                       itemType.includes(lowerQuery);
+                       productName.includes(lowerQuery) || 
+                       productType.includes(lowerQuery);
         
         if (matches) {
             row.style.display = '';
