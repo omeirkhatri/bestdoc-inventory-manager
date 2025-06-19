@@ -280,9 +280,9 @@
                     const undoButton = document.getElementById('undoButton');
                     const undoDescription = document.getElementById('undoDescription');
                     
-                    if (data.has_action) {
+                    if (data.action) {
                         undoButton.classList.remove('d-none');
-                        undoDescription.textContent = data.description;
+                        undoDescription.textContent = data.action.description;
                     } else {
                         undoButton.classList.add('d-none');
                     }
