@@ -257,3 +257,18 @@ def init_default_types():
             item.type = 'Medications/Vials'  # Default to type 1
     
     db.session.commit()
+
+class InventoryAudit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    bag_id = db.Column(db.Integer, db.ForeignKey('bag.id'), nullable=True)  # Optional: specific bag audited
+    audit_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    items_checked = db.Column(db.Integer, default=0)  # Number of items audited
+    notes = db.Column(db.Text)
+    
+    # Relationships
+    user = db.relationship('User', backref='inventory_audits')
+    bag = db.relationship('Bag', backref='audits')
+    
+    def __repr__(self):
+        return f'<InventoryAudit {self.audit_date}>'

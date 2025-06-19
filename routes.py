@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, PermanentDeletion, init_default_types, format_datetime_gmt4, format_date_gmt4
+from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, PermanentDeletion, InventoryAudit, init_default_types, format_datetime_gmt4, format_date_gmt4
 import json
 
 # Authentication routes
@@ -120,6 +120,11 @@ def dashboard():
                 'low_items': bag_low_items
             })
     
+    # Check for overdue inventory audits (over 7 days)
+    seven_days_ago = datetime.now() - timedelta(days=7)
+    last_audit = InventoryAudit.query.order_by(InventoryAudit.audit_date.desc()).first()
+    audit_overdue = not last_audit or last_audit.audit_date < seven_days_ago
+    
     # Recent movements
     recent_movements = MovementHistory.query.order_by(
         MovementHistory.timestamp.desc()
@@ -150,7 +155,9 @@ def dashboard():
                          low_stock_bags=low_stock_bags,
                          empty_bags=empty_bags,
                          recent_movements=recent_movements,
-                         bags_with_counts=bags_with_counts)
+                         bags_with_counts=bags_with_counts,
+                         audit_overdue=audit_overdue,
+                         last_audit=last_audit)
 
 @app.route('/add_items', methods=['GET', 'POST'])
 @login_required
@@ -1773,10 +1780,10 @@ def get_last_action():
     except Exception as e:
         return jsonify({'action': None, 'error': str(e)})
 
-@app.route('/weekly_check')
+@app.route('/inventory_audit')
 @login_required
-def weekly_check():
-    """Display weekly check page for consumable items separated by storage location"""
+def inventory_audit():
+    """Display inventory audit page for consumable items separated by storage location"""
     # Get selected bag/storage from query parameter
     selected_bag_id = request.args.get('bag_id', type=int)
     
@@ -1825,10 +1832,10 @@ def weekly_check():
                          all_bags=all_bags,
                          selected_bag=selected_bag)
 
-@app.route('/weekly_check', methods=['POST'])
+@app.route('/inventory_audit', methods=['POST'])
 @login_required
-def handle_weekly_check():
-    """Process weekly check form submission"""
+def handle_inventory_audit():
+    """Process inventory audit form submission"""
     if request.method == 'POST':
         try:
             # Get today's date to check if it's Friday
@@ -1904,15 +1911,24 @@ def handle_weekly_check():
             for movement in bulk_movements:
                 db.session.add(movement)
             
+            # Create audit record
+            audit = InventoryAudit(
+                user_id=current_user.id,
+                bag_id=request.form.get('selected_bag_id', type=int),
+                items_checked=len(bulk_movements),
+                notes=f'Inventory audit completed with {len(bulk_movements)} items updated'
+            )
+            db.session.add(audit)
+            
             db.session.commit()
             
-            flash(f'Weekly check completed successfully! {len(bulk_movements)} items updated.', 'success')
+            flash(f'Inventory audit completed successfully! {len(bulk_movements)} items updated.', 'success')
             
         except Exception as e:
             db.session.rollback()
-            flash(f'Error processing weekly check: {str(e)}', 'error')
+            flash(f'Error processing inventory audit: {str(e)}', 'error')
     
-    return redirect(url_for('weekly_check'))
+    return redirect(url_for('inventory_audit'))
 
 @app.route('/api/update-product', methods=['POST'])
 @login_required
