@@ -158,7 +158,7 @@
                         </td>
                         <td>
                             <div class="d-flex align-items-center justify-content-between">
-                                <span>{{ item.date_added.strftime('%m/%d/%Y') if item.date_added else '-' }}</span>
+                                <span>{{ item.date_added|format_date_gmt4 if item.date_added else '-' }}</span>
                                 <a href="{{ url_for('individual_item_history', item_id=item.id) }}" 
                                    class="btn btn-outline-info btn-sm ms-2" 
                                    title="View individual item history">
@@ -270,7 +270,7 @@
                             {% if movement.expiry_date %}
                             <div class="row mt-2">
                                 <div class="col-md-6">
-                                    <strong>Expiry Date:</strong> {{ movement.expiry_date.strftime('%m/%d/%Y') }}
+                                    <strong>Expiry Date:</strong> {{ movement.expiry_date|format_date_gmt4 }}
                                 </div>
                             </div>
                             {% endif %}

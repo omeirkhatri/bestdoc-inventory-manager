@@ -104,7 +104,7 @@
                         </td>
                         <td>{{ item.bag.name }}</td>
                         <td>
-                            <strong class="text-danger">{{ item.expiry_date.strftime('%m/%d/%Y') }}</strong>
+                            <strong class="text-danger">{{ item.expiry_date|format_date_gmt4 }}</strong>
                         </td>
                         <td>
                             <span class="badge bg-danger">
@@ -154,7 +154,7 @@
                     <tr>
                         <td>
                             <div>
-                                <strong>{{ record.timestamp.strftime('%m/%d/%Y') }}</strong><br>
+                                <strong>{{ record.timestamp|format_date_gmt4 }}</strong><br>
                                 <small class="text-muted">{{ record.timestamp.strftime('%H:%M:%S') }}</small>
                             </div>
                         </td>
@@ -168,7 +168,7 @@
                         <td>{{ record.from_bag }}</td>
                         <td>
                             {% if record.expiry_date %}
-                                {{ record.expiry_date.strftime('%m/%d/%Y') }}
+                                {{ record.expiry_date|format_date_gmt4 }}
                             {% else %}
                                 <span class="text-muted">-</span>
                             {% endif %}
