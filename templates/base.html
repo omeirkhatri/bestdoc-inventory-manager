@@ -271,8 +271,18 @@
         
         // Undo functionality
         function checkForUndoActions() {
-            fetch('/api/get_last_action')
-                .then(response => response.json())
+            fetch('/api/get_last_action', {
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const undoButton = document.getElementById('undoButton');
                     
@@ -290,8 +300,18 @@
 
         function performUndo() {
             // First get the last action details
-            fetch('/api/get_last_action')
-                .then(response => response.json())
+            fetch('/api/get_last_action', {
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.action) {
                         showUndoModal(data.action.description);
@@ -370,11 +390,18 @@
             
             fetch('/api/undo_last_action', {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Show success message

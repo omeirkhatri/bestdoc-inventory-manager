@@ -1755,20 +1755,23 @@ def bulk_update_bag_minimums():
 @login_required
 def get_last_action():
     """Get information about the last action that can be undone"""
-    last_action = UndoAction.query.filter_by(
-        user_id=current_user.id,
-        is_used=False
-    ).order_by(UndoAction.timestamp.desc()).first()
-    
-    if last_action:
-        return jsonify({
-            'action': {
-                'description': last_action.description,
-                'timestamp': last_action.timestamp.isoformat()
-            }
-        })
-    else:
-        return jsonify({'action': None})
+    try:
+        last_action = UndoAction.query.filter_by(
+            user_id=current_user.id,
+            is_used=False
+        ).order_by(UndoAction.timestamp.desc()).first()
+        
+        if last_action:
+            return jsonify({
+                'action': {
+                    'description': last_action.description,
+                    'timestamp': last_action.timestamp.isoformat()
+                }
+            })
+        else:
+            return jsonify({'action': None})
+    except Exception as e:
+        return jsonify({'action': None, 'error': str(e)})
 
 @app.route('/weekly_check')
 @login_required
