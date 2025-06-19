@@ -183,12 +183,7 @@
     </div>
 </div>
 
-<!-- Mobile Transfer Button -->
-<button class="btn btn-success mobile-transfer-button d-flex align-items-center justify-content-center" 
-        onclick="scrollToTransfer()" id="mobileScrollBtn">
-    <i class="fas fa-exchange-alt me-2"></i>
-    Transfer <span id="mobileSelectedBadge" class="ms-1">(0)</span>
-</button>
+
 
 
 
@@ -271,26 +266,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     /* Mobile transfer button - wide sticky button */
     .mobile-transfer-button {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1040;
-        width: 50%;
-        min-width: 200px;
-        max-width: 300px;
-        border-radius: 25px;
-        font-weight: 600;
-        font-size: 16px;
-        padding: 12px 20px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-        border: none;
+        width: 50% !important;
+        min-width: 200px !important;
+        max-width: 300px !important;
+        border-radius: 25px !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        padding: 12px 20px !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+        border: none !important;
         display: none !important;
     }
     
     /* Show button when items are selected */
     .mobile-transfer-button.show {
         display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 }
 
@@ -755,4 +747,13 @@ function clearSearch() {
     filterItems('cabinet');
 }
 </script>
+
+<!-- Mobile Transfer Button - Outside all containers for proper positioning -->
+<button class="btn btn-success mobile-transfer-button" 
+        onclick="scrollToTransfer()" id="mobileScrollBtn"
+        style="position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 9999 !important;">
+    <i class="fas fa-exchange-alt me-2"></i>
+    Transfer <span id="mobileSelectedBadge" class="ms-1">(0)</span>
+</button>
+
 {% endblock %}
