@@ -558,6 +558,13 @@ def inventory():
         
         items = item_query.order_by(Item.brand, Item.size, Item.expiry_date).all()
         
+        # Collect unique generic names from ALL items for this product (including zero quantity)
+        unique_generic_names = []
+        for item in all_items_for_product:
+            if item.generic_name and item.generic_name.strip():
+                if item.generic_name not in unique_generic_names:
+                    unique_generic_names.append(item.generic_name)
+        
         if items:  # Only include products that have matching items
             # Group items by brand, size, and expiry date
             grouped_items = []
@@ -584,13 +591,6 @@ def inventory():
                     # Add to existing group (should not happen with bag_id in key)
                     current_group['items'].append(item)
                     current_group['total_quantity'] += item.quantity
-            
-            # Collect unique generic names from ALL items for this product (including zero quantity)
-            unique_generic_names = []
-            for item in all_items_for_product:
-                if item.generic_name and item.generic_name.strip():
-                    if item.generic_name not in unique_generic_names:
-                        unique_generic_names.append(item.generic_name)
             
 
             
