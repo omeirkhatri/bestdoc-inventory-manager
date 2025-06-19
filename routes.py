@@ -1685,8 +1685,13 @@ def undo_last_action():
                     )
                 ).all()
                 
-                if quantity_change > 0:
-                    # Original was addition, so we need to subtract
+                if quantity_change < 0:
+                    # Original was reduction (usage), so we need to add back
+                    quantity_to_add = abs(quantity_change)
+                    if items_to_update:
+                        items_to_update[0].quantity += quantity_to_add
+                else:
+                    # Original was addition (adjustment), so we need to subtract
                     remaining_to_reduce = quantity_change
                     for item in items_to_update:
                         if remaining_to_reduce <= 0:
@@ -1698,11 +1703,6 @@ def undo_last_action():
                         else:
                             item.quantity -= remaining_to_reduce
                             remaining_to_reduce = 0
-                else:
-                    # Original was reduction, so we need to add back
-                    quantity_to_add = abs(quantity_change)
-                    if items_to_update:
-                        items_to_update[0].quantity += quantity_to_add
             
             # Remove the audit movement history records
             MovementHistory.query.filter(
@@ -2123,6 +2123,7 @@ def handle_inventory_audit():
                 notes=f'Inventory audit completed with {len(bulk_movements)} items updated'
             )
             db.session.add(audit)
+            db.session.flush()  # Get the audit ID before creating undo action
             
             # Create undo action for the entire audit
             if bulk_movements:
@@ -2138,7 +2139,7 @@ def handle_inventory_audit():
                         'item_name': movement.item_name,
                         'item_type': movement.item_type,
                         'item_size': movement.item_size,
-                        'quantity_change': movement.quantity if 'USAGE' in movement.movement_type else -movement.quantity,
+                        'quantity_change': -movement.quantity if 'USAGE' in movement.movement_type else movement.quantity,
                         'movement_type': movement.movement_type,
                         'notes': movement.notes
                     }
