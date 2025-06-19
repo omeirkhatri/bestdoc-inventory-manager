@@ -293,56 +293,38 @@
         }
 
         function performUndo() {
-            // First get the last action details
-            fetch('/api/get_last_action')
+            if (confirm('Are you sure you want to undo the last action?')) {
+                fetch('/api/undo_last_action', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.action) {
-                        const confirmMessage = `Are you sure you want to undo this action?\n\n${data.action.description}`;
-                        if (confirm(confirmMessage)) {
-                            executeUndo();
+                    if (data.success) {
+                        // Show success message
+                        showAlert('success', data.message);
+                        
+                        // Hide undo button
+                        const undoBtn = document.getElementById('undoButton');
+                        if (undoBtn) {
+                            undoBtn.classList.add('d-none');
                         }
+                        
+                        // Refresh page to show updated data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
                     } else {
-                        alert('No action available to undo');
+                        showAlert('danger', data.error || 'Failed to undo action');
                     }
                 })
                 .catch(error => {
-                    console.error('Error getting last action:', error);
-                    // Fallback to simple confirmation
-                    if (confirm('Are you sure you want to undo the last action?')) {
-                        executeUndo();
-                    }
+                    console.error('Error performing undo:', error);
+                    showAlert('danger', 'An error occurred while undoing the action');
                 });
-        }
-
-        function executeUndo() {
-            fetch('/api/undo_last_action', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    showAlert('success', data.message);
-                    
-                    // Hide undo button
-                    document.getElementById('undoButton').classList.add('d-none');
-                    
-                    // Refresh page to show updated data
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                } else {
-                    showAlert('danger', data.error || 'Failed to undo action');
-                }
-            })
-            .catch(error => {
-                console.error('Error performing undo:', error);
-                showAlert('danger', 'An error occurred while undoing the action');
-            });
+            }
         }
 
         function showAlert(type, message) {
