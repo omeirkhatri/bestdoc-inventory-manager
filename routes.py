@@ -569,6 +569,7 @@ def inventory():
                     current_group = {
                         'key': group_key,
                         'brand': item.brand,
+                        'generic_name': item.generic_name,
                         'size': item.size,
                         'expiry_date': item.expiry_date,
                         'items': [item],

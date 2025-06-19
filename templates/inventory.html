@@ -121,14 +121,14 @@
                         <td>
                             <div class="product-name" title="{{ product.name }}">
                                 {{ product.name }}
-                                {% set unique_brands = [] %}
+                                {% set unique_generic_names = [] %}
                                 {% for group in grouped_items %}
-                                    {% if group['brand'] and group['brand'] not in unique_brands %}
-                                        {% set _ = unique_brands.append(group['brand']) %}
+                                    {% if group['generic_name'] and group['generic_name'] not in unique_generic_names %}
+                                        {% set _ = unique_generic_names.append(group['generic_name']) %}
                                     {% endif %}
                                 {% endfor %}
-                                {% for brand in unique_brands %}
-                                    <span class="badge bg-info ms-2">{{ brand }}</span>
+                                {% for generic_name in unique_generic_names %}
+                                    <span class="badge bg-info ms-2">{{ generic_name }}</span>
                                 {% endfor %}
                             </div>
                         </td>
