@@ -1791,12 +1791,12 @@ def inventory_audit():
     all_bags = Bag.query.order_by(Bag.location.desc(), Bag.name).all()
     
     # Get all items that require weekly check (types 4 and 5)
-    weekly_check_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
+    consumables_audit_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
     
     # Base query for consumable items
     query = Item.query.join(Bag).filter(
         and_(
-            Item.type.in_(weekly_check_types),
+            Item.type.in_(consumables_audit_types),
             Item.quantity > 0
         )
     )
@@ -1827,7 +1827,7 @@ def inventory_audit():
         grouped_items[key]['current_qty'] += item.quantity
         grouped_items[key]['items'].append(item)
     
-    return render_template('weekly_check.html', 
+    return render_template('inventory_audit.html', 
                          grouped_items=grouped_items,
                          all_bags=all_bags,
                          selected_bag=selected_bag)

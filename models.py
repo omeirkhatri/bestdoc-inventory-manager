@@ -138,10 +138,10 @@ class Item(db.Model):
         return 'good'
     
     @property
-    def is_weekly_check_item(self):
-        """Check if this item type requires weekly check (types 4 and 5)"""
-        weekly_check_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
-        return self.type in weekly_check_types
+    def is_consumables_audit_item(self):
+        """Check if this item type requires consumables audit (types 4 and 5)"""
+        consumables_audit_types = ['Consumable Dressings/Swabs', 'Catheters & Containers']
+        return self.type in consumables_audit_types
 
 class MovementHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
