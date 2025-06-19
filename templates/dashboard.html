@@ -515,8 +515,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @media (max-width: 768px) {
     .col-md-2-4 {
-        flex: 0 0 50%;
-        max-width: 50%;
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 0.75rem;
+    }
+    
+    .stat-card {
+        height: 80px;
+        padding: 16px 20px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-content {
+        height: 100%;
+        justify-content: space-between;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        margin-right: 16px;
+        flex-shrink: 0;
+    }
+    
+    .stat-icon i {
+        font-size: 18px;
+    }
+    
+    .stat-info {
+        flex: 1;
+        text-align: left;
+    }
+    
+    .stat-number {
+        font-size: 20px !important;
+        font-weight: 300;
+        margin: 0;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+        margin-top: 2px;
+        opacity: 0.8;
+        line-height: 1.2;
+    }
+    
+    .stat-footer {
+        display: none;
     }
 }
 

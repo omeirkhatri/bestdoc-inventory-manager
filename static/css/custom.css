@@ -326,6 +326,20 @@ body {
     display: none;
 }
 
+/* Logo white background in light mode */
+[data-bs-theme="light"] .navbar-brand img,
+[data-bs-theme="light"] .brand-logo img {
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+[data-bs-theme="light"] .sidebar-brand img {
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
 /* Logout button styling */
 .logout-button {
     width: 100%;

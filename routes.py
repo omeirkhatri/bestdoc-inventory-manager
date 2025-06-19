@@ -38,6 +38,7 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/')
+@app.route('/dashboard')
 @login_required
 def dashboard():
     # Initialize default types if needed
