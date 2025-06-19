@@ -26,28 +26,43 @@
 
             {% if low_stock_bags %}
             <!-- Low Stock Alert -->
-            <div class="alert alert-warning mb-4">
-                <h5><i class="fas fa-exclamation-triangle me-2"></i>Storage Locations Need Restocking</h5>
-                <div class="row">
-                    {% for bag_info in low_stock_bags %}
-                    <div class="col-md-6 mb-3">
-                        <div class="card border-warning">
-                            <div class="card-body">
-                                <h6 class="card-title text-warning">
-                                    <i class="fas fa-briefcase me-2"></i>{{ bag_info.bag.name }}
-                                </h6>
-                                {% for item in bag_info.low_items %}
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <small>{{ item.product.name }}</small>
-                                    <span class="badge bg-warning text-dark">
-                                        {{ item.current }}/{{ item.minimum }} (need {{ item.shortage }})
-                                    </span>
+            <div class="card mb-4" style="background: linear-gradient(135deg, #2b3035, #1a1d20); border: 1px solid rgba(79, 209, 199, 0.3);">
+                <div class="card-body">
+                    <h5 class="mb-3" style="color: #4fd1c7;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Storage Locations Need Restocking
+                    </h5>
+                    
+                    <div class="accordion" id="bagMinimumsAccordion">
+                        {% for bag_info in low_stock_bags %}
+                        <div class="accordion-item mb-2" style="border: 1px solid rgba(79, 209, 199, 0.3); border-radius: 12px; background: rgba(43, 48, 53, 0.95);">
+                            <h2 class="accordion-header" id="bagHeading{{ loop.index }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bagCollapse{{ loop.index }}" aria-expanded="false" aria-controls="bagCollapse{{ loop.index }}"
+                                        style="background: transparent; border: none; color: #4fd1c7; padding: 0.75rem 1rem; border-radius: 12px;">
+                                    <div class="d-flex justify-content-between align-items-center w-100">
+                                        <div>
+                                            <i class="fas fa-briefcase me-2"></i>{{ bag_info.bag.name }}
+                                            <span class="badge ms-2" style="background: linear-gradient(135deg, #ffc107, #e0a800); color: #000; border-radius: 6px; font-size: 0.65rem;">
+                                                {{ bag_info.low_items|length }} items need restocking
+                                            </span>
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="bagCollapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="bagHeading{{ loop.index }}" data-bs-parent="#bagMinimumsAccordion">
+                                <div class="accordion-body" style="padding: 1rem; background: rgba(43, 48, 53, 0.95); border-radius: 0 0 12px 12px;">
+                                    {% for item in bag_info.low_items %}
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span style="color: #dee2e6;">{{ item.product.name }}</span>
+                                        <span class="badge" style="background: linear-gradient(135deg, #ffc107, #e0a800); color: #000; border-radius: 6px; font-size: 0.7rem;">
+                                            {{ item.current }}/{{ item.minimum }} (need {{ item.shortage }})
+                                        </span>
+                                    </div>
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
             {% endif %}
