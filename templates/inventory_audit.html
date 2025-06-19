@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Weekly Check - Healthcare Inventory{% endblock %}
+{% block title %}Consumables Audit - Healthcare Inventory{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12">
         <h1 class="mb-4">
-            <i class="fas fa-calendar-check me-2"></i>
-            Weekly Check
+            <i class="fas fa-clipboard-check me-2"></i>
+            Consumables Audit
             {% if selected_bag %}
                 - {{ selected_bag.name }} ({{ selected_bag.location.title() }})
             {% endif %}
@@ -66,7 +66,7 @@
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-clipboard-list me-2"></i>
-                    Consumable Items Check
+                    Consumables Audit
                 </h5>
             </div>
             <div class="card-body">
@@ -196,14 +196,14 @@ function changeBag() {
     const selectedBagId = bagSelect.value;
     
     if (selectedBagId) {
-        window.location.href = `{{ url_for('weekly_check') }}?bag_id=${selectedBagId}`;
+        window.location.href = `{{ url_for('inventory_audit') }}?bag_id=${selectedBagId}`;
     } else {
-        window.location.href = `{{ url_for('weekly_check') }}`;
+        window.location.href = `{{ url_for('inventory_audit') }}`;
     }
 }
 
 function viewAllLocations() {
-    window.location.href = `{{ url_for('weekly_check') }}`;
+    window.location.href = `{{ url_for('inventory_audit') }}`;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
