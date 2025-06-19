@@ -1,5 +1,233 @@
 {% extends "base.html" %}
 
+{% block title %}Inventory - Healthcare Inventory Management{% endblock %}
+
+{% block extra_head %}
+<style>
+.inventory-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.inventory-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #007bff;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    cursor: pointer;
+    padding: 15px 20px;
+}
+
+.card-header:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+.expand-icon {
+    transition: transform 0.3s ease;
+    color: #6c757d;
+}
+
+.expand-icon.expanded {
+    transform: rotate(90deg);
+    color: #007bff;
+}
+
+.item-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1em;
+}
+
+.item-type {
+    color: #6c757d;
+    font-size: 0.9em;
+    margin-left: 8px;
+}
+
+.quantity-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.quantity-badge {
+    background: #28a745;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.quantity-badge.low-stock {
+    background: #dc3545;
+}
+
+.quantity-badge.medium-stock {
+    background: #ffc107;
+    color: #000;
+}
+
+.minimum-stock-info {
+    color: #6c757d;
+    font-size: 0.85em;
+}
+
+.card-body {
+    display: none;
+    padding: 20px;
+    background: #fafafa;
+}
+
+.card-body.show {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
+}
+
+.details-table {
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.details-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 8px;
+}
+
+.details-table td {
+    padding: 10px 8px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.expiry-status {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.expiry-status.expired {
+    background: #dc3545;
+    color: white;
+}
+
+.expiry-status.expires-soon {
+    background: #ffc107;
+    color: #000;
+}
+
+.expiry-status.good {
+    background: #28a745;
+    color: white;
+}
+
+.expiry-status.no-expiry {
+    background: #6c757d;
+    color: white;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.search-container {
+    position: relative;
+    max-width: 400px;
+}
+
+.search-input {
+    padding-right: 40px;
+}
+
+.search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    font-size: 16px;
+}
+
+.search-clear:hover {
+    color: #dc3545;
+}
+
+.inventory-summary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.summary-item {
+    text-align: center;
+}
+
+.summary-number {
+    font-size: 2em;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.summary-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.low-stock-alert {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.no-items-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.no-items-message i {
+    font-size: 4em;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+</style>
+{% endblock %}
+
 {% block title %}Inventory - Healthcare Inventory{% endblock %}
 
 {% block content %}
@@ -116,7 +344,7 @@
                     <tr class="expandable-row" 
                         data-item-name="{{ item_name.lower() }}" 
                         data-item-type="{{ item_type.lower() }}"
-                        onclick="toggleItemDetails('{{ item_name }}', '{{ item_type }}')">
+                        onclick="toggleItemDetails({{ loop.index }})">
                         <td class="text-center">
                             <i class="fas fa-chevron-right expand-icon" id="icon-{{ loop.index }}"></i>
                         </td>
@@ -170,7 +398,7 @@
                                         title="Record usage">
                                     <i class="fas fa-minus"></i>
                                 </button>
-                                <a href="{{ url_for('item_history', product_id=product.id) }}" 
+                                <a href="{{ url_for('item_history', name=item_name, type=item_type) }}" 
                                    class="btn btn-outline-info btn-sm" 
                                    title="View history">
                                     <i class="fas fa-history"></i>
@@ -401,13 +629,13 @@ function filterInventoryCards(query) {
     let visibleCount = 0;
     
     rows.forEach(row => {
-        const productName = row.dataset.productName;
-        const productType = row.dataset.productType;
+        const itemName = row.dataset.itemName;
+        const itemType = row.dataset.itemType;
         const detailsRow = row.nextElementSibling;
         
         const matches = !lowerQuery || 
-                       productName.includes(lowerQuery) || 
-                       productType.includes(lowerQuery);
+                       itemName.includes(lowerQuery) || 
+                       itemType.includes(lowerQuery);
         
         if (matches) {
             row.style.display = '';
