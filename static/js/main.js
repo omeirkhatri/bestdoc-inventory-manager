@@ -2,7 +2,7 @@
 
 // Global configuration
 const INVENTORY_CONFIG = {
-    dateFormat: 'MM/dd/yyyy',
+    dateFormat: 'dd/MM/yyyy',
     lowStockThreshold: 5,
     expiryWarningDays: 30,
     maxFileSize: 16 * 1024 * 1024 // 16MB
