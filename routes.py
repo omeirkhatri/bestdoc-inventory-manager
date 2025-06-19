@@ -1663,6 +1663,61 @@ def undo_last_action():
             else:
                 return jsonify({'success': False, 'error': 'Added item not found for reversal'})
         
+        elif last_action.action_type == 'inventory_audit':
+            # Reverse inventory audit changes
+            audit_id = action_data['audit_id']
+            changes = action_data['changes']
+            
+            # Reverse each change made during the audit
+            for change in changes:
+                item_name = change['item_name']
+                item_type = change['item_type']
+                item_size = change['item_size']
+                quantity_change = change['quantity_change']
+                
+                # Find items to reverse the change
+                items_to_update = Item.query.filter(
+                    and_(
+                        Item.name == item_name,
+                        Item.type == item_type,
+                        Item.size == item_size if item_size else Item.size.is_(None),
+                        Item.quantity >= 0
+                    )
+                ).all()
+                
+                if quantity_change > 0:
+                    # Original was addition, so we need to subtract
+                    remaining_to_reduce = quantity_change
+                    for item in items_to_update:
+                        if remaining_to_reduce <= 0:
+                            break
+                        
+                        if item.quantity <= remaining_to_reduce:
+                            remaining_to_reduce -= item.quantity
+                            item.quantity = 0
+                        else:
+                            item.quantity -= remaining_to_reduce
+                            remaining_to_reduce = 0
+                else:
+                    # Original was reduction, so we need to add back
+                    quantity_to_add = abs(quantity_change)
+                    if items_to_update:
+                        items_to_update[0].quantity += quantity_to_add
+            
+            # Remove the audit movement history records
+            MovementHistory.query.filter(
+                MovementHistory.movement_type.like('BULK_WEEKLY_CHECK_%')
+            ).filter(
+                MovementHistory.timestamp >= last_action.timestamp
+            ).delete(synchronize_session=False)
+            
+            # Mark the audit as reversed
+            audit = InventoryAudit.query.get(audit_id)
+            if audit:
+                audit.notes = f"{audit.notes} - REVERSED"
+            
+            success_message = f"Reversed inventory audit with {len(changes)} item changes"
+        
         else:
             return jsonify({'success': False, 'error': 'Unknown action type'})
         
@@ -2068,6 +2123,35 @@ def handle_inventory_audit():
                 notes=f'Inventory audit completed with {len(bulk_movements)} items updated'
             )
             db.session.add(audit)
+            
+            # Create undo action for the entire audit
+            if bulk_movements:
+                # Store the audit changes for undo
+                audit_data = {
+                    'audit_id': audit.id,
+                    'changes': []
+                }
+                
+                # Store each change made during the audit
+                for movement in bulk_movements:
+                    change_data = {
+                        'item_name': movement.item_name,
+                        'item_type': movement.item_type,
+                        'item_size': movement.item_size,
+                        'quantity_change': movement.quantity if 'USAGE' in movement.movement_type else -movement.quantity,
+                        'movement_type': movement.movement_type,
+                        'notes': movement.notes
+                    }
+                    audit_data['changes'].append(change_data)
+                
+                # Create undo action
+                undo_action = UndoAction(
+                    action_type='inventory_audit',
+                    action_data=json.dumps(audit_data),
+                    description=f'Inventory audit with {len(bulk_movements)} item changes',
+                    user_id=current_user.id
+                )
+                db.session.add(undo_action)
             
             db.session.commit()
             
