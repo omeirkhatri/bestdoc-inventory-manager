@@ -585,11 +585,7 @@ def inventory():
             # Collect unique generic names for this product
             unique_generic_names = list(set(item.generic_name for item in items if item.generic_name))
             
-            # Debug logging
-            if product.name == 'Scopinal':
-                print(f"DEBUG: Scopinal items: {[(item.name, item.generic_name, item.brand) for item in items]}")
-                print(f"DEBUG: Unique generic names: {unique_generic_names}")
-            
+
             filtered_products.append({
                 'product': product,
                 'grouped_items': grouped_items,

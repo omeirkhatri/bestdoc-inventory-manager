@@ -121,7 +121,6 @@
                         <td>
                             <div class="product-name" title="{{ product.name }}">
                                 {{ product.name }}
-                                <!-- Debug: {{ product_data.unique_generic_names }} -->
                                 {% for generic_name in product_data.unique_generic_names %}
                                     <span class="badge bg-info ms-2">{{ generic_name }}</span>
                                 {% endfor %}
