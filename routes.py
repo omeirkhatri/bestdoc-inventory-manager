@@ -582,9 +582,12 @@ def inventory():
                     current_group['items'].append(item)
                     current_group['total_quantity'] += item.quantity
             
-            # Collect unique generic names for this product
-            unique_generic_names = list(set(item.generic_name for item in items if item.generic_name))
-            
+            # Collect unique generic names for this product - fix the logic
+            unique_generic_names = []
+            for item in items:
+                if item.generic_name and item.generic_name.strip():
+                    if item.generic_name not in unique_generic_names:
+                        unique_generic_names.append(item.generic_name)
 
             filtered_products.append({
                 'product': product,
