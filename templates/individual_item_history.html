@@ -35,6 +35,15 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-2">
+                            <strong>Generic Name:</strong><br>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted" id="itemGenericName">{{ item.generic_name or 'Not specified' }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('generic_name', '{{ item.generic_name or '' }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
                             <strong>Item Name:</strong><br>
                             <div class="d-flex align-items-center">
                                 <span class="text-white" id="itemName">{{ item.name }}</span>

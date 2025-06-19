@@ -107,6 +107,7 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
+                        <th>Generic Name</th>
                         <th>Brand</th>
                         <th>Size</th>
                         <th>Quantity</th>
@@ -120,6 +121,14 @@
                 <tbody>
                     {% for item in current_items %}
                     <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted" id="itemGenericName-{{ item.id }}">{{ item.generic_name or 'Not specified' }}</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="editItemField('generic_name', '{{ item.generic_name or '' }}', {{ item.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
                         <td>
                             {% if item.brand %}
                                 <span class="badge bg-info">{{ item.brand }}</span>

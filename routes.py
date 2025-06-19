@@ -2277,11 +2277,11 @@ def update_item():
         item = Item.query.get_or_404(item_id)
         
         # Validate field
-        if field not in ['name', 'type', 'size', 'brand']:
+        if field not in ['name', 'type', 'size', 'brand', 'generic_name']:
             return jsonify({'success': False, 'message': 'Invalid field'})
         
         # Handle empty string for optional fields
-        if field in ['size', 'brand'] and not value:
+        if field in ['size', 'brand', 'generic_name'] and not value:
             value = None
         
         # Update the field

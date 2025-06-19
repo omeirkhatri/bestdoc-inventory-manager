@@ -530,6 +530,9 @@
                     } else if (field === 'size') {
                         const sizeEl = document.getElementById('itemSize');
                         if (sizeEl) sizeEl.textContent = value || 'N/A';
+                    } else if (field === 'generic_name') {
+                        const genericNameEl = document.getElementById('itemGenericName');
+                        if (genericNameEl) genericNameEl.textContent = value || 'Not specified';
                     }
                     
                     // Show success message
@@ -582,9 +585,23 @@
 
         // Inline editing functions
         window.showInlineEditor = function(field, currentValue, itemId, itemType) {
-            const elementId = itemType === 'product' ? 
-                (field === 'name' ? 'productName' : field === 'minimum_stock' ? 'productMinStock' : 'productType') :
-                (field === 'name' ? 'itemName' : field === 'size' ? 'itemSize' : 'itemType');
+            let elementId;
+            if (itemType === 'product') {
+                elementId = field === 'name' ? 'productName' : field === 'minimum_stock' ? 'productMinStock' : 'productType';
+            } else {
+                // For items, check if we have a specific ID suffix (for tables with multiple items)
+                const specificId = field === 'generic_name' ? `itemGenericName-${itemId}` : 
+                                  field === 'name' ? `itemName-${itemId}` || 'itemName' :
+                                  field === 'size' ? `itemSize-${itemId}` || 'itemSize' :
+                                  field === 'type' ? `itemType-${itemId}` || 'itemType' : 'itemType';
+                
+                // Check if the specific element exists, otherwise fall back to generic
+                if (document.getElementById(specificId)) {
+                    elementId = specificId;
+                } else {
+                    elementId = field === 'name' ? 'itemName' : field === 'size' ? 'itemSize' : field === 'generic_name' ? 'itemGenericName' : 'itemType';
+                }
+            }
             
             const element = document.getElementById(elementId);
             if (!element) return;
