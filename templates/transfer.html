@@ -278,8 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
         display: none !important;
     }
     
-    /* Show button when items are selected */
-    .mobile-transfer-button.show {
+    /* Show button when items are selected - higher specificity */
+    #mobileScrollBtn.mobile-transfer-button.show {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -750,7 +750,7 @@ function clearSearch() {
 <!-- Mobile Transfer Button - Outside all containers for proper positioning -->
 <button class="btn btn-success mobile-transfer-button" 
         onclick="scrollToTransfer()" id="mobileScrollBtn"
-        style="position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 9999 !important; display: none !important;">
+        style="position: fixed !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 9999 !important;">
     <i class="fas fa-exchange-alt me-2"></i>
     Transfer <span id="mobileSelectedBadge" class="ms-1">(0)</span>
 </button>
