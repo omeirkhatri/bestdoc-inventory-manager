@@ -704,6 +704,155 @@ def handle_transfer():
     
     return redirect(url_for('transfer'))
 
+@app.route('/transfer/multi', methods=['POST'])
+@login_required
+def handle_multi_transfer():
+    try:
+        to_bag_id = request.form.get('to_bag_id')
+        
+        if not to_bag_id:
+            flash("Please select a destination bag", "danger")
+            return redirect(url_for('transfer'))
+        
+        to_bag = Bag.query.get_or_404(to_bag_id)
+        
+        # Parse item data from form
+        transfer_items = []
+        successful_transfers = []
+        total_items_processed = 0
+        
+        # Extract items data from form
+        for key in request.form.keys():
+            if key.startswith('items[') and key.endswith('][item_id]'):
+                # Extract item ID from key like "items[123][item_id]"
+                item_id = request.form.get(key)
+                quantity_key = key.replace('[item_id]', '[quantity]')
+                quantity = int(request.form.get(quantity_key, 0))
+                
+                if item_id and quantity > 0:
+                    transfer_items.append({
+                        'item_id': item_id,
+                        'quantity': quantity
+                    })
+        
+        if not transfer_items:
+            flash("No items selected for transfer", "warning")
+            return redirect(url_for('transfer'))
+        
+        # Process each transfer
+        for transfer_data in transfer_items:
+            try:
+                item_id = transfer_data['item_id']
+                quantity = transfer_data['quantity']
+                
+                item = Item.query.get(item_id)
+                if not item:
+                    continue
+                
+                # Validation checks
+                if quantity > item.quantity:
+                    flash(f"Cannot transfer {quantity} units of {item.name} - only {item.quantity} available", "warning")
+                    continue
+                
+                if item.bag_id == int(to_bag_id):
+                    flash(f"Cannot transfer {item.name} to the same bag", "warning")
+                    continue
+                
+                from_bag = item.bag
+                
+                # Check if same item exists in destination bag
+                existing_item = Item.query.filter_by(
+                    name=item.name,
+                    type=item.type,
+                    size=item.size,
+                    expiry_date=item.expiry_date,
+                    brand=item.brand,
+                    bag_id=to_bag_id
+                ).first()
+                
+                if existing_item:
+                    # Add to existing item
+                    existing_item.quantity += quantity
+                    existing_item.updated_at = datetime.utcnow()
+                else:
+                    # Create new item in destination bag
+                    new_item = Item(
+                        name=item.name,
+                        type=item.type,
+                        brand=item.brand,
+                        size=item.size,
+                        quantity=quantity,
+                        expiry_date=item.expiry_date,
+                        bag_id=to_bag_id,
+                        product_id=item.product_id
+                    )
+                    db.session.add(new_item)
+                
+                # Reduce quantity from source item
+                item.quantity -= quantity
+                item.updated_at = datetime.utcnow()
+                
+                # Remove source item if quantity reaches zero
+                if item.quantity <= 0:
+                    db.session.delete(item)
+                
+                # Log the transfer
+                movement = MovementHistory(
+                    item_name=item.name,
+                    item_type=item.type,
+                    item_size=item.size,
+                    quantity=quantity,
+                    movement_type='transfer',
+                    from_bag=from_bag.name,
+                    to_bag=to_bag.name,
+                    notes=f"Multi-transfer: {quantity} units"
+                )
+                db.session.add(movement)
+                
+                successful_transfers.append({
+                    'name': item.name,
+                    'quantity': quantity,
+                    'from_bag': from_bag.name
+                })
+                total_items_processed += 1
+                
+            except Exception as e:
+                flash(f"Error transferring {item.name if 'item' in locals() else 'item'}: {str(e)}", "danger")
+                continue
+        
+        if successful_transfers:
+            # Create a single undo action for the multi-transfer
+            undo_data = {
+                'action_type': 'multi_transfer',
+                'to_bag_id': to_bag_id,
+                'to_bag_name': to_bag.name,
+                'transfers': successful_transfers,
+                'total_items': total_items_processed
+            }
+            
+            undo_action = UndoAction(
+                action_type='multi_transfer',
+                action_data=json.dumps(undo_data),
+                description=f"Multi-transfer of {total_items_processed} items to {to_bag.name}",
+                user_id=current_user.id
+            )
+            db.session.add(undo_action)
+            
+            db.session.commit()
+            
+            if total_items_processed == 1:
+                flash(f"Successfully transferred 1 item to {to_bag.name}", "success")
+            else:
+                flash(f"Successfully transferred {total_items_processed} items to {to_bag.name}", "success")
+        else:
+            flash("No items were transferred", "warning")
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error during multi-transfer: {str(e)}", "danger")
+    
+    return redirect(url_for('transfer'))
+
 @app.route('/usage', methods=['GET', 'POST'])
 @login_required
 def usage():
