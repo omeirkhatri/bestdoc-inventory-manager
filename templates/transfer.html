@@ -78,8 +78,8 @@
         </div>
     </div>
 
-    <!-- Transfer Form -->
-    <div class="col-md-6 mb-4">
+    <!-- Desktop Transfer Form -->
+    <div class="col-md-6 mb-4 desktop-transfer-form">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -180,6 +180,103 @@
         </div>
     </div>
 </div>
+
+<!-- Mobile Transfer Toggle Button -->
+<button class="btn btn-primary mobile-transfer-toggle d-flex align-items-center justify-content-center" 
+        onclick="toggleMobileTransfer()" id="mobileToggleBtn">
+    <i class="fas fa-exchange-alt" id="toggleIcon"></i>
+    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+          id="mobileSelectedBadge" style="display: none;">
+        0
+    </span>
+</button>
+
+<!-- Mobile Sticky Transfer Form -->
+<div id="mobile-transfer-sticky" style="display: none;">
+    <div class="card border-0 rounded-0">
+        <div class="card-header border-0 pb-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-share me-2"></i>
+                    Transfer Items <span id="mobileSelectedCount" class="badge bg-primary">0</span>
+                </h6>
+                <button type="button" class="btn-close" onclick="toggleMobileTransfer()"></button>
+            </div>
+        </div>
+        <div class="card-body pt-0">
+            <form method="POST" id="mobileTransferForm">
+                <input type="hidden" id="mobile_item_id" name="item_id">
+                
+                <div class="mb-3">
+                    <div id="mobileSelectedItemsList" class="border rounded p-2" style="min-height: 80px; max-height: 150px; overflow-y: auto;">
+                        <div class="text-body-secondary text-center py-2" id="mobileNoItemsSelected">
+                            No items selected
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="mobile_to_bag_id" class="form-label">Destination Storage</label>
+                    <select class="form-select form-select-sm" id="mobile_to_bag_id" name="to_bag_id" required>
+                        <option value="">Select destination...</option>
+                        {% if cabinet %}
+                        <option value="{{ cabinet.id }}">{{ cabinet.name }} (Cabinet)</option>
+                        {% endif %}
+                        {% for bag in bags %}
+                        <option value="{{ bag.id }}">{{ bag.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </button>
+                    <button type="submit" class="btn btn-success btn-sm flex-grow-1" id="mobileTransferBtn" disabled>
+                        <i class="fas fa-exchange-alt me-1"></i>Transfer <span id="mobileTransferItemCount">0</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add mobile body padding class on page load for mobile devices
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.innerWidth <= 768) {
+        document.body.classList.add('mobile-body-padding');
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth <= 768) {
+            document.body.classList.add('mobile-body-padding');
+        } else {
+            document.body.classList.remove('mobile-body-padding');
+            // Hide mobile form on desktop
+            const mobileForm = document.getElementById('mobile-transfer-sticky');
+            if (mobileForm) {
+                mobileForm.style.display = 'none';
+            }
+        }
+    });
+    
+    // Initialize mobile form validation after DOM is ready
+    const mobileTransferForm = document.getElementById('mobileTransferForm');
+    if (mobileTransferForm) {
+        mobileTransferForm.addEventListener('submit', function(e) {
+            validateAndSubmitTransfer(e, 'mobile_to_bag_id', '#mobileSelectedItemsList input[type="number"]');
+            // Sync destination back to desktop
+            const mobileBag = document.getElementById('mobile_to_bag_id').value;
+            const desktopBag = document.getElementById('to_bag_id');
+            if (desktopBag && mobileBag) {
+                desktopBag.value = mobileBag;
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
 
 {% block extra_css %}
@@ -245,9 +342,68 @@
     color: var(--bs-light);
 }
 
+/* Mobile optimizations */
 @media (max-width: 768px) {
     .card-header .btn-group {
         margin-top: 0.5rem;
+    }
+    
+    /* Make transfer form sticky on mobile */
+    #mobile-transfer-sticky {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1030;
+        background: var(--bs-body-bg);
+        border-top: 1px solid var(--bs-border-color);
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+    
+    /* Add padding to body to account for sticky form */
+    .mobile-body-padding {
+        padding-bottom: 200px;
+    }
+    
+    /* Compact mobile transfer form */
+    #mobile-transfer-sticky .card-body {
+        padding: 1rem;
+    }
+    
+    #mobile-transfer-sticky #selectedItemsList {
+        max-height: 150px;
+        overflow-y: auto;
+    }
+    
+    /* Hide desktop transfer form on mobile */
+    .desktop-transfer-form {
+        display: none;
+    }
+    
+    /* Show mobile toggle button */
+    .mobile-transfer-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1040;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+}
+
+@media (min-width: 769px) {
+    /* Hide mobile elements on desktop */
+    .mobile-transfer-toggle,
+    #mobile-transfer-sticky {
+        display: none !important;
+    }
+    
+    .desktop-transfer-form {
+        display: block;
     }
 }
 </style>
@@ -300,11 +456,33 @@ function updateSelectedItemsList() {
     const transferItemCount = document.getElementById('transferItemCount');
     const transferBtn = document.getElementById('transferBtn');
     
+    // Update mobile elements
+    const mobileSelectedItemsList = document.getElementById('mobileSelectedItemsList');
+    const mobileSelectedCount = document.getElementById('mobileSelectedCount');
+    const mobileTransferItemCount = document.getElementById('mobileTransferItemCount');
+    const mobileTransferBtn = document.getElementById('mobileTransferBtn');
+    const mobileSelectedBadge = document.getElementById('mobileSelectedBadge');
+    
     selectedCountBadge.textContent = selectedCount;
     transferItemCount.textContent = selectedCount;
     
+    // Update mobile counts
+    if (mobileSelectedCount) mobileSelectedCount.textContent = selectedCount;
+    if (mobileTransferItemCount) mobileTransferItemCount.textContent = selectedCount;
+    
+    // Update mobile badge
+    if (mobileSelectedBadge) {
+        if (selectedCount > 0) {
+            mobileSelectedBadge.textContent = selectedCount;
+            mobileSelectedBadge.style.display = 'block';
+        } else {
+            mobileSelectedBadge.style.display = 'none';
+        }
+    }
+    
     // Clear previous content
     selectedItemsList.innerHTML = '';
+    if (mobileSelectedItemsList) mobileSelectedItemsList.innerHTML = '';
     
     if (selectedCount === 0) {
         const noItemsDiv = document.createElement('div');
@@ -312,19 +490,91 @@ function updateSelectedItemsList() {
         noItemsDiv.id = 'noItemsSelected';
         noItemsDiv.textContent = 'No items selected. Click on items in the Cabinet to add them.';
         selectedItemsList.appendChild(noItemsDiv);
+        
+        // Mobile no items
+        if (mobileSelectedItemsList) {
+            const mobileNoItemsDiv = document.createElement('div');
+            mobileNoItemsDiv.className = 'text-body-secondary text-center py-2';
+            mobileNoItemsDiv.textContent = 'No items selected';
+            mobileSelectedItemsList.appendChild(mobileNoItemsDiv);
+        }
+        
         transferBtn.disabled = true;
+        if (mobileTransferBtn) mobileTransferBtn.disabled = true;
         
         // Reset form action for single transfer
         document.getElementById('singleTransferForm').action = '';
+        if (document.getElementById('mobileTransferForm')) {
+            document.getElementById('mobileTransferForm').action = '';
+        }
     } else {
         transferBtn.disabled = false;
+        if (mobileTransferBtn) mobileTransferBtn.disabled = false;
         
-        // Determine if single or multi transfer
-        if (selectedCount === 1) {
-            // Single item transfer - show simple interface
-            const itemData = selectedItems.values().next().value;
+        // Generate items for both desktop and mobile
+        generateItemsList(selectedItemsList, false);
+        if (mobileSelectedItemsList) {
+            generateItemsList(mobileSelectedItemsList, true);
+        }
+    }
+}
+
+function generateItemsList(container, isMobile) {
+    const selectedCount = selectedItems.size;
+    
+    // Determine if single or multi transfer
+    if (selectedCount === 1) {
+        // Single item transfer - show simple interface
+        const itemData = selectedItems.values().next().value;
+        const itemDiv = document.createElement('div');
+        itemDiv.className = isMobile ? 'p-2 bg-body-secondary rounded border' : 'p-2 bg-body-secondary rounded border';
+        const inputSize = isMobile ? 'form-control-sm' : 'form-control-sm';
+        const inputName = isMobile ? 'quantity' : 'quantity';
+        const hiddenName = isMobile ? 'item_id' : 'item_id';
+        
+        itemDiv.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong class="text-body">${itemData.name}</strong>
+                    <div class="small text-body-secondary">
+                        ${itemData.type}${itemData.size ? ' - ' + itemData.size : ''}
+                    </div>
+                    <div class="small">
+                        Quantity: <input type="number" class="${inputSize} d-inline-block" 
+                                       style="width: 70px;" min="1" max="${itemData.maxQuantity}" 
+                                       value="${itemData.maxQuantity}" 
+                                       name="${inputName}" required>
+                        <span class="text-body-secondary">/ ${itemData.maxQuantity}</span>
+                        <input type="hidden" name="${hiddenName}" value="${itemData.id}">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" 
+                        onclick="removeFromSelection('${itemData.id}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(itemDiv);
+        
+        // Use regular transfer route for single items
+        document.getElementById('singleTransferForm').action = '';
+        if (document.getElementById('mobileTransferForm')) {
+            document.getElementById('mobileTransferForm').action = '';
+        }
+    } else {
+        // Multi item transfer - show detailed interface
+        document.getElementById('singleTransferForm').action = '{{ url_for("handle_multi_transfer") }}';
+        if (document.getElementById('mobileTransferForm')) {
+            document.getElementById('mobileTransferForm').action = '{{ url_for("handle_multi_transfer") }}';
+        }
+        
+        selectedItems.forEach((itemData, itemId) => {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'p-2 bg-body-secondary rounded border';
+            itemDiv.className = 'border rounded p-2 mb-2 bg-body-secondary';
+            const inputSize = isMobile ? 'form-control-sm' : 'form-control-sm';
+            const inputName = `items[${itemId}][quantity]`;
+            const hiddenName = `items[${itemId}][item_id]`;
+            
             itemDiv.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -333,56 +583,23 @@ function updateSelectedItemsList() {
                             ${itemData.type}${itemData.size ? ' - ' + itemData.size : ''}
                         </div>
                         <div class="small">
-                            Quantity: <input type="number" class="form-control form-control-sm d-inline-block" 
-                                           style="width: 80px;" min="1" max="${itemData.maxQuantity}" 
+                            Quantity: <input type="number" class="${inputSize} d-inline-block" 
+                                           style="width: 70px;" min="1" max="${itemData.maxQuantity}" 
                                            value="${itemData.maxQuantity}" 
-                                           name="quantity" required>
-                            <span class="text-body-secondary">/ ${itemData.maxQuantity} available</span>
-                            <input type="hidden" name="item_id" value="${itemData.id}">
+                                           name="${inputName}" required>
+                            <span class="text-body-secondary">/ ${itemData.maxQuantity}</span>
+                            <input type="hidden" name="${hiddenName}" value="${itemId}">
                         </div>
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-danger" 
-                            onclick="removeFromSelection('${itemData.id}')">
+                            onclick="removeFromSelection('${itemId}')">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             `;
-            selectedItemsList.appendChild(itemDiv);
-            
-            // Use regular transfer route for single items
-            document.getElementById('singleTransferForm').action = '';
-        } else {
-            // Multi item transfer - show detailed interface
-            document.getElementById('singleTransferForm').action = '{{ url_for("handle_multi_transfer") }}';
-            
-            selectedItems.forEach((itemData, itemId) => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'border rounded p-2 mb-2 bg-body-secondary';
-                itemDiv.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong class="text-body">${itemData.name}</strong>
-                            <div class="small text-body-secondary">
-                                ${itemData.type}${itemData.size ? ' - ' + itemData.size : ''}
-                            </div>
-                            <div class="small">
-                                Quantity: <input type="number" class="form-control form-control-sm d-inline-block" 
-                                               style="width: 80px;" min="1" max="${itemData.maxQuantity}" 
-                                               value="${itemData.maxQuantity}" 
-                                               name="items[${itemId}][quantity]" required>
-                                <span class="text-body-secondary">/ ${itemData.maxQuantity}</span>
-                                <input type="hidden" name="items[${itemId}][item_id]" value="${itemId}">
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                onclick="removeFromSelection('${itemId}')">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                selectedItemsList.appendChild(itemDiv);
-            });
-        }
+            container.appendChild(itemDiv);
+        });
+    }
     }
 }
 
@@ -430,14 +647,41 @@ function clearSelection() {
     updateSelectedItemsList();
 }
 
-// Form validation
+// Mobile toggle functionality
+function toggleMobileTransfer() {
+    const mobileForm = document.getElementById('mobile-transfer-sticky');
+    const toggleBtn = document.getElementById('mobileToggleBtn');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    if (mobileForm.style.display === 'none' || !mobileForm.style.display) {
+        mobileForm.style.display = 'block';
+        toggleIcon.className = 'fas fa-times';
+        // Sync mobile form destination with desktop
+        const desktopBag = document.getElementById('to_bag_id').value;
+        const mobileBag = document.getElementById('mobile_to_bag_id');
+        if (mobileBag && desktopBag) {
+            mobileBag.value = desktopBag;
+        }
+    } else {
+        mobileForm.style.display = 'none';
+        toggleIcon.className = 'fas fa-exchange-alt';
+    }
+}
+
+// Form validation for desktop
 document.getElementById('singleTransferForm').addEventListener('submit', function(e) {
-    const toBagId = document.getElementById('to_bag_id').value;
+    validateAndSubmitTransfer(e, 'to_bag_id', '#selectedItemsList input[type="number"]');
+});
+
+
+
+function validateAndSubmitTransfer(e, bagSelectId, quantitySelector) {
+    const toBagId = document.getElementById(bagSelectId).value;
     
     if (!toBagId) {
         e.preventDefault();
         alert('Please select a destination bag');
-        document.getElementById('to_bag_id').focus();
+        document.getElementById(bagSelectId).focus();
         return false;
     }
     
@@ -448,7 +692,7 @@ document.getElementById('singleTransferForm').addEventListener('submit', functio
     }
     
     // Validate quantities
-    const quantityInputs = document.querySelectorAll('#selectedItemsList input[type="number"]');
+    const quantityInputs = document.querySelectorAll(quantitySelector);
     let hasInvalidQuantity = false;
     
     quantityInputs.forEach(input => {
@@ -467,7 +711,7 @@ document.getElementById('singleTransferForm').addEventListener('submit', functio
     }
     
     // Confirm transfer
-    const bagName = document.getElementById('to_bag_id').options[document.getElementById('to_bag_id').selectedIndex].text;
+    const bagName = document.getElementById(bagSelectId).options[document.getElementById(bagSelectId).selectedIndex].text;
     const itemCount = selectedItems.size;
     
     const confirmMessage = itemCount === 1 
@@ -478,7 +722,7 @@ document.getElementById('singleTransferForm').addEventListener('submit', functio
         e.preventDefault();
         return false;
     }
-});
+}
 
 // Search functionality for transfer items
 function filterItems(section) {
