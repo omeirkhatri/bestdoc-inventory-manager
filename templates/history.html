@@ -231,14 +231,14 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="date_from" class="form-label">From Date</label>
-                                    <input type="date" class="form-control" id="date_from" name="date_from" 
-                                           value="{{ request.args.get('date_from', '') }}">
+                                    <label for="date_from" class="form-label">From Month/Year</label>
+                                    <input type="month" class="form-control" id="date_from" name="date_from" 
+                                           value="{{ request.args.get('date_from', '') }}" placeholder="MM/YYYY">
                                 </div>
                                 <div class="col-md-2">
-                                    <label for="date_to" class="form-label">To Date</label>
-                                    <input type="date" class="form-control" id="date_to" name="date_to" 
-                                           value="{{ request.args.get('date_to', '') }}">
+                                    <label for="date_to" class="form-label">To Month/Year</label>
+                                    <input type="month" class="form-control" id="date_to" name="date_to" 
+                                           value="{{ request.args.get('date_to', '') }}" placeholder="MM/YYYY">
                                 </div>
                                 <div class="col-md-3 d-flex align-items-end">
                                     <button type="submit" class="btn btn-primary me-2">Apply Filters</button>

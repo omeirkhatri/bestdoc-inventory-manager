@@ -258,22 +258,22 @@ def handle_csv_upload(file):
                         db.session.add(bag)
                         db.session.flush()
                     
-                    # Parse expiry date
+                    # Parse expiry date (MM/YYYY format, default to 1st of month)
                     expiry_date = None
                     if row.get('expiry_date'):
                         try:
-                            # Try YYYY-MM-DD first (HTML date input format)
-                            expiry_date = datetime.strptime(row['expiry_date'], '%Y-%m-%d').date()
+                            # Try YYYY-MM format (HTML month input)
+                            expiry_date = datetime.strptime(f"{row['expiry_date']}-01", '%Y-%m-%d').date()
                         except ValueError:
                             try:
-                                # Try DD/MM/YYYY format
-                                expiry_date = datetime.strptime(row['expiry_date'], '%d/%m/%Y').date()
+                                # Try MM/YYYY format
+                                expiry_date = datetime.strptime(f"01/{row['expiry_date']}", '%d/%m/%Y').date()
                             except ValueError:
                                 try:
-                                    # Try DD-MM-YYYY format
-                                    expiry_date = datetime.strptime(row['expiry_date'], '%d-%m-%Y').date()
+                                    # Try MM-YYYY format
+                                    expiry_date = datetime.strptime(f"01-{row['expiry_date']}", '%d-%m-%Y').date()
                                 except ValueError:
-                                    errors.append(f"Row {row_num}: Invalid expiry date format. Use DD/MM/YYYY, DD-MM-YYYY, or YYYY-MM-DD")
+                                    errors.append(f"Row {row_num}: Invalid expiry date format. Use MM/YYYY")
                                     continue
                     
                     # Check if identical item already exists in the same bag
@@ -367,13 +367,14 @@ def handle_manual_addition():
         for i in range(len(names)):
             if i < len(names) and i < len(types) and i < len(quantities):
                 if names[i].strip() and types[i].strip() and quantities[i].strip():
-                    # Parse expiry date
+                    # Parse expiry date (MM/YYYY format, default to 1st of month)
                     expiry_date = None
                     if i < len(expiry_dates) and expiry_dates[i].strip():
                         try:
-                            expiry_date = datetime.strptime(expiry_dates[i], '%Y-%m-%d').date()
+                            # HTML month input format (YYYY-MM)
+                            expiry_date = datetime.strptime(f"{expiry_dates[i]}-01", '%Y-%m-%d').date()
                         except ValueError:
-                            flash(f"Invalid expiry date format for item {i+1}", "warning")
+                            flash(f"Invalid expiry date format for item {i+1}. Use MM/YYYY format.", "warning")
                             continue
                     
                     # Get additional fields safely

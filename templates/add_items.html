@@ -89,9 +89,9 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-2">
-                                    <label class="form-label">Expiry Date</label>
+                                    <label class="form-label">Expiry Month/Year</label>
                                     <div class="input-group">
-                                        <input type="date" class="form-control" name="expiry_date">
+                                        <input type="month" class="form-control" name="expiry_date" placeholder="MM/YYYY">
                                         <button type="button" class="btn btn-outline-secondary no-expiry-btn" 
                                                 title="No expiry date">
                                             <i class="fas fa-infinity"></i>
@@ -138,7 +138,7 @@
                         <li><strong>type</strong> (required) - Item type</li>
                         <li><strong>quantity</strong> (required) - Quantity to add</li>
                         <li><strong>size</strong> (optional) - Item size</li>
-                        <li><strong>expiry_date</strong> (optional) - Format: DD/MM/YYYY or DD-MM-YYYY or YYYY-MM-DD</li>
+                        <li><strong>expiry_date</strong> (optional) - Format: MM/YYYY</li>
                         <li><strong>bag</strong> (optional) - Destination bag (defaults to Cabinet)</li>
                     </ul>
                     <small class="text-muted">Example: name,type,quantity,size,expiry_date,bag</small>
