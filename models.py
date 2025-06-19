@@ -35,16 +35,16 @@ def format_datetime_gmt4(dt):
     return local_dt.strftime('%d/%m/%Y %H:%M')
 
 def format_date_gmt4(dt):
-    """Convert date to GMT+4 and format as DD/MM/YYYY"""
+    """Convert date to GMT+4 and format as MM/YY"""
     if not dt:
         return ''
     if isinstance(dt, datetime):
         if dt.tzinfo is None:
             dt = pytz.utc.localize(dt)
         local_dt = dt.astimezone(GMT_PLUS_4)
-        return local_dt.strftime('%d/%m/%Y')
+        return local_dt.strftime('%m/%y')
     else:
-        return dt.strftime('%d/%m/%Y')
+        return dt.strftime('%m/%y')
 
 class Bag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
