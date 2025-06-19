@@ -47,7 +47,7 @@
                                 </p>
                                 <small class="text-muted">
                                     {% if item.expiry_date %}
-                                        Expires: {{ item.expiry_date.strftime('%m/%d/%Y') }}
+                                        Expires: {{ item.expiry_date|format_date_gmt4 }}
                                         {% if item.expiry_status == 'expired' %}
                                             <span class="badge bg-danger ms-1">Expired</span>
                                         {% elif item.expiry_status == 'expiring' %}

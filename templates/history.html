@@ -38,7 +38,7 @@
                     <tr>
                         <td>
                             <div>
-                                <strong>{{ movement.timestamp.strftime('%m/%d/%Y') }}</strong><br>
+                                <strong>{{ movement.timestamp|format_date_gmt4 }}</strong><br>
                                 <small class="text-muted">{{ movement.timestamp.strftime('%H:%M:%S') }}</small>
                             </div>
                         </td>
