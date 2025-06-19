@@ -181,65 +181,17 @@
     </div>
 </div>
 
-<!-- Mobile Transfer Toggle Button -->
+<!-- Mobile Scroll to Transfer Button -->
 <button class="btn btn-primary mobile-transfer-toggle d-flex align-items-center justify-content-center" 
-        onclick="toggleMobileTransfer()" id="mobileToggleBtn">
-    <i class="fas fa-exchange-alt" id="toggleIcon"></i>
+        onclick="scrollToTransfer()" id="mobileScrollBtn">
+    <i class="fas fa-arrow-down"></i>
     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
           id="mobileSelectedBadge" style="display: none;">
         0
     </span>
 </button>
 
-<!-- Mobile Sticky Transfer Form -->
-<div id="mobile-transfer-sticky" style="display: none;">
-    <div class="card border-0 rounded-0">
-        <div class="card-header border-0 pb-2">
-            <div class="d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0">
-                    <i class="fas fa-share me-2"></i>
-                    Transfer Items <span id="mobileSelectedCount" class="badge bg-primary">0</span>
-                </h6>
-                <button type="button" class="btn-close" onclick="toggleMobileTransfer()"></button>
-            </div>
-        </div>
-        <div class="card-body pt-0">
-            <form method="POST" id="mobileTransferForm">
-                <input type="hidden" id="mobile_item_id" name="item_id">
-                
-                <div class="mb-3">
-                    <div id="mobileSelectedItemsList" class="border rounded p-2" style="min-height: 80px; max-height: 150px; overflow-y: auto;">
-                        <div class="text-body-secondary text-center py-2" id="mobileNoItemsSelected">
-                            No items selected
-                        </div>
-                    </div>
-                </div>
 
-                <div class="mb-3">
-                    <label for="mobile_to_bag_id" class="form-label">Destination Storage</label>
-                    <select class="form-select form-select-sm" id="mobile_to_bag_id" name="to_bag_id" required>
-                        <option value="">Select destination...</option>
-                        {% if cabinet %}
-                        <option value="{{ cabinet.id }}">{{ cabinet.name }} (Cabinet)</option>
-                        {% endif %}
-                        {% for bag in bags %}
-                        <option value="{{ bag.id }}">{{ bag.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSelection()">
-                        <i class="fas fa-times me-1"></i>Clear
-                    </button>
-                    <button type="submit" class="btn btn-success btn-sm flex-grow-1" id="mobileTransferBtn" disabled>
-                        <i class="fas fa-exchange-alt me-1"></i>Transfer <span id="mobileTransferItemCount">0</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <script>
 // Add mobile body padding class on page load for mobile devices
@@ -348,41 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
         margin-top: 0.5rem;
     }
     
-    /* Make transfer form sticky on mobile */
-    #mobile-transfer-sticky {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 1030;
-        background: var(--bs-body-bg);
-        border-top: 1px solid var(--bs-border-color);
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        max-height: 50vh;
-        overflow-y: auto;
-    }
-    
-    /* Add padding to body to account for sticky form */
-    .mobile-body-padding {
-        padding-bottom: 200px;
-    }
-    
-    /* Compact mobile transfer form */
-    #mobile-transfer-sticky .card-body {
-        padding: 1rem;
-    }
-    
-    #mobile-transfer-sticky #selectedItemsList {
-        max-height: 150px;
-        overflow-y: auto;
-    }
-    
-    /* Hide desktop transfer form on mobile */
-    .desktop-transfer-form {
-        display: none;
-    }
-    
-    /* Show mobile toggle button */
+    /* Show mobile scroll button */
     .mobile-transfer-toggle {
         position: fixed;
         bottom: 20px;
@@ -396,14 +314,9 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 @media (min-width: 769px) {
-    /* Hide mobile elements on desktop */
-    .mobile-transfer-toggle,
-    #mobile-transfer-sticky {
+    /* Hide mobile button on desktop */
+    .mobile-transfer-toggle {
         display: none !important;
-    }
-    
-    .desktop-transfer-form {
-        display: block;
     }
 }
 </style>
@@ -456,19 +369,10 @@ function updateSelectedItemsList() {
     const transferItemCount = document.getElementById('transferItemCount');
     const transferBtn = document.getElementById('transferBtn');
     
-    // Update mobile elements
-    const mobileSelectedItemsList = document.getElementById('mobileSelectedItemsList');
-    const mobileSelectedCount = document.getElementById('mobileSelectedCount');
-    const mobileTransferItemCount = document.getElementById('mobileTransferItemCount');
-    const mobileTransferBtn = document.getElementById('mobileTransferBtn');
     const mobileSelectedBadge = document.getElementById('mobileSelectedBadge');
     
     selectedCountBadge.textContent = selectedCount;
     transferItemCount.textContent = selectedCount;
-    
-    // Update mobile counts
-    if (mobileSelectedCount) mobileSelectedCount.textContent = selectedCount;
-    if (mobileTransferItemCount) mobileTransferItemCount.textContent = selectedCount;
     
     // Update mobile badge
     if (mobileSelectedBadge) {
@@ -600,7 +504,6 @@ function generateItemsList(container, isMobile) {
             container.appendChild(itemDiv);
         });
     }
-    }
 }
 
 function removeFromSelection(itemId) {
@@ -647,24 +550,51 @@ function clearSelection() {
     updateSelectedItemsList();
 }
 
-// Mobile toggle functionality
-function toggleMobileTransfer() {
-    const mobileForm = document.getElementById('mobile-transfer-sticky');
-    const toggleBtn = document.getElementById('mobileToggleBtn');
-    const toggleIcon = document.getElementById('toggleIcon');
+function selectItemForTransfer(itemId, itemName, itemType, itemSize, itemBrand, maxQuantity) {
+    const itemData = {
+        id: itemId,
+        name: itemName,
+        type: itemType,
+        size: itemSize,
+        brand: itemBrand,
+        maxQuantity: maxQuantity
+    };
     
-    if (mobileForm.style.display === 'none' || !mobileForm.style.display) {
-        mobileForm.style.display = 'block';
-        toggleIcon.className = 'fas fa-times';
-        // Sync mobile form destination with desktop
-        const desktopBag = document.getElementById('to_bag_id').value;
-        const mobileBag = document.getElementById('mobile_to_bag_id');
-        if (mobileBag && desktopBag) {
-            mobileBag.value = desktopBag;
-        }
+    if (selectedItems.has(itemId)) {
+        // Item already selected, remove it
+        removeFromSelection(itemId);
     } else {
-        mobileForm.style.display = 'none';
-        toggleIcon.className = 'fas fa-exchange-alt';
+        // Add item to selection
+        selectedItems.set(itemId, itemData);
+        
+        // Update button appearance
+        const button = document.getElementById(`selectBtn_${itemId}`);
+        if (button) {
+            button.innerHTML = '<i class="fas fa-check"></i>';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-success');
+        }
+        
+        // Update item highlighting
+        document.querySelectorAll('.list-group-item').forEach(item => {
+            const itemButton = item.querySelector(`#selectBtn_${itemId}`);
+            if (itemButton) {
+                item.classList.add('border-success', 'bg-success', 'bg-opacity-10');
+            }
+        });
+        
+        updateSelectedItemsList();
+    }
+}
+
+// Mobile scroll to transfer functionality
+function scrollToTransfer() {
+    const transferSection = document.querySelector('.desktop-transfer-form');
+    if (transferSection) {
+        transferSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
     }
 }
 
