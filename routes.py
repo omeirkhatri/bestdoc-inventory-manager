@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
-from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, PermanentDeletion, InventoryAudit, init_default_types, format_datetime_gmt4, format_date_gmt4
+from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, PermanentDeletion, InventoryAudit, init_default_types, format_datetime_gmt4, format_date_gmt4, GMT_PLUS_4
 import json
 
 # Authentication routes
@@ -573,7 +573,7 @@ def inventory():
                          products=filtered_products,
                          bags=bags,
                          item_types=item_types,
-                         today=date.today(),
+                         today=datetime.now(GMT_PLUS_4).date(),
                          current_filters={
                              'search': search,
                              'type': type_filter,
@@ -993,7 +993,6 @@ def history():
 @login_required
 def expiry():
     # Use GMT+4 timezone for consistent date calculations
-    from models import GMT_PLUS_4
     gmt4_now = datetime.now(GMT_PLUS_4)
     today = gmt4_now.date()
     thirty_days = today + timedelta(days=30)
@@ -1217,8 +1216,9 @@ def wastage():
     if request.method == 'POST':
         return handle_wastage()
     
-    # Get expired items for disposal
-    today = date.today()
+    # Get expired items for disposal using GMT+4 timezone
+    gmt4_now = datetime.now(GMT_PLUS_4)
+    today = gmt4_now.date()
     expired_items = Item.query.filter(
         and_(
             Item.expiry_date.isnot(None),
