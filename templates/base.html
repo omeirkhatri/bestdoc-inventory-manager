@@ -163,9 +163,6 @@
         <button type="button" class="btn btn-warning btn-lg rounded-circle shadow" onclick="performUndo()" title="Undo Last Action">
             <i class="fas fa-undo"></i>
         </button>
-        <div class="undo-text mt-1">
-            <small id="undoDescription" class="text-muted"></small>
-        </div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -278,11 +275,9 @@
                 .then(response => response.json())
                 .then(data => {
                     const undoButton = document.getElementById('undoButton');
-                    const undoDescription = document.getElementById('undoDescription');
                     
                     if (data.action) {
                         undoButton.classList.remove('d-none');
-                        undoDescription.textContent = data.action.description;
                     } else {
                         undoButton.classList.add('d-none');
                     }
@@ -298,24 +293,80 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.action) {
-                        const confirmMessage = `Are you sure you want to undo this action?\n\n${data.action.description}`;
-                        if (confirm(confirmMessage)) {
-                            executeUndo();
-                        }
+                        showUndoModal(data.action.description);
                     } else {
-                        alert('No action available to undo');
+                        showAlert('warning', 'No action available to undo');
                     }
                 })
                 .catch(error => {
                     console.error('Error getting last action:', error);
-                    // Fallback to simple confirmation
-                    if (confirm('Are you sure you want to undo the last action?')) {
-                        executeUndo();
-                    }
+                    showAlert('danger', 'Error retrieving undo information');
                 });
         }
 
+        function showUndoModal(description) {
+            // Create modal HTML
+            const modalHtml = `
+                <div class="modal fade" id="undoModal" tabindex="-1" aria-labelledby="undoModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="undoModalLabel">
+                                    <i class="fas fa-undo me-2"></i>Undo Last Action
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <div>
+                                        <strong>Are you sure you want to undo this action?</strong>
+                                    </div>
+                                </div>
+                                <div class="bg-light p-3 rounded">
+                                    <strong>Action to undo:</strong><br>
+                                    ${description}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </button>
+                                <button type="button" class="btn btn-warning" onclick="executeUndo()">
+                                    <i class="fas fa-undo me-1"></i>Undo Action
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if present
+            const existingModal = document.getElementById('undoModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('undoModal'));
+            modal.show();
+            
+            // Clean up modal after it's hidden
+            document.getElementById('undoModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
         function executeUndo() {
+            // Close the modal first
+            const modal = bootstrap.Modal.getInstance(document.getElementById('undoModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
             fetch('/api/undo_last_action', {
                 method: 'POST',
                 headers: {
