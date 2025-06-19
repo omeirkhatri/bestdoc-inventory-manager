@@ -210,7 +210,7 @@
 {% endif %}
 
 <!-- Alerts Section -->
-{% if expired_items or expiring_items or low_stock_items %}
+{% if expired_items or expiring_items or low_stock_items or audit_overdue %}
 <div class="row mb-3 dashboard-section">
     <div class="col-12">
         <div class="card">
@@ -248,6 +248,16 @@
                             <div class="alert alert-info mb-0 py-2 alert-compact">
                                 <h6 class="mb-1"><i class="fas fa-arrow-down me-1"></i>{{ low_stock_items|length }}</h6>
                                 <small>Low Stock Items</small>
+                            </div>
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if audit_overdue %}
+                    <div class="col-md-4 mb-2">
+                        <a href="{{ url_for('inventory_audit') }}" class="text-decoration-none">
+                            <div class="alert alert-secondary mb-0 py-2 alert-compact">
+                                <h6 class="mb-1"><i class="fas fa-clipboard-check me-1"></i>Overdue</h6>
+                                <small>Inventory Audit{% if last_audit %} ({{ last_audit.audit_date.strftime('%d/%m/%y') }}){% endif %}</small>
                             </div>
                         </a>
                     </div>
