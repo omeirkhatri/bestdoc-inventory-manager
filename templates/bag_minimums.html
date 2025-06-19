@@ -8,20 +8,6 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-briefcase-medical me-2"></i>Storage Minimum Quantities</h2>
-                <div>
-                    <button id="editModeBtn" class="btn btn-primary me-2" onclick="toggleEditMode()">
-                        <i class="fas fa-edit me-1"></i>Edit Mode
-                    </button>
-                    <button id="saveChangesBtn" class="btn btn-success me-2" onclick="saveAllChanges()" style="display: none;">
-                        <i class="fas fa-save me-1"></i>Save Changes
-                    </button>
-                    <button id="cancelEditBtn" class="btn btn-secondary me-2" onclick="cancelEdit()" style="display: none;">
-                        <i class="fas fa-times me-1"></i>Cancel
-                    </button>
-                    <button class="btn btn-outline-success" onclick="exportBagMinimumsReport()">
-                        <i class="fas fa-download me-2"></i>Export Report
-                    </button>
-                </div>
             </div>
 
             {% if low_stock_bags %}
@@ -71,23 +57,28 @@
             </div>
             {% endif %}
 
-            <!-- Instructions -->
-            <div class="alert alert-info mb-4">
-                <h6><i class="fas fa-info-circle me-2"></i>Bag Minimum Management</h6>
-                <ul class="mb-0">
-                    <li><strong>Set Minimums:</strong> Click on any cell to set the minimum quantity for that product in that bag</li>
-                    <li><strong>Two-Level System:</strong> Global minimums (for total inventory) + individual bag minimums</li>
-                    <li><strong>Monitoring:</strong> Bags below minimum will appear in alerts and dashboard warnings</li>
-                    <li><strong>Remove Minimums:</strong> Set to 0 to remove minimum requirement for a product in a specific bag</li>
-                </ul>
-            </div>
-
             <!-- Minimums Management Table -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-table me-2"></i>Minimum Quantities by Bag
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-table me-2"></i>Minimum Quantities by Bag
+                        </h5>
+                        <div>
+                            <button id="editModeBtn" class="btn btn-primary me-2" onclick="handleEditSave()">
+                                <i class="fas fa-edit me-1"></i><span id="editModeText">Edit</span>
+                            </button>
+                            <button id="saveChangesBtn" class="btn btn-success me-2" onclick="saveAllChanges()" style="display: none;">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                            <button id="cancelEditBtn" class="btn btn-secondary me-2" onclick="cancelEdit()" style="display: none;">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </button>
+                            <button class="btn btn-outline-success" onclick="exportBagMinimumsReport()">
+                                <i class="fas fa-download me-2"></i>Export Report
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -156,6 +147,17 @@
                         </table>
                     </div>
                 </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="alert alert-info mt-4">
+                <h6><i class="fas fa-info-circle me-2"></i>Bag Minimum Management</h6>
+                <ul class="mb-0">
+                    <li><strong>Set Minimums:</strong> Click on any cell to set the minimum quantity for that product in that bag</li>
+                    <li><strong>Two-Level System:</strong> Global minimums (for total inventory) + individual bag minimums</li>
+                    <li><strong>Monitoring:</strong> Bags below minimum will appear in alerts and dashboard warnings</li>
+                    <li><strong>Remove Minimums:</strong> Set to 0 to remove minimum requirement for a product in a specific bag</li>
+                </ul>
             </div>
 
             <!-- Current Stock Summary -->
@@ -228,6 +230,16 @@ let currentBagId, currentProductId, currentBagName, currentProductName;
 let isEditMode = false;
 let changedCells = new Set();
 
+function handleEditSave() {
+    if (isEditMode) {
+        // Save mode - save changes and exit edit mode
+        saveAllChanges();
+    } else {
+        // Edit mode - enter edit mode
+        toggleEditMode();
+    }
+}
+
 function toggleEditMode() {
     isEditMode = !isEditMode;
     
@@ -237,9 +249,9 @@ function toggleEditMode() {
     
     if (isEditMode) {
         // Enter edit mode
-        document.getElementById('editModeBtn').innerHTML = '<i class="fas fa-eye me-1"></i>View Mode';
-        document.getElementById('editModeBtn').className = 'btn btn-secondary me-2';
-        document.getElementById('saveChangesBtn').style.display = 'inline-block';
+        document.getElementById('editModeBtn').innerHTML = '<i class="fas fa-save me-1"></i><span id="editModeText">Save</span>';
+        document.getElementById('editModeBtn').className = 'btn btn-success me-2';
+        document.getElementById('saveChangesBtn').style.display = 'none';
         document.getElementById('cancelEditBtn').style.display = 'inline-block';
         
         // Show all input fields and hide badges in minimum cells only
@@ -255,7 +267,7 @@ function toggleEditMode() {
         
     } else {
         // Exit edit mode
-        document.getElementById('editModeBtn').innerHTML = '<i class="fas fa-edit me-1"></i>Edit Mode';
+        document.getElementById('editModeBtn').innerHTML = '<i class="fas fa-edit me-1"></i><span id="editModeText">Edit</span>';
         document.getElementById('editModeBtn').className = 'btn btn-primary me-2';
         document.getElementById('saveChangesBtn').style.display = 'none';
         document.getElementById('cancelEditBtn').style.display = 'none';
