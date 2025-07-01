@@ -1787,6 +1787,47 @@ def undo_last_action():
             
             success_message = f"Reversed inventory audit with {len(changes)} item changes"
         
+        elif last_action.action_type == 'delete_item':
+            # Restore the deleted item
+            item_data = action_data['item_data']
+            
+            # Recreate the item
+            restored_item = Item(
+                name=item_data['name'],
+                type=item_data['type'],
+                brand=item_data.get('brand'),
+                size=item_data.get('size'),
+                quantity=item_data['quantity'],
+                expiry_date=datetime.fromisoformat(item_data['expiry_date']).date() if item_data.get('expiry_date') else None,
+                bag_id=item_data['bag_id'],
+                product_id=item_data.get('product_id'),
+                generic_name=item_data.get('generic_name'),
+                date_added=datetime.fromisoformat(item_data['date_added']) if item_data.get('date_added') else datetime.utcnow()
+            )
+            db.session.add(restored_item)
+            
+            # Mark the permanent deletion as restored
+            permanent_deletion = PermanentDeletion.query.filter_by(
+                entity_type='item',
+                entity_name=f"{item_data['name']} ({item_data['quantity']} units)",
+                user_id=current_user.id,
+                is_restored=False
+            ).first()
+            if permanent_deletion:
+                permanent_deletion.is_restored = True
+            
+            # Remove the deletion movement history
+            MovementHistory.query.filter(
+                and_(
+                    MovementHistory.item_name == item_data['name'],
+                    MovementHistory.from_bag == item_data['bag_name'],
+                    MovementHistory.quantity == item_data['quantity'],
+                    MovementHistory.movement_type == 'deletion'
+                )
+            ).delete()
+            
+            success_message = f"Restored deleted item: {item_data['name']} ({item_data['quantity']} units to {item_data['bag_name']})"
+        
         else:
             return jsonify({'success': False, 'error': 'Unknown action type'})
         
