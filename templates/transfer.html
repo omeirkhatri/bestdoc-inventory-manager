@@ -415,8 +415,8 @@ function updateSelectedItemsList() {
             `;
             selectedItemsList.appendChild(itemDiv);
             
-            // Use regular transfer route for single items
-            document.getElementById('singleTransferForm').action = '';
+            // Use regular transfer route for single items - set to POST to /transfer
+            document.getElementById('singleTransferForm').action = '{{ url_for("transfer") }}';
         } else {
             // Multi item transfer - show detailed interface
             document.getElementById('singleTransferForm').action = '{{ url_for("handle_multi_transfer") }}';
