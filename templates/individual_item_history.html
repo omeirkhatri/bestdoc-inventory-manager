@@ -267,9 +267,62 @@
                                 title="Record usage">
                             <i class="fas fa-minus me-2"></i>Record Usage
                         </button>
+                        <button type="button" class="btn btn-outline-danger" 
+                                onclick="showDeleteModal('{{ item.id }}', '{{ item.name }}', {{ item.quantity }}, '{{ item.bag.name }}')"
+                                title="Delete this item">
+                            <i class="fas fa-trash me-2"></i>Delete Item
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Delete Item
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('delete_item') }}">
+                <div class="modal-body">
+                    <input type="hidden" id="delete-item-id" name="item_id">
+                    <div class="alert alert-danger">
+                        <strong><i class="fas fa-exclamation-triangle me-2"></i>Warning!</strong>
+                        This action cannot be undone. The item and all its history will be permanently deleted.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Item to Delete:</strong></label>
+                        <div id="delete-item-details" class="form-control-plaintext bg-light p-2 rounded"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="delete-reason" class="form-label"><strong>Reason for Deletion:</strong></label>
+                        <select class="form-select" id="delete-reason" name="reason" required>
+                            <option value="">Select a reason...</option>
+                            <option value="spelling_mistake">Spelling mistake in name</option>
+                            <option value="duplicate_entry">Duplicate entry</option>
+                            <option value="wrong_information">Wrong item information</option>
+                            <option value="data_cleanup">Data cleanup</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="delete-notes" class="form-label">Additional Notes (Optional):</label>
+                        <textarea class="form-control" id="delete-notes" name="notes" rows="3" placeholder="Provide additional details about why this item is being deleted..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Item
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -414,6 +467,12 @@ function showUsageModal(itemId, itemName, quantity) {
     document.getElementById('usage-quantity').max = quantity;
     document.getElementById('usage-quantity').value = 1;
     new bootstrap.Modal(document.getElementById('usageModal')).show();
+}
+
+function showDeleteModal(itemId, itemName, quantity, bagName) {
+    document.getElementById('delete-item-id').value = itemId;
+    document.getElementById('delete-item-details').textContent = `${itemName} (${quantity} units in ${bagName})`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 </script>
 {% endblock %}

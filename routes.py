@@ -2349,6 +2349,92 @@ def update_item():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/delete_item', methods=['POST'])
+@login_required
+def delete_item():
+    """Delete an individual item from the inventory"""
+    try:
+        item_id = request.form.get('item_id')
+        reason = request.form.get('reason')
+        notes = request.form.get('notes', '')
+        
+        if not item_id:
+            flash('No item specified for deletion', 'error')
+            return redirect(url_for('inventory'))
+        
+        if not reason:
+            flash('Reason for deletion is required', 'error')
+            return redirect(request.referrer or url_for('inventory'))
+        
+        # Get the item to delete
+        item = Item.query.get_or_404(item_id)
+        
+        # Store item information for logging and undo functionality
+        item_data = {
+            'id': item.id,
+            'name': item.name,
+            'type': item.type,
+            'brand': item.brand,
+            'size': item.size,
+            'quantity': item.quantity,
+            'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
+            'bag_id': item.bag_id,
+            'bag_name': item.bag.name,
+            'product_id': item.product_id,
+            'generic_name': item.generic_name,
+            'date_added': item.date_added.isoformat() if item.date_added else None
+        }
+        
+        # Create permanent deletion record
+        deletion_record = PermanentDeletion(
+            entity_type='item',
+            entity_name=f"{item.name} ({item.quantity} units)",
+            entity_data=json.dumps(item_data),
+            user_id=current_user.id
+        )
+        db.session.add(deletion_record)
+        
+        # Log the deletion in movement history
+        movement = MovementHistory(
+            item_name=item.name,
+            item_type=item.type,
+            item_size=item.size,
+            quantity=item.quantity,
+            movement_type='deletion',
+            from_bag=item.bag.name,
+            notes=f"Item deleted - Reason: {reason}. {notes}".strip(),
+            expiry_date=item.expiry_date
+        )
+        db.session.add(movement)
+        
+        # Create undo action for deletion
+        undo_data = {
+            'action_type': 'delete_item',
+            'item_data': item_data,
+            'reason': reason,
+            'notes': notes
+        }
+        
+        undo_action = UndoAction(
+            action_type='delete_item',
+            action_data=json.dumps(undo_data),
+            description=f"Deleted item: {item.name} ({item.quantity} units from {item.bag.name})",
+            user_id=current_user.id
+        )
+        db.session.add(undo_action)
+        
+        # Delete the item
+        db.session.delete(item)
+        db.session.commit()
+        
+        flash(f'Item "{item_data["name"]}" has been successfully deleted', 'success')
+        return redirect(url_for('inventory'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting item: {str(e)}', 'error')
+        return redirect(request.referrer or url_for('inventory'))
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404
