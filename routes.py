@@ -1684,6 +1684,85 @@ def undo_last_action():
             
             success_message = f"Reversed transfer of {action_data['quantity']} {action_data['item_name']} from {to_bag.name} back to {from_bag.name}"
         
+        elif last_action.action_type == 'multi_transfer':
+            # Reverse the multi-transfer
+            to_bag_id = action_data['to_bag_id']
+            to_bag_name = action_data['to_bag_name']
+            transfers = action_data['transfers']
+            
+            # Find the destination bag
+            to_bag = Bag.query.get(to_bag_id)
+            if not to_bag:
+                return jsonify({'success': False, 'error': 'Destination bag not found'})
+            
+            # Find Cabinet (source for multi-transfers)
+            cabinet = Bag.query.filter_by(name='Cabinet').first()
+            if not cabinet:
+                return jsonify({'success': False, 'error': 'Cabinet not found'})
+            
+            reversed_items = []
+            for transfer in transfers:
+                item_name = transfer['name']
+                quantity = transfer['quantity']
+                
+                # Find the item in the destination bag
+                dest_item = Item.query.filter_by(
+                    name=item_name,
+                    bag_id=to_bag_id
+                ).first()
+                
+                if dest_item:
+                    # Reduce or remove from destination bag
+                    if dest_item.quantity <= quantity:
+                        # Remove the entire item
+                        db.session.delete(dest_item)
+                    else:
+                        # Reduce the quantity
+                        dest_item.quantity -= quantity
+                        dest_item.updated_at = datetime.utcnow()
+                
+                # Find existing item in Cabinet to restore quantity
+                cabinet_item = Item.query.filter_by(
+                    name=item_name,
+                    bag_id=cabinet.id
+                ).first()
+                
+                if cabinet_item:
+                    # Add quantity back to existing Cabinet item
+                    cabinet_item.quantity += quantity
+                    cabinet_item.updated_at = datetime.utcnow()
+                else:
+                    # Need to recreate the item in Cabinet
+                    # Use the destination item's properties as reference
+                    if dest_item:
+                        new_cabinet_item = Item(
+                            name=dest_item.name,
+                            type=dest_item.type,
+                            brand=dest_item.brand,
+                            size=dest_item.size,
+                            quantity=quantity,
+                            expiry_date=dest_item.expiry_date,
+                            bag_id=cabinet.id,
+                            product_id=dest_item.product_id,
+                            generic_name=dest_item.generic_name
+                        )
+                        db.session.add(new_cabinet_item)
+                
+                # Remove the transfer movement history
+                MovementHistory.query.filter(
+                    and_(
+                        MovementHistory.item_name == item_name,
+                        MovementHistory.from_bag == 'Cabinet',
+                        MovementHistory.to_bag == to_bag_name,
+                        MovementHistory.quantity == quantity,
+                        MovementHistory.movement_type == 'transfer'
+                    )
+                ).delete()
+                
+                reversed_items.append(f"{quantity} {item_name}")
+            
+            success_message = f"Reversed multi-transfer of {', '.join(reversed_items)} from {to_bag_name} back to Cabinet"
+        
         elif last_action.action_type == 'usage':
             # Reverse the usage
             item = Item.query.get(action_data['item_id'])
