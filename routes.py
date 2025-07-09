@@ -2686,10 +2686,226 @@ def delete_user(user_id):
     flash(f'User {username} deleted successfully', 'success')
     return redirect(url_for('admin_panel'))
 
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def user_profile():
+    """User profile management page"""
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'update_profile':
+            return handle_profile_update()
+        elif action == 'change_password':
+            return handle_password_change()
+        elif action == 'add_user' and current_user.is_admin:
+            return handle_add_user_from_profile()
+        elif action == 'edit_user' and current_user.is_admin:
+            return handle_edit_user_from_profile()
+        elif action == 'delete_user' and current_user.is_admin:
+            return handle_delete_user_from_profile()
+    
+    # Get all users if admin
+    all_users = User.query.all() if current_user.is_admin else None
+    
+    return render_template('user_profile.html', all_users=all_users)
+
+def handle_profile_update():
+    """Handle profile information update"""
+    try:
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        username = request.form.get('username', '').strip()
+        
+        if not username:
+            flash('Username is required', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        # Check if username is already taken by another user
+        existing_user = User.query.filter(User.username == username, User.id != current_user.id).first()
+        if existing_user:
+            flash('Username already exists', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        # Update user information
+        current_user.username = username
+        current_user.first_name = first_name if first_name else None
+        current_user.last_name = last_name if last_name else None
+        
+        db.session.commit()
+        flash('Profile updated successfully', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating profile: {str(e)}', 'danger')
+    
+    return redirect(url_for('user_profile'))
+
+def handle_password_change():
+    """Handle password change"""
+    try:
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not current_password or not new_password or not confirm_password:
+            flash('All password fields are required', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        if not current_user.check_password(current_password):
+            flash('Current password is incorrect', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        if new_password != confirm_password:
+            flash('New passwords do not match', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        if len(new_password) < 6:
+            flash('Password must be at least 6 characters long', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        current_user.set_password(new_password)
+        db.session.commit()
+        flash('Password changed successfully', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error changing password: {str(e)}', 'danger')
+    
+    return redirect(url_for('user_profile'))
+
+def handle_add_user_from_profile():
+    """Handle adding new user from profile page"""
+    try:
+        username = request.form.get('new_username', '').strip()
+        first_name = request.form.get('new_first_name', '').strip()
+        last_name = request.form.get('new_last_name', '').strip()
+        password = request.form.get('new_password', '').strip()
+        is_admin = request.form.get('new_is_admin') == 'on'
+        
+        if not username or not password:
+            flash('Username and password are required', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters long', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        # Check if username already exists
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Username already exists', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        # Create new user
+        new_user = User(
+            username=username,
+            first_name=first_name if first_name else None,
+            last_name=last_name if last_name else None,
+            is_admin=is_admin
+        )
+        new_user.set_password(password)
+        
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash(f'User {username} created successfully', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error creating user: {str(e)}', 'danger')
+    
+    return redirect(url_for('user_profile'))
+
+def handle_edit_user_from_profile():
+    """Handle editing user from profile page"""
+    try:
+        user_id = request.form.get('edit_user_id')
+        username = request.form.get('edit_username', '').strip()
+        first_name = request.form.get('edit_first_name', '').strip()
+        last_name = request.form.get('edit_last_name', '').strip()
+        is_admin = request.form.get('edit_is_admin') == 'on'
+        new_password = request.form.get('edit_password', '').strip()
+        
+        if not user_id or not username:
+            flash('User ID and username are required', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        user = User.query.get_or_404(user_id)
+        
+        # Check if username is already taken by another user
+        existing_user = User.query.filter(User.username == username, User.id != user.id).first()
+        if existing_user:
+            flash('Username already exists', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        # Update user information
+        user.username = username
+        user.first_name = first_name if first_name else None
+        user.last_name = last_name if last_name else None
+        user.is_admin = is_admin
+        
+        # Update password if provided
+        if new_password:
+            if len(new_password) < 6:
+                flash('Password must be at least 6 characters long', 'danger')
+                return redirect(url_for('user_profile'))
+            user.set_password(new_password)
+        
+        db.session.commit()
+        flash(f'User {username} updated successfully', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating user: {str(e)}', 'danger')
+    
+    return redirect(url_for('user_profile'))
+
+def handle_delete_user_from_profile():
+    """Handle deleting user from profile page"""
+    try:
+        user_id = request.form.get('delete_user_id')
+        
+        if not user_id:
+            flash('User ID is required', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        user = User.query.get_or_404(user_id)
+        
+        # Prevent deleting yourself
+        if user.id == current_user.id:
+            flash('You cannot delete your own account', 'danger')
+            return redirect(url_for('user_profile'))
+        
+        # Prevent deleting the last admin
+        if user.is_admin:
+            admin_count = User.query.filter_by(is_admin=True).count()
+            if admin_count <= 1:
+                flash('Cannot delete the last admin user', 'danger')
+                return redirect(url_for('user_profile'))
+        
+        username = user.username
+        db.session.delete(user)
+        db.session.commit()
+        
+        flash(f'User {username} deleted successfully', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting user: {str(e)}', 'danger')
+    
+    return redirect(url_for('user_profile'))
+
 @app.route('/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
-    """Allow users to change their own password"""
+    """Allow users to change their own password - redirect to profile page"""
+    return redirect(url_for('user_profile'))
+
+# Keep the old change_password function for backward compatibility
+@app.route('/change_password_old', methods=['GET', 'POST'])
+@login_required
+def change_password_old():
+    """Legacy change password route"""
     if request.method == 'POST':
         current_password = request.form.get('current_password', '')
         new_password = request.form.get('new_password', '')

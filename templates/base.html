@@ -133,16 +133,16 @@
                         <span class="badge bg-danger ms-2">Admin</span>
                         {% endif %}
                     </div>
+                    <a href="{{ url_for('user_profile') }}" class="user-menu-link" title="Profile">
+                        <i class="fas fa-user-circle me-2"></i>
+                        <span>Profile</span>
+                    </a>
                     {% if current_user.is_admin %}
                     <a href="{{ url_for('admin_panel') }}" class="user-menu-link" title="Admin Panel">
                         <i class="fas fa-users-cog me-2"></i>
                         <span>Admin Panel</span>
                     </a>
                     {% endif %}
-                    <a href="{{ url_for('change_password') }}" class="user-menu-link" title="Change Password">
-                        <i class="fas fa-key me-2"></i>
-                        <span>Change Password</span>
-                    </a>
                     <a href="{{ url_for('logout') }}" class="logout-button" title="Logout">
                         <i class="fas fa-sign-out-alt me-2"></i>
                         <span>Logout</span>
