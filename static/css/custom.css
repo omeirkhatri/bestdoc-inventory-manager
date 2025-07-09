@@ -58,6 +58,10 @@ body {
 }
 
 /* Text contrast fixes for light and dark modes */
+[data-bs-theme="light"] {
+    color: var(--text-contrast-light) !important;
+}
+
 [data-bs-theme="light"] .form-control,
 [data-bs-theme="light"] .form-select,
 [data-bs-theme="light"] input[type="text"],
@@ -67,6 +71,14 @@ body {
     color: var(--text-contrast-light) !important;
     background-color: #ffffff !important;
     border-color: #ced4da !important;
+}
+
+[data-bs-theme="light"] a {
+    color: var(--inventory-teal-dark) !important;
+}
+
+[data-bs-theme="light"] .btn-link {
+    color: var(--inventory-teal-dark) !important;
 }
 
 [data-bs-theme="light"] .form-control::placeholder,
@@ -115,8 +127,136 @@ body {
     color: var(--text-contrast-light) !important;
 }
 
+[data-bs-theme="light"] .table td,
+[data-bs-theme="light"] .table th {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .table thead th {
+    color: var(--text-contrast-light) !important;
+    background-color: #f8f9fa !important;
+}
+
+[data-bs-theme="light"] .table tbody tr {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .table tbody tr:hover {
+    background-color: rgba(79, 209, 199, 0.1) !important;
+    color: var(--text-contrast-light) !important;
+}
+
 [data-bs-theme="dark"] .table {
     color: var(--text-contrast-dark) !important;
+}
+
+[data-bs-theme="dark"] .table td,
+[data-bs-theme="dark"] .table th {
+    color: var(--text-contrast-dark) !important;
+}
+
+[data-bs-theme="dark"] .table thead th {
+    color: var(--text-contrast-dark) !important;
+    background-color: #2b3035 !important;
+}
+
+[data-bs-theme="dark"] .table tbody tr {
+    color: var(--text-contrast-dark) !important;
+}
+
+[data-bs-theme="dark"] .table tbody tr:hover {
+    background-color: rgba(79, 209, 199, 0.1) !important;
+    color: var(--text-contrast-dark) !important;
+}
+
+/* General text elements for light mode */
+[data-bs-theme="light"] h1,
+[data-bs-theme="light"] h2,
+[data-bs-theme="light"] h3,
+[data-bs-theme="light"] h4,
+[data-bs-theme="light"] h5,
+[data-bs-theme="light"] h6 {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] p,
+[data-bs-theme="light"] span,
+[data-bs-theme="light"] div,
+[data-bs-theme="light"] strong,
+[data-bs-theme="light"] em {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .text-primary {
+    color: var(--inventory-teal-dark) !important;
+}
+
+[data-bs-theme="light"] .text-secondary {
+    color: var(--muted-text-light) !important;
+}
+
+[data-bs-theme="light"] .text-success {
+    color: var(--status-good) !important;
+}
+
+[data-bs-theme="light"] .text-warning {
+    color: var(--status-warning) !important;
+}
+
+[data-bs-theme="light"] .text-danger {
+    color: var(--status-danger) !important;
+}
+
+/* Badge colors for light mode */
+[data-bs-theme="light"] .badge {
+    color: white !important;
+}
+
+[data-bs-theme="light"] .badge-secondary {
+    background-color: var(--muted-text-light) !important;
+    color: white !important;
+}
+
+/* DataTables specific styling for light mode */
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_length,
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_filter,
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_info,
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_paginate {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_length label,
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_filter label {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background-color: var(--inventory-teal) !important;
+    color: white !important;
+}
+
+/* List and dropdown text for light mode */
+[data-bs-theme="light"] .list-group-item {
+    color: var(--text-contrast-light) !important;
+    background-color: #ffffff !important;
+}
+
+[data-bs-theme="light"] .dropdown-menu {
+    background-color: #ffffff !important;
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .dropdown-item {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .dropdown-item:hover {
+    background-color: var(--inventory-teal) !important;
+    color: white !important;
 }
 
 /* Action button styling */
