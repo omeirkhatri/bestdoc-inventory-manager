@@ -290,6 +290,7 @@
                                 <th>Item</th>
                                 <th style="width: 80px;">Qty</th>
                                 <th>Details</th>
+                                <th style="width: 100px;">User</th>
                                 <th style="width: 140px;">Date</th>
                             </tr>
                         </thead>
@@ -347,6 +348,13 @@
                                     {% endif %}
                                     {% if movement.notes %}
                                         <br><small class="text-muted">{{ movement.notes }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if movement.user %}
+                                        <small>{{ movement.user.username }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
                                     {% endif %}
                                 </td>
                                 <td>

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit User - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit User: {{ user.username }}</h4>
+                </div>
+                <div class="card-body">
+                    <!-- User Info -->
+                    <div class="mb-4">
+                        <p class="mb-2"><strong>Username:</strong> {{ user.username }}</p>
+                        <p class="mb-2"><strong>Role:</strong> 
+                            {% if user.is_admin %}
+                            <span class="badge bg-danger">Admin</span>
+                            {% else %}
+                            <span class="badge bg-secondary">User</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-0"><strong>Created:</strong> {{ user.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Change Password -->
+                    <h5 class="mb-3">Change Password</h5>
+                    <form method="POST" class="mb-4">
+                        <input type="hidden" name="action" value="update_password">
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-key me-1"></i>Update Password
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    
+                    <!-- Toggle Admin Status -->
+                    <h5 class="mb-3">User Role</h5>
+                    <form method="POST" class="mb-4">
+                        <input type="hidden" name="action" value="toggle_admin">
+                        <p>Current role: 
+                            {% if user.is_admin %}
+                            <strong>Administrator</strong>
+                            {% else %}
+                            <strong>Regular User</strong>
+                            {% endif %}
+                        </p>
+                        <button type="submit" class="btn btn-warning">
+                            {% if user.is_admin %}
+                            <i class="fas fa-user me-1"></i>Remove Admin Privileges
+                            {% else %}
+                            <i class="fas fa-user-shield me-1"></i>Grant Admin Privileges
+                            {% endif %}
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to User List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

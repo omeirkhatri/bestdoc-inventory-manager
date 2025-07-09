@@ -9,6 +9,17 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db
 from models import Item, Bag, MovementHistory, ItemType, Product, User, BagMinimum, UndoAction, PermanentDeletion, InventoryAudit, init_default_types, format_datetime_gmt4, format_date_gmt4, GMT_PLUS_4
 import json
+from functools import wraps
+
+# Admin required decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash('You need administrator privileges to access this page.', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Authentication routes
 @app.route('/login', methods=['GET', 'POST'])
@@ -313,7 +324,8 @@ def handle_csv_upload(file):
                         quantity=item.quantity,
                         movement_type='addition',
                         to_bag=bag.name,
-                        notes=f"Added via CSV upload: {filename}"
+                        notes=f"Added via CSV upload: {filename}",
+                        user_id=current_user.id
                     )
                     db.session.add(movement)
                     
@@ -452,7 +464,8 @@ def handle_manual_addition():
                         quantity=item.quantity,
                         movement_type='addition',
                         to_bag=bag.name,
-                        notes="Added manually"
+                        notes="Added manually",
+                        user_id=current_user.id
                     )
                     db.session.add(movement)
                     
@@ -715,7 +728,8 @@ def handle_transfer():
             movement_type='transfer',
             from_bag=from_bag.name,
             to_bag=to_bag.name,
-            notes=f"Transferred {quantity} units"
+            notes=f"Transferred {quantity} units",
+            user_id=current_user.id
         )
         db.session.add(movement)
         
@@ -856,7 +870,8 @@ def handle_multi_transfer():
                     movement_type='transfer',
                     from_bag=from_bag.name,
                     to_bag=to_bag.name,
-                    notes=f"Multi-transfer: {quantity} units"
+                    notes=f"Multi-transfer: {quantity} units",
+                    user_id=current_user.id
                 )
                 db.session.add(movement)
                 
@@ -956,7 +971,8 @@ def handle_usage():
             from_bag=item.bag.name,
             patient_name=patient_name,
             notes=notes or f"Used {quantity_used} units for patient {patient_name}",
-            expiry_date=item.expiry_date
+            expiry_date=item.expiry_date,
+            user_id=current_user.id
         )
         db.session.add(movement)
         
@@ -1214,7 +1230,8 @@ def handle_bag_management():
                         movement_type='transfer',
                         from_bag=bag.name,
                         to_bag=cabinet.name,
-                        notes=f'Auto-transferred due to bag deletion'
+                        notes=f'Auto-transferred due to bag deletion',
+                        user_id=current_user.id
                     )
                     db.session.add(movement)
             
@@ -1316,7 +1333,8 @@ def handle_wastage():
             movement_type='wastage',
             from_bag=item.bag.name,
             notes=reason or f"Wastage of {quantity_wasted} units",
-            expiry_date=item.expiry_date
+            expiry_date=item.expiry_date,
+            user_id=current_user.id
         )
         db.session.add(movement)
         
@@ -2089,7 +2107,8 @@ def quick_restock():
                             movement_type='transfer',
                             from_bag=cabinet.name,
                             to_bag=target_bag.name,
-                            notes=f"Quick restock transfer"
+                            notes=f"Quick restock transfer",
+                            user_id=current_user.id
                         )
                         db.session.add(movement)
                         
@@ -2281,7 +2300,8 @@ def handle_inventory_audit():
                             quantity=abs(delta),
                             movement_type=f'BULK_WEEKLY_CHECK_{movement_type}',
                             notes=f'Weekly check: {current_qty} → {new_count} (Δ{delta:+d})',
-                            timestamp=datetime.utcnow()
+                            timestamp=datetime.utcnow(),
+                            user_id=current_user.id
                         )
                         bulk_movements.append(movement)
                         
@@ -2577,3 +2597,114 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
+
+# Admin Panel Routes
+@app.route('/admin')
+@admin_required
+def admin_panel():
+    """Display admin panel with user management"""
+    users = User.query.all()
+    return render_template('admin/admin_panel.html', users=users)
+
+@app.route('/admin/add_user', methods=['GET', 'POST'])
+@admin_required
+def add_user():
+    """Add a new user"""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        is_admin = request.form.get('is_admin') == 'on'
+        
+        if not username or not password:
+            flash('Username and password are required', 'danger')
+            return redirect(url_for('add_user'))
+        
+        if User.query.filter_by(username=username).first():
+            flash('User already exists', 'danger')
+            return redirect(url_for('add_user'))
+        
+        user = User(username=username, is_admin=is_admin)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        
+        flash(f'User {username} created successfully', 'success')
+        return redirect(url_for('admin_panel'))
+    
+    return render_template('admin/add_user.html')
+
+@app.route('/admin/edit_user/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_user(user_id):
+    """Edit user details"""
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'update_password':
+            new_password = request.form.get('new_password', '').strip()
+            if new_password:
+                user.set_password(new_password)
+                db.session.commit()
+                flash(f'Password updated for {user.username}', 'success')
+            else:
+                flash('Password cannot be empty', 'danger')
+        
+        elif action == 'toggle_admin':
+            user.is_admin = not user.is_admin
+            db.session.commit()
+            status = 'admin' if user.is_admin else 'regular user'
+            flash(f'{user.username} is now a {status}', 'success')
+        
+        return redirect(url_for('admin_panel'))
+    
+    return render_template('admin/edit_user.html', user=user)
+
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    """Delete a user"""
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent deleting the last admin
+    if user.is_admin:
+        admin_count = User.query.filter_by(is_admin=True).count()
+        if admin_count <= 1:
+            flash('Cannot delete the last admin user', 'danger')
+            return redirect(url_for('admin_panel'))
+    
+    # Prevent self-deletion
+    if user.id == current_user.id:
+        flash('You cannot delete your own account', 'danger')
+        return redirect(url_for('admin_panel'))
+    
+    username = user.username
+    db.session.delete(user)
+    db.session.commit()
+    
+    flash(f'User {username} deleted successfully', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Allow users to change their own password"""
+    if request.method == 'POST':
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        if not current_user.check_password(current_password):
+            flash('Current password is incorrect', 'danger')
+        elif not new_password:
+            flash('New password cannot be empty', 'danger')
+        elif new_password != confirm_password:
+            flash('New passwords do not match', 'danger')
+        else:
+            current_user.set_password(new_password)
+            db.session.commit()
+            flash('Password changed successfully', 'success')
+            return redirect(url_for('dashboard'))
+    
+    return render_template('change_password.html')

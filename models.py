@@ -14,6 +14,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def set_password(self, password):
@@ -164,6 +165,10 @@ class MovementHistory(db.Model):
     date_added = db.Column(db.DateTime, default=datetime.utcnow)  # When movement occurred
     patient_name = db.Column(db.String(200))  # For usage tracking
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Track who made the change
+    
+    # Relationship
+    user = db.relationship('User', backref='movements')
     
     def __repr__(self):
         return f'<Movement {self.item_name} ({self.quantity}) - {self.movement_type}>'

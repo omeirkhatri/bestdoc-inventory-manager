@@ -30,6 +30,7 @@
                         <th>Quantity</th>
                         <th>From</th>
                         <th>To</th>
+                        <th>User</th>
                         <th>Notes</th>
                     </tr>
                 </thead>
@@ -77,6 +78,13 @@
                                 <span class="badge bg-outline-primary">{{ movement.to_bag }}</span>
                             {% else %}
                                 <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if movement.user %}
+                                <small>{{ movement.user.username }}</small>
+                            {% else %}
+                                <small class="text-muted">-</small>
                             {% endif %}
                         </td>
                         <td>

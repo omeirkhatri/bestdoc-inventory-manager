@@ -332,6 +332,40 @@ body {
     color: #212529 !important;
 }
 
+/* User menu styling */
+.user-menu {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1rem;
+}
+
+.user-info {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--inventory-sidebar-text);
+    display: flex;
+    align-items: center;
+}
+
+.user-menu-link {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    background-color: transparent;
+    color: var(--inventory-sidebar-text);
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    margin-bottom: 0.5rem;
+}
+
+.user-menu-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+}
+
 /* Logout button styling */
 .logout-button {
     width: 100%;
