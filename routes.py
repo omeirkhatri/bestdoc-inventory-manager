@@ -1039,6 +1039,7 @@ def history():
     movements = query.order_by(MovementHistory.timestamp.desc()).paginate(
         page=page, per_page=50, error_out=False
     )
+    
     return render_template('history.html', movements=movements)
 
 @app.route('/expiry')
