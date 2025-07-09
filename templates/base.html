@@ -130,7 +130,7 @@
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="userMenuHeading">
                                 <button class="accordion-button collapsed user-menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#userMenuCollapse" aria-expanded="false" aria-controls="userMenuCollapse">
-                                    <i class="fas fa-user-circle me-2"></i>
+                                    <i class="fas fa-user me-2"></i>
                                     <span>{{ current_user.username }}</span>
                                     {% if current_user.is_admin %}
                                     <span class="badge bg-danger ms-2">admin</span>
@@ -140,7 +140,7 @@
                             <div id="userMenuCollapse" class="accordion-collapse collapse" aria-labelledby="userMenuHeading" data-bs-parent="#userMenuAccordion">
                                 <div class="accordion-body user-menu-content">
                                     <a href="{{ url_for('user_profile') }}" class="user-menu-link" title="Profile">
-                                        <i class="fas fa-user-circle me-2"></i>
+                                        <i class="fas fa-user-cog me-2"></i>
                                         <span>Profile</span>
                                     </a>
                                     <a href="{{ url_for('logout') }}" class="logout-button" title="Logout">
