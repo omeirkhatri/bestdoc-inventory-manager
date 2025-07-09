@@ -112,6 +112,7 @@ This is a Flask-based healthcare inventory management system designed for medica
 - File size restrictions
 
 ## Changelog
+- July 09, 2025. Fixed History page DataTable conflict - Disabled client-side DataTable that was overriding server-side pagination, ensuring Dashboard and History show identical data
 - July 09, 2025. Fixed History page date filter parsing for month inputs - History now shows all movements correctly
 - July 09, 2025. Fixed transfer form data handling for single item transfers - Transfer functionality now works properly
 - July 01, 2025. Initial setup

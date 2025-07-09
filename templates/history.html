@@ -256,16 +256,9 @@
 
 {% block extra_scripts %}
 <script>
-// Initialize DataTable
+// DataTable disabled - using Flask pagination instead
 $(document).ready(function() {
-    $('#historyTable').DataTable({
-        responsive: true,
-        pageLength: 25,
-        order: [[0, 'desc']], // Sort by date/time descending
-        columnDefs: [
-            { orderable: false, targets: [-1] } // Disable sorting on Notes column
-        ]
-    });
+    console.log('History page loaded - using Flask pagination');
 });
 
 // Export to CSV
