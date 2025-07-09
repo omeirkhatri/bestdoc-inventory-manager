@@ -453,26 +453,20 @@
 
 {% block extra_js %}
 <script>
-function showTransferModal(itemId, itemName, quantity, bagName) {
-    document.getElementById('transfer-item-id').value = itemId;
-    document.getElementById('transfer-item-details').textContent = `${itemName} (${quantity} units from ${bagName})`;
-    document.getElementById('transfer-quantity').max = quantity;
-    document.getElementById('transfer-quantity').value = quantity;
-    new bootstrap.Modal(document.getElementById('transferModal')).show();
-}
-
-function showUsageModal(itemId, itemName, quantity) {
-    document.getElementById('usage-item-id').value = itemId;
-    document.getElementById('usage-item-details').textContent = `${itemName} (${quantity} units available)`;
-    document.getElementById('usage-quantity').max = quantity;
-    document.getElementById('usage-quantity').value = 1;
-    new bootstrap.Modal(document.getElementById('usageModal')).show();
-}
-
 function showDeleteModal(itemId, itemName, quantity, bagName) {
-    document.getElementById('delete-item-id').value = itemId;
-    document.getElementById('delete-item-details').textContent = `${itemName} (${quantity} units in ${bagName})`;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    const modal = document.getElementById('deleteModal');
+    if (!modal) {
+        console.error('Delete modal not found');
+        return;
+    }
+    
+    const itemIdField = document.getElementById('delete-item-id');
+    const itemDetailsField = document.getElementById('delete-item-details');
+    
+    if (itemIdField) itemIdField.value = itemId;
+    if (itemDetailsField) itemDetailsField.textContent = `${itemName} (${quantity} units in ${bagName})`;
+    
+    new bootstrap.Modal(modal).show();
 }
 </script>
 {% endblock %}

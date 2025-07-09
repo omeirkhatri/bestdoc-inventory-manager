@@ -280,15 +280,18 @@ const SearchFilter = {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
                 const filterValue = button.getAttribute('data-quick-filter');
-                const targetInput = document.querySelector(button.getAttribute('data-target'));
+                const targetSelector = button.getAttribute('data-target');
                 
-                if (targetInput) {
-                    targetInput.value = filterValue;
-                    
-                    // Trigger form submission if auto-submit is enabled
-                    const form = targetInput.closest('form');
-                    if (form && form.hasAttribute('data-auto-submit')) {
-                        form.submit();
+                if (targetSelector) {
+                    const targetInput = document.querySelector(targetSelector);
+                    if (targetInput) {
+                        targetInput.value = filterValue;
+                        
+                        // Trigger form submission if auto-submit is enabled
+                        const form = targetInput.closest('form');
+                        if (form && form.hasAttribute('data-auto-submit')) {
+                            form.submit();
+                        }
                     }
                 }
             });
@@ -946,18 +949,35 @@ function showTransferModal(itemId, itemName, quantity, bagName) {
         return;
     }
     
-    // Populate modal with item data
-    const modalTitle = modal.querySelector('.modal-title');
-    const itemNameField = modal.querySelector('#transfer_item_name');
-    const quantityField = modal.querySelector('#transfer_quantity');
-    const fromBagField = modal.querySelector('#transfer_from_bag');
-    const itemIdField = modal.querySelector('#transfer_item_id');
+    // Check if this is the individual item history page layout
+    const itemDetailsField = modal.querySelector('#transfer-item-details');
+    const toBagField = modal.querySelector('#transfer-to-bag');
     
-    if (modalTitle) modalTitle.textContent = `Transfer ${itemName}`;
-    if (itemNameField) itemNameField.value = itemName;
-    if (quantityField) quantityField.max = quantity;
-    if (fromBagField) fromBagField.value = bagName;
-    if (itemIdField) itemIdField.value = itemId;
+    if (itemDetailsField && toBagField) {
+        // This is the individual item history page layout
+        const itemIdField = modal.querySelector('#transfer-item-id');
+        const quantityField = modal.querySelector('#transfer-quantity');
+        
+        if (itemIdField) itemIdField.value = itemId;
+        if (itemDetailsField) itemDetailsField.textContent = `${itemName} (${quantity} units from ${bagName})`;
+        if (quantityField) {
+            quantityField.max = quantity;
+            quantityField.value = quantity;
+        }
+    } else {
+        // This is the main inventory page layout
+        const modalTitle = modal.querySelector('.modal-title');
+        const itemNameField = modal.querySelector('#transfer_item_name');
+        const quantityField = modal.querySelector('#transfer_quantity');
+        const fromBagField = modal.querySelector('#transfer_from_bag');
+        const itemIdField = modal.querySelector('#transfer_item_id');
+        
+        if (modalTitle) modalTitle.textContent = `Transfer ${itemName}`;
+        if (itemNameField) itemNameField.value = itemName;
+        if (quantityField) quantityField.max = quantity;
+        if (fromBagField) fromBagField.value = bagName;
+        if (itemIdField) itemIdField.value = itemId;
+    }
     
     // Show modal
     const bootstrapModal = new bootstrap.Modal(modal);
@@ -972,20 +992,52 @@ function showUsageModal(itemId, itemName, quantity) {
         return;
     }
     
-    // Populate modal with item data
-    const modalTitle = modal.querySelector('.modal-title');
-    const itemNameField = modal.querySelector('#usage_item_name');
-    const quantityField = modal.querySelector('#usage_quantity');
-    const itemIdField = modal.querySelector('#usage_item_id');
+    // Check if this is the individual item history page layout
+    const itemDetailsField = modal.querySelector('#usage-item-details');
     
-    if (modalTitle) modalTitle.textContent = `Record Usage: ${itemName}`;
-    if (itemNameField) itemNameField.value = itemName;
-    if (quantityField) quantityField.max = quantity;
-    if (itemIdField) itemIdField.value = itemId;
+    if (itemDetailsField) {
+        // This is the individual item history page layout
+        const itemIdField = modal.querySelector('#usage-item-id');
+        const quantityField = modal.querySelector('#usage-quantity');
+        
+        if (itemIdField) itemIdField.value = itemId;
+        if (itemDetailsField) itemDetailsField.textContent = `${itemName} (${quantity} units available)`;
+        if (quantityField) {
+            quantityField.max = quantity;
+            quantityField.value = 1;
+        }
+    } else {
+        // This is the main inventory page layout
+        const modalTitle = modal.querySelector('.modal-title');
+        const itemNameField = modal.querySelector('#usage_item_name');
+        const quantityField = modal.querySelector('#usage_quantity');
+        const itemIdField = modal.querySelector('#usage_item_id');
+        
+        if (modalTitle) modalTitle.textContent = `Record Usage: ${itemName}`;
+        if (itemNameField) itemNameField.value = itemName;
+        if (quantityField) quantityField.max = quantity;
+        if (itemIdField) itemIdField.value = itemId;
+    }
     
     // Show modal
     const bootstrapModal = new bootstrap.Modal(modal);
     bootstrapModal.show();
+}
+
+function showDeleteModal(itemId, itemName, quantity, bagName) {
+    const modal = document.getElementById('deleteModal');
+    if (!modal) {
+        console.error('Delete modal not found');
+        return;
+    }
+    
+    const itemIdField = document.getElementById('delete-item-id');
+    const itemDetailsField = document.getElementById('delete-item-details');
+    
+    if (itemIdField) itemIdField.value = itemId;
+    if (itemDetailsField) itemDetailsField.textContent = `${itemName} (${quantity} units in ${bagName})`;
+    
+    new bootstrap.Modal(modal).show();
 }
 
 // Export utilities for use in other scripts
@@ -996,3 +1048,4 @@ window.InventoryExport = DataExport;
 window.editMinimumStock = editMinimumStock;
 window.showTransferModal = showTransferModal;
 window.showUsageModal = showUsageModal;
+window.showDeleteModal = showDeleteModal;
