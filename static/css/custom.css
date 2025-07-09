@@ -304,6 +304,114 @@ body {
     color: white !important;
 }
 
+/* Transfer page specific elements */
+[data-bs-theme="light"] .item-card {
+    background-color: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .item-card h6,
+[data-bs-theme="light"] .item-card .h6 {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .item-card .small {
+    color: var(--muted-text-light) !important;
+}
+
+[data-bs-theme="light"] .item-card .text-sm {
+    color: var(--muted-text-light) !important;
+}
+
+[data-bs-theme="light"] .selected-item {
+    background-color: #2b3035 !important;
+    color: white !important;
+}
+
+[data-bs-theme="light"] .selected-item h6,
+[data-bs-theme="light"] .selected-item .h6,
+[data-bs-theme="light"] .selected-item .small,
+[data-bs-theme="light"] .selected-item .text-sm {
+    color: white !important;
+}
+
+/* Cabinet items and transfer sections */
+[data-bs-theme="light"] .cabinet-items .list-group-item {
+    background-color: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .cabinet-items .list-group-item:hover {
+    background-color: rgba(79, 209, 199, 0.1) !important;
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .selected-items .list-group-item {
+    background-color: #2b3035 !important;
+    color: white !important;
+}
+
+/* Input groups for light mode */
+[data-bs-theme="light"] .input-group-text {
+    background-color: #f8f9fa !important;
+    border-color: #ced4da !important;
+    color: var(--text-contrast-light) !important;
+}
+
+/* Specific targeting for transfer page list items */
+[data-bs-theme="light"] #cabinetItemsList .list-group-item {
+    background-color: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] #cabinetItemsList .list-group-item h6 {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] #cabinetItemsList .list-group-item p {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] #cabinetItemsList .list-group-item small {
+    color: var(--muted-text-light) !important;
+}
+
+[data-bs-theme="light"] #cabinetItemsList .list-group-item .text-muted {
+    color: var(--muted-text-light) !important;
+}
+
+[data-bs-theme="light"] #selectedItemsList .list-group-item {
+    background-color: #2b3035 !important;
+    color: white !important;
+}
+
+[data-bs-theme="light"] #selectedItemsList .list-group-item h6,
+[data-bs-theme="light"] #selectedItemsList .list-group-item p,
+[data-bs-theme="light"] #selectedItemsList .list-group-item small {
+    color: white !important;
+}
+
+/* Transfer page card headers */
+[data-bs-theme="light"] .card-header h5 {
+    color: var(--text-contrast-light) !important;
+}
+
+[data-bs-theme="light"] .card-title {
+    color: var(--text-contrast-light) !important;
+}
+
+/* Transfer page empty state */
+[data-bs-theme="light"] .text-center h6 {
+    color: var(--muted-text-light) !important;
+}
+
+[data-bs-theme="light"] .text-center p {
+    color: var(--muted-text-light) !important;
+}
+
 /* Alert styling for light mode */
 [data-bs-theme="light"] .alert {
     color: var(--text-contrast-light) !important;
