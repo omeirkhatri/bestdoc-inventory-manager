@@ -404,7 +404,6 @@ function updateSelectedItemsList() {
                                            value="${itemData.maxQuantity}" 
                                            name="quantity" required>
                             <span class="text-body-secondary">/ ${itemData.maxQuantity} available</span>
-                            <input type="hidden" name="item_id" value="${itemData.id}">
                         </div>
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-danger" 
@@ -414,6 +413,9 @@ function updateSelectedItemsList() {
                 </div>
             `;
             selectedItemsList.appendChild(itemDiv);
+            
+            // Set the hidden item_id field for single item transfer
+            document.getElementById('item_id').value = itemData.id;
             
             // Use regular transfer route for single items - set to POST to /transfer
             document.getElementById('singleTransferForm').action = '{{ url_for("transfer") }}';
@@ -493,6 +495,7 @@ function clearSelection() {
     
     // Reset form and destination
     document.getElementById('to_bag_id').value = '';
+    document.getElementById('item_id').value = '';
     
     updateSelectedItemsList();
 }
