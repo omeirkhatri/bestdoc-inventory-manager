@@ -325,7 +325,7 @@ body {
 }
 
 [data-bs-theme="light"] .selected-item {
-    background-color: #2b3035 !important;
+    background-color: #6c757d !important;
     color: white !important;
 }
 
@@ -349,7 +349,7 @@ body {
 }
 
 [data-bs-theme="light"] .selected-items .list-group-item {
-    background-color: #2b3035 !important;
+    background-color: #6c757d !important;
     color: white !important;
 }
 
@@ -384,7 +384,7 @@ body {
 }
 
 [data-bs-theme="light"] #selectedItemsList .list-group-item {
-    background-color: #2b3035 !important;
+    background-color: #6c757d !important;
     color: white !important;
 }
 
