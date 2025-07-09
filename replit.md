@@ -112,6 +112,8 @@ This is a Flask-based healthcare inventory management system designed for medica
 - File size restrictions
 
 ## Changelog
+- July 09, 2025. Fixed History page date filter parsing for month inputs
+- July 09, 2025. Fixed transfer form data handling for single item transfers
 - July 01, 2025. Initial setup
 
 ## User Preferences

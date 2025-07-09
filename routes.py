@@ -1009,16 +1009,29 @@ def history():
     
     if date_from:
         try:
-            from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+            # Handle both YYYY-MM (from month input) and YYYY-MM-DD formats
+            if len(date_from) == 7:  # YYYY-MM format
+                from_date = datetime.strptime(date_from + '-01', '%Y-%m-%d').date()
+            else:  # YYYY-MM-DD format
+                from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
             query = query.filter(MovementHistory.timestamp >= from_date)
         except ValueError:
             flash("Invalid from date format", "warning")
     
     if date_to:
         try:
-            to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
-            # Add one day to include the entire to_date
-            to_date = datetime.combine(to_date, datetime.max.time())
+            # Handle both YYYY-MM (from month input) and YYYY-MM-DD formats
+            if len(date_to) == 7:  # YYYY-MM format
+                # Get the last day of the month
+                year, month = map(int, date_to.split('-'))
+                if month == 12:
+                    to_date = datetime(year + 1, 1, 1) - timedelta(days=1)
+                else:
+                    to_date = datetime(year, month + 1, 1) - timedelta(days=1)
+                to_date = datetime.combine(to_date.date(), datetime.max.time())
+            else:  # YYYY-MM-DD format
+                to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+                to_date = datetime.combine(to_date, datetime.max.time())
             query = query.filter(MovementHistory.timestamp <= to_date)
         except ValueError:
             flash("Invalid to date format", "warning")
