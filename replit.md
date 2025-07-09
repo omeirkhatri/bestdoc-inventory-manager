@@ -112,6 +112,7 @@ This is a Flask-based healthcare inventory management system designed for medica
 - File size restrictions
 
 ## Changelog
+- July 09, 2025. Removed Admin Panel page and created accordion-style user menu - Consolidated all admin functionality into user profile page, replaced static user menu with collapsible accordion showing "username [admin]" when collapsed
 - July 09, 2025. Created comprehensive user profile management page - Added first_name and last_name fields to User model, created unified profile page with personal info management, password change, and admin user management (add/edit/delete users)
 - July 09, 2025. Fixed undo functionality for multi-transfer actions - Added support for multi_transfer action type that was missing from undo system
 - July 09, 2025. Fixed History page DataTable conflict - Disabled client-side DataTable that was overriding server-side pagination, ensuring Dashboard and History show identical data

@@ -332,21 +332,65 @@ body {
     color: #212529 !important;
 }
 
-/* User menu styling */
-.user-menu {
+/* User menu accordion styling */
+.user-menu-accordion {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 1rem;
 }
 
-.user-info {
+.user-menu-accordion .accordion-item {
+    background-color: transparent;
+    border: none;
+}
+
+.user-menu-accordion .accordion-button {
+    background-color: transparent;
+    border: none;
     padding: 0.5rem;
     font-size: 0.9rem;
     color: var(--inventory-sidebar-text);
-    display: flex;
-    align-items: center;
+    box-shadow: none;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
 }
 
-.user-menu-link {
+.user-menu-accordion .accordion-button:not(.collapsed) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    box-shadow: none;
+}
+
+.user-menu-accordion .accordion-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.user-menu-accordion .accordion-button:focus {
+    box-shadow: none;
+}
+
+.user-menu-accordion .accordion-button::after {
+    margin-left: auto;
+    background-size: 1rem;
+    filter: invert(1);
+    opacity: 0.7;
+    transition: transform 0.2s ease;
+}
+
+.user-menu-accordion .accordion-button:not(.collapsed)::after {
+    transform: rotate(-180deg);
+}
+
+.user-menu-accordion .accordion-collapse {
+    border: none;
+}
+
+.user-menu-accordion .accordion-body {
+    padding: 0.5rem 0 0 0;
+    border: none;
+}
+
+.user-menu-accordion .user-menu-link {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid transparent;
@@ -360,14 +404,14 @@ body {
     margin-bottom: 0.5rem;
 }
 
-.user-menu-link:hover {
+.user-menu-accordion .user-menu-link:hover {
     background-color: rgba(255, 255, 255, 0.1);
     color: white;
     text-decoration: none;
 }
 
 /* Logout button styling */
-.logout-button {
+.user-menu-accordion .logout-button {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid #dee2e6;
@@ -382,7 +426,7 @@ body {
     margin-top: 0.5rem;
 }
 
-.logout-button:hover {
+.user-menu-accordion .logout-button:hover {
     background-color: #dc3545;
     color: white;
     border-color: #dc3545;
