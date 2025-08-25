@@ -1,4 +1,5 @@
 name: Migrate Postgres to Postgres
+
 on:
   workflow_dispatch: {}
 
@@ -21,4 +22,7 @@ jobs:
           SRC_DB_URL: ${{ secrets.SRC_DB_URL }}
           DST_DB_URL: ${{ secrets.DST_DB_URL }}
         run: |
-          python migrate_postgres_to_postgres.py --src "$SRC_DB_URL" --dst "$DST_DB_URL"
+3python migrate_postgres_to_postgres.py --src "$SRC_DB_URL" --dst "$DST_DB_URL"
+
+
+      python migrate_pg_to_postgres.py --src "$SRC_DB_URL" --dst "$DST_DB_URL"
