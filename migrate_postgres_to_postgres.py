@@ -1,4 +1,5 @@
 import argparse
+
 from sqlalchemy import create_engine, MetaData, select
 from sqlalchemy.sql import util as sqlutil
 
