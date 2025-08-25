@@ -25,4 +25,4 @@ jobs:
         run: |
 
 
-      python migrate_pg_to_postgres.py --src "$SRC_DB_URL" --dst "$DST_DB_URL"
+        python migrate_pg_to_postgres.py --src "$SRC_DB_URL" --dst "$DST_DB_URL"
