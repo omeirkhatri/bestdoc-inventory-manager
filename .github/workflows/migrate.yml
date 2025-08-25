@@ -22,5 +22,5 @@ jobs:
         env:
           SRC_DB_URL: ${{ secrets.SRC_DB_URL }}
           DST_DB_URL: ${{ secrets.DST_DB_URL }}
+         run: echo "Skip migration"
    
-   run: python migrate_pg_to_postgres.py --src "$SRC_DB_URL" --dst "$DST_DB_URL
